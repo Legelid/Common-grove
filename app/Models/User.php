@@ -1,0 +1,402 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+
+class User extends Authenticatable implements MustVerifyEmail
+{
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasFactory, HasUuids, Notifiable, SoftDeletes;
+
+    /** @var list<string> */
+    protected $fillable = [
+        'gamertag',
+        'display_name',
+        'email',
+        'password',
+        'identity_mode',
+        'show_names_pref',
+        'password_reset_required',
+        'bio',
+        'avatar_path',
+        'last_seen_at',
+        'last_gamertag_changed_at',
+        'suspended_at',
+        'dismiss_count',
+        'is_admin',
+        // Group 2 — status
+        'status_text',
+        'status_mood',
+        'status_expires_at',
+        // Group 3 — currently into
+        'currently_playing',
+        'currently_reading',
+        'currently_watching',
+        // Group 9 — read receipts
+        'show_read_receipts',
+        // Group 11 — discovery
+        'show_connection_suggestions',
+        'low_stimulation_mode',
+        'is_supporter',
+        'show_official_rooms',
+        // Group 10 — onboarding
+        'onboarding_completed',
+        'comfort_preferences',
+    ];
+
+    /** @var list<string> */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at'          => 'datetime',
+            'password'                   => 'hashed',
+            'show_names_pref'            => 'boolean',
+            'password_reset_required'    => 'boolean',
+            'identity_mode'              => 'integer',
+            'last_seen_at'               => 'datetime',
+            'last_gamertag_changed_at'   => 'datetime',
+            'suspended_at'               => 'datetime',
+            'is_admin'                   => 'boolean',
+            'status_expires_at'          => 'datetime',
+            'show_read_receipts'             => 'boolean',
+            'show_connection_suggestions'   => 'boolean',
+            'low_stimulation_mode'          => 'boolean',
+            'is_supporter'                  => 'boolean',
+            'show_official_rooms'           => 'boolean',
+            'onboarding_completed'          => 'boolean',
+            'comfort_preferences'        => 'array',
+        ];
+    }
+
+    // -------------------------------------------------------------------------
+    // Accessors
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns the appropriate name to show others, based on identity_mode.
+     *
+     * Mode 1 — gamertag only
+     * Mode 2 — gamertag · goes by display_name (if set)
+     * Mode 3 — display_name if set, else gamertag
+     *
+     * Reads the raw database value via $this->attributes to avoid recursion.
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        $raw = $this->attributes['display_name'] ?? null;
+
+        return match ($this->identity_mode) {
+            2       => $raw ? $this->gamertag . ' · goes by ' . $raw : $this->gamertag,
+            3       => $raw ?? $this->gamertag,
+            default => $this->gamertag,
+        };
+    }
+
+    /**
+     * Returns the absolute URL to the user's avatar, or a placeholder.
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        if ($this->avatar_path) {
+            return Storage::disk('s3')->url($this->avatar_path);
+        }
+
+        return asset('images/default-avatar.svg');
+    }
+
+    // -------------------------------------------------------------------------
+    // Methods
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns true if the user was seen within the last 15 minutes.
+     */
+    public function isOnline(): bool
+    {
+        return $this->last_seen_at !== null
+            && $this->last_seen_at->isAfter(now()->subMinutes(15));
+    }
+
+    /**
+     * Returns true if the user has an unexpired status set.
+     */
+    public function hasActiveStatus(): bool
+    {
+        return $this->status_expires_at !== null
+            && $this->status_expires_at->isAfter(now());
+    }
+
+    // -------------------------------------------------------------------------
+    // Relationships
+    // -------------------------------------------------------------------------
+
+    /**
+     * Tags the user has selected.
+     * No withTimestamps() — created_at is filled by the DB default on the pivot.
+     */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'user_tags')
+            ->withPivot('created_at');
+    }
+
+    /**
+     * Hangout posts authored by this user.
+     */
+    public function hangoutPosts(): HasMany
+    {
+        return $this->hasMany(HangoutPost::class);
+    }
+
+    /**
+     * Conversations this user is a participant of.
+     */
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants')
+            ->withPivot(['joined_at', 'last_read_at', 'is_muted', 'left_at']);
+    }
+
+    /**
+     * Notification preferences for this user.
+     */
+    public function notificationPreferences(): HasOne
+    {
+        return $this->hasOne(NotificationPreference::class);
+    }
+
+    // -------------------------------------------------------------------------
+    // Safety relationships
+    // -------------------------------------------------------------------------
+
+    /** Users this user has blocked. */
+    public function blockedUsers(): HasMany
+    {
+        return $this->hasMany(Block::class, 'blocker_id');
+    }
+
+    /** Users who have blocked this user. */
+    public function blockedByUsers(): HasMany
+    {
+        return $this->hasMany(Block::class, 'blocked_id');
+    }
+
+    /** Users this user has muted. */
+    public function mutedUsers(): HasMany
+    {
+        return $this->hasMany(Mute::class, 'muter_id');
+    }
+
+    /** Reports filed by this user. */
+    public function reportsFiled(): HasMany
+    {
+        return $this->hasMany(Report::class, 'reporter_id');
+    }
+
+    /** Reports filed against this user. */
+    public function reportsReceived(): HasMany
+    {
+        return $this->hasMany(Report::class, 'reported_user_id');
+    }
+
+    /** Strikes issued to this user. */
+    public function strikes(): HasMany
+    {
+        return $this->hasMany(Strike::class);
+    }
+
+    // -------------------------------------------------------------------------
+    // Safety helpers
+    // -------------------------------------------------------------------------
+
+    public function hasBlocked(User $user): bool
+    {
+        return $this->blockedUsers()->where('blocked_id', $user->id)->exists();
+    }
+
+    public function isBlockedBy(User $user): bool
+    {
+        return $this->blockedByUsers()->where('blocker_id', $user->id)->exists();
+    }
+
+    public function hasMuted(User $user): bool
+    {
+        return $this->mutedUsers()->where('muted_id', $user->id)->exists();
+    }
+
+    /**
+     * Returns the highest active strike level (1–3), or 0 if none.
+     */
+    public function activeStrikeLevel(): int
+    {
+        $strike = $this->strikes()
+            ->where(function ($q): void {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->orderByDesc('level')
+            ->first();
+
+        return $strike ? $strike->level : 0;
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
+    }
+
+    /**
+     * Restricted users (strike level 2+) can read but not send messages.
+     */
+    public function isRestricted(): bool
+    {
+        return $this->activeStrikeLevel() >= 2;
+    }
+
+    /**
+     * Users whose reports are dismissed at a high rate — potential bad actors.
+     *
+     * @param  Builder<User>  $query
+     */
+    public function scopeSerialReporters(Builder $query): Builder
+    {
+        return $query->where('dismiss_count', '>=', 5);
+    }
+
+    // -------------------------------------------------------------------------
+    // Tag helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Attach a tag and increment its usage count.
+     * Safe to call even if already attached — will not double-attach.
+     */
+    public function selectTag(Tag $tag): void
+    {
+        if ($this->tags()->where('tag_id', $tag->id)->doesntExist()) {
+            $this->tags()->attach($tag->id);
+            Tag::where('id', $tag->id)->increment('usage_count');
+        }
+    }
+
+    /**
+     * Detach a tag and decrement its usage count, never below zero.
+     */
+    public function deselectTag(Tag $tag): void
+    {
+        $detached = $this->tags()->detach($tag->id);
+
+        if ($detached > 0) {
+            Tag::where('id', $tag->id)->where('usage_count', '>', 0)->decrement('usage_count');
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Pinned rooms
+    // -------------------------------------------------------------------------
+
+    public function pinnedRooms(): HasMany
+    {
+        return $this->hasMany(PinnedRoom::class)->latest();
+    }
+
+    // -------------------------------------------------------------------------
+    // Friendship relationships
+    // -------------------------------------------------------------------------
+
+    /** Friendships where this user sent the request. */
+    public function sentFriendships(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'requester_id');
+    }
+
+    /** Friendships where this user received the request. */
+    public function receivedFriendships(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'recipient_id');
+    }
+
+    /** All accepted Friendship records in either direction. */
+    public function friendships(): Collection
+    {
+        return $this->sentFriendships()->where('status', 'accepted')->get()
+            ->merge($this->receivedFriendships()->where('status', 'accepted')->get());
+    }
+
+    /**
+     * All User models who are accepted friends.
+     *
+     * @return Collection<int, User>
+     */
+    public function friends(): Collection
+    {
+        $sentIds     = $this->sentFriendships()->where('status', 'accepted')->pluck('recipient_id');
+        $receivedIds = $this->receivedFriendships()->where('status', 'accepted')->pluck('requester_id');
+
+        return User::whereIn('id', $sentIds->merge($receivedIds))->get();
+    }
+
+    /** Pending friend requests received by this user. */
+    public function pendingRequestsReceived(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'recipient_id')->where('status', 'pending');
+    }
+
+    /** Pending friend requests sent by this user. */
+    public function pendingRequestsSent(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'requester_id')->where('status', 'pending');
+    }
+
+    // -------------------------------------------------------------------------
+    // Friendship helpers
+    // -------------------------------------------------------------------------
+
+    public function isFriendWith(User $user): bool
+    {
+        return Friendship::where('status', 'accepted')
+            ->where(function ($q) use ($user): void {
+                $q->where(function ($inner) use ($user): void {
+                    $inner->where('requester_id', $this->id)->where('recipient_id', $user->id);
+                })->orWhere(function ($inner) use ($user): void {
+                    $inner->where('requester_id', $user->id)->where('recipient_id', $this->id);
+                });
+            })
+            ->exists();
+    }
+
+    public function hasPendingRequestFrom(User $user): bool
+    {
+        return Friendship::where('requester_id', $user->id)
+            ->where('recipient_id', $this->id)
+            ->where('status', 'pending')
+            ->exists();
+    }
+
+    public function hasSentRequestTo(User $user): bool
+    {
+        return Friendship::where('requester_id', $this->id)
+            ->where('recipient_id', $user->id)
+            ->where('status', 'pending')
+            ->exists();
+    }
+}

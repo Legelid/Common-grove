@@ -1,0 +1,180 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Livewire\Admin\CrisisLog;
+use App\Livewire\Admin\Dashboard as AdminDashboard;
+use App\Livewire\Admin\PlatformStats;
+use App\Livewire\Admin\ReportsQueue;
+use App\Livewire\Admin\TagModeration;
+use App\Livewire\Admin\UserManagement;
+use App\Livewire\Auth\Login;
+use App\Livewire\Auth\Register;
+use App\Livewire\Feed\CreateHangoutPost;
+use App\Livewire\Feed\HangoutFeed;
+use App\Livewire\Friends\FriendsList;
+use App\Livewire\Messaging\ConversationList;
+use App\Livewire\Messaging\DirectMessage;
+use App\Livewire\Messaging\Room;
+use App\Livewire\Profile\ProfileSettings;
+use App\Livewire\Profile\PublicProfile;
+use App\Livewire\Onboarding\OnboardingFlow;
+use App\Livewire\Tags\TagSelector;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Local-only debug routes — REMOVE BEFORE PRODUCTION
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/dev-login', function () {
+    if (!app()->isLocal()) abort(404);
+    $user = App\Models\User::where('is_admin', true)->first();
+    if (!$user) return 'No admin user found';
+    Auth::login($user);
+    session()->regenerate();
+    return redirect()->route('feed');
+})->name('dev.login');
+
+/*
+|--------------------------------------------------------------------------
+| Public routes — accessible without authentication
+|--------------------------------------------------------------------------
+*/
+
+Route::view('/', 'landing')->name('home');
+Route::view('/privacy', 'privacy')->name('privacy');
+Route::view('/terms', 'terms')->name('terms');
+
+// Registration
+Route::get('/register', Register::class)->name('register');
+
+// Login
+Route::get('/login', Login::class)->name('login');
+
+// Password reset — request link
+Route::get('/forgot-password', function () {
+    return view('auth.forgot-password');
+})->name('password.request');
+
+Route::post('/forgot-password', function (\Illuminate\Http\Request $request) {
+    $request->validate(['email' => ['required', 'email']]);
+
+    $status = \Illuminate\Support\Facades\Password::sendResetLink(
+        $request->only('email')
+    );
+
+    return $status === \Illuminate\Support\Facades\Password::RESET_LINK_SENT
+        ? back()->with('status', __($status))
+        : back()->withInput($request->only('email'))->withErrors(['email' => __($status)]);
+})->middleware('throttle:5,1')->name('password.email');
+
+// Password reset — set new password
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
+    ->name('password.reset');
+
+Route::post('/reset-password', [NewPasswordController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('password.store');
+
+/*
+|--------------------------------------------------------------------------
+| Auth only — email verified not required
+| (used for the email verification notice page itself)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->group(function () {
+
+    // Email verification notice
+    Route::get('/email/verify', function () {
+        return view('auth.verify-email');
+    })->name('verification.notice');
+
+    // Resend verification email
+    Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+        return back()->with('status', 'verification-link-sent');
+    })->middleware('throttle:6,1')->name('verification.send');
+
+    // Handle the verification link click (signed URL)
+    Route::get('/email/verify/{id}/{hash}', function (\Illuminate\Foundation\Auth\EmailVerificationRequest $request) {
+        $request->fulfill();
+        return redirect()->route('onboarding');
+    })->middleware('signed')->name('verification.verify');
+
+    // Logout
+    Route::post('/logout', LogoutController::class)->name('logout');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Protected routes — auth + verified required
+| Add all internal platform routes inside this group.
+|--------------------------------------------------------------------------
+*/
+
+// Onboarding — auth + verified, but NOT behind onboarded middleware (to avoid redirect loop)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/onboarding', OnboardingFlow::class)->name('onboarding');
+});
+
+Route::middleware(['auth', 'verified', 'onboarded'])->group(function () {
+
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    // Interest tag selection
+    Route::get('/tags', TagSelector::class)->name('tags.select');
+
+    // Hangout Feed
+    Route::get('/feed', HangoutFeed::class)->name('feed');
+    Route::get('/feed/post', CreateHangoutPost::class)->name('feed.post');
+
+    // Hangout room — redirect to room if one exists, otherwise placeholder
+    Route::get('/hangout/{id}', function (string $id) {
+        $room = \App\Models\Conversation::where('hangout_post_id', $id)->first();
+
+        if ($room) {
+            return redirect()->route('room.show', $room->id);
+        }
+
+        return view('hangout.placeholder', ['id' => $id]);
+    })->name('hangout.show');
+
+    // Messaging
+    Route::get('/messages', ConversationList::class)->name('messages.index');
+    Route::get('/messages/{conversationId}', DirectMessage::class)->name('messages.show');
+    Route::get('/room/{conversationId}', Room::class)->name('room.show');
+
+    // Friends
+    Route::get('/friends', FriendsList::class)->name('friends.index');
+
+    // Profile
+    Route::get('/profile/settings', ProfileSettings::class)->name('profile.settings');
+    Route::get('/profile/{gamertag}', PublicProfile::class)->name('profile.show');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin routes — auth + verified + admin middleware
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(function () {
+
+    Route::get('/', AdminDashboard::class)->name('admin.dashboard');
+    Route::get('/reports', ReportsQueue::class)->name('admin.reports');
+    Route::get('/users', UserManagement::class)->name('admin.users');
+    Route::get('/tags', TagModeration::class)->name('admin.tags');
+    Route::get('/stats', PlatformStats::class)->name('admin.stats');
+    Route::get('/crisis', CrisisLog::class)->name('admin.crisis');
+
+});
