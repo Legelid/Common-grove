@@ -1,5 +1,12 @@
+@php
+    $isAuthPage = request()->routeIs('login', 'register', 'password.*', 'verification.*', 'home');
+    $isLowStim  = auth()->check() && auth()->user()->low_stimulation_mode;
+    $bodyBg     = $isLowStim
+        ? 'background:#0D1117;'
+        : 'background:radial-gradient(ellipse 80% 50% at 50% 100%, rgba(29,158,117,0.055) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 75% 0%, rgba(8,32,58,0.20) 0%, transparent 55%), #0D1117;';
+@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full {{ $isAuthPage ? 'overflow-hidden' : '' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,11 +15,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="h-full antialiased" style="background:#0D1117;color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
-
-@php
-    $isAuthPage = request()->routeIs('login', 'register', 'password.*', 'verification.*', 'home');
-@endphp
+<body class="h-full antialiased {{ $isAuthPage ? 'overflow-hidden' : '' }} {{ $isLowStim ? 'low-stimulation' : '' }}" style="{{ $bodyBg }}color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
 
 @if ($isAuthPage)
 
@@ -41,16 +44,68 @@
                 <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
             </div>
             @auth
-                <a
-                    href="{{ route('profile.settings') }}"
-                    wire:navigate
-                    class="flex items-center gap-2 transition"
-                    style="color:#8B949E;"
-                    onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
-                >
-                    <img src="{{ auth()->user()->avatar_url }}" alt="" class="w-7 h-7 rounded-full object-cover" style="background:#21262D;">
-                    <span class="hidden sm:block text-xs">{{ auth()->user()->gamertag }}</span>
-                </a>
+                <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                    <button
+                        type="button"
+                        @click="open = !open"
+                        :aria-expanded="open.toString()"
+                        class="flex items-center gap-2 transition"
+                        style="color:#8B949E;"
+                        onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
+                    >
+                        <img src="{{ auth()->user()->avatar_url }}" alt="" class="w-7 h-7 rounded-full object-cover" style="background:#21262D;">
+                        <span class="hidden sm:block text-xs">{{ auth()->user()->gamertag }}</span>
+                        <svg x-show="!open" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                        <svg x-show="open" style="display:none;" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
+                    </button>
+
+                    <div
+                        x-show="open"
+                        class="account-dropdown fixed right-6 w-44 rounded-xl py-1"
+                        style="display:none;top:60px;border:1px solid #30363D;box-shadow:0 8px 24px rgba(0,0,0,0.5);z-index:9999;"
+                    >
+                        <a
+                            href="{{ route('profile.show', auth()->user()->gamertag) }}"
+                            wire:navigate
+                            @click="open = false"
+                            class="flex items-center px-4 py-2.5 text-sm transition"
+                            style="color:#8B949E;"
+                            onmouseover="this.style.color='#E6EDF3';this.style.background='rgba(255,255,255,0.04)'"
+                            onmouseout="this.style.color='#8B949E';this.style.background=''"
+                        >Profile</a>
+                        <a
+                            href="{{ route('profile.settings') }}"
+                            wire:navigate
+                            @click="open = false"
+                            class="flex items-center px-4 py-2.5 text-sm transition"
+                            style="color:#8B949E;"
+                            onmouseover="this.style.color='#E6EDF3';this.style.background='rgba(255,255,255,0.04)'"
+                            onmouseout="this.style.color='#8B949E';this.style.background=''"
+                        >Settings</a>
+                        @if (auth()->user()->is_admin)
+                            <a
+                                href="{{ route('admin.dashboard') }}"
+                                wire:navigate
+                                @click="open = false"
+                                class="flex items-center px-4 py-2.5 text-sm transition"
+                                style="color:#D29922;"
+                                onmouseover="this.style.color='#E6B84A';this.style.background='rgba(210,153,34,0.05)'"
+                                onmouseout="this.style.color='#D29922';this.style.background=''"
+                            >Admin Panel</a>
+                        @endif
+                        <div class="my-1 border-t" style="border-color:#21262D;"></div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button
+                                type="submit"
+                                class="flex items-center w-full px-4 py-2.5 text-sm transition text-left"
+                                style="color:#8B949E;"
+                                onmouseover="this.style.color='#E24B4A';this.style.background='rgba(226,75,74,0.06)'"
+                                onmouseout="this.style.color='#8B949E';this.style.background=''"
+                            >Sign out</button>
+                        </form>
+                    </div>
+                </div>
             @endauth
         </header>
 
@@ -100,12 +155,6 @@
                     @endif
                 @endauth
 
-                {{-- User strip --}}
-                <div class="flex-none px-4 py-3 border-t text-xs" style="border-color:#30363D;color:#8B949E;">
-                    @auth
-                        <p class="truncate">{{ auth()->user()->gamertag }}</p>
-                    @endauth
-                </div>
 
             </aside>
 
@@ -178,46 +227,28 @@
                             </a>
                         @endforeach
 
-                        {{-- Admin link --}}
-                        @if (auth()->user()->is_admin)
-                            @php $adminActive = request()->routeIs('admin.*'); @endphp
-                            <div class="pt-3 mt-3 border-t" style="border-color:#21262D;">
-                                <a
-                                    href="{{ route('admin.dashboard') }}"
-                                    wire:navigate
-                                    class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition"
-                                    style="{{ $adminActive
-                                        ? 'background:rgba(210,153,34,0.1);color:#D29922;'
-                                        : 'color:#8B949E;' }}"
-                                    onmouseover="{{ $adminActive ? '' : "this.style.color='#D29922';this.style.background='rgba(210,153,34,0.05)'" }}"
-                                    onmouseout="{{ $adminActive ? '' : "this.style.color='#8B949E';this.style.background=''" }}"
-                                >
-                                    @if ($adminActive)
-                                        <span class="w-1 h-1 rounded-full flex-none" style="background:#D29922;"></span>
-                                    @else
-                                        <span class="w-1 h-1 rounded-full flex-none" style="background:transparent;"></span>
-                                    @endif
-                                    Admin Panel
-                                </a>
-                            </div>
-                        @endif
                     </div>
 
-                    {{-- Sign out --}}
-                    <div class="flex-none px-3 py-5 mt-4 border-t" style="border-color:#21262D;">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button
-                                type="submit"
-                                class="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm transition"
-                                style="color:#8B949E;"
-                                onmouseover="this.style.color='#E24B4A';this.style.background='rgba(226,75,74,0.06)'"
-                                onmouseout="this.style.color='#8B949E';this.style.background=''"
-                            >
-                                <span class="w-1 h-1 rounded-full flex-none" style="background:transparent;"></span>
-                                Sign out
-                            </button>
-                        </form>
+                    {{-- Support section --}}
+                    <div class="flex-none px-3 pb-5 border-t" style="border-color:#21262D;">
+                        <div class="px-3 pt-4 pb-1">
+                            <p class="text-xs font-medium uppercase tracking-widest" style="color:#3d4451;">Support</p>
+                        </div>
+                        <a
+                            href="{{ route('guidelines') }}"
+                            class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition"
+                            style="color:#3d4451;"
+                            onmouseover="this.style.color='#8B949E';this.style.background='rgba(255,255,255,0.03)'"
+                            onmouseout="this.style.color='#3d4451';this.style.background=''"
+                        >Community Guidelines</a>
+                        <a
+                            href="{{ route('report') }}"
+                            wire:navigate
+                            class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition"
+                            style="color:#3d4451;"
+                            onmouseover="this.style.color='#8B949E';this.style.background='rgba(255,255,255,0.03)'"
+                            onmouseout="this.style.color='#3d4451';this.style.background=''"
+                        >Report a problem</a>
                     </div>
                 @endauth
 

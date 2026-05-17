@@ -76,6 +76,19 @@ class ProfileSettings extends Component
     public bool $showReadReceipts = false;
 
     // -------------------------------------------------------------------------
+    // Profile expression section
+    // -------------------------------------------------------------------------
+
+    public string $profileStatus      = '';
+    public string $accentColor        = '';
+    public string $bannerStyle        = '';
+    public string $promptComfortThing = '';
+    public string $promptRambleTopic  = '';
+
+    /** @var list<string> */
+    public array $socialStyles = [];
+
+    // -------------------------------------------------------------------------
     // Discovery section (Group 11)
     // -------------------------------------------------------------------------
 
@@ -92,6 +105,7 @@ class ProfileSettings extends Component
     public ?string $avatarMessage        = null;
     public ?string $gamertagMessage      = null;
     public ?string $currentlyMessage     = null;
+    public ?string $expressionMessage    = null;
     public ?string $readReceiptsMessage  = null;
     public ?string $discoveryMessage     = null;
     public ?string $officialRoomsMessage = null;
@@ -109,6 +123,12 @@ class ProfileSettings extends Component
         $this->currentlyPlaying  = $user->currently_playing ?? '';
         $this->currentlyReading  = $user->currently_reading ?? '';
         $this->currentlyWatching = $user->currently_watching ?? '';
+        $this->profileStatus      = $user->profile_status ?? '';
+        $this->accentColor        = $user->accent_color ?? '';
+        $this->bannerStyle        = $user->banner_style ?? '';
+        $this->promptComfortThing = $user->prompt_comfort_thing ?? '';
+        $this->promptRambleTopic  = $user->prompt_ramble_topic ?? '';
+        $this->socialStyles       = $user->social_styles ?? [];
         $this->showReadReceipts          = (bool) $user->show_read_receipts;
         $this->showConnectionSuggestions = (bool) ($user->show_connection_suggestions ?? true);
         $this->lowStimulationMode        = (bool) ($user->low_stimulation_mode ?? false);
@@ -339,6 +359,51 @@ class ProfileSettings extends Component
         ]);
 
         $this->currentlyMessage = 'Currently Into saved.';
+    }
+
+    // -------------------------------------------------------------------------
+    // Profile expression section
+    // -------------------------------------------------------------------------
+
+    public function toggleSocialStyle(string $style): void
+    {
+        $allowed = ['quiet_chatter', 'mostly_listening', 'slow_replies', 'deep_talks', 'late_night', 'introvert_friendly'];
+
+        if (! in_array($style, $allowed, true)) {
+            return;
+        }
+
+        if (in_array($style, $this->socialStyles, true)) {
+            $this->socialStyles = array_values(array_diff($this->socialStyles, [$style]));
+        } else {
+            $this->socialStyles[] = $style;
+        }
+    }
+
+    public function saveExpression(): void
+    {
+        $this->validate([
+            'profileStatus'      => ['nullable', 'string', 'max:120'],
+            'accentColor'        => ['nullable', 'string', 'in:green,blue,amber,purple,slate'],
+            'bannerStyle'        => ['nullable', 'string', 'in:rain_window,forest,night_sky,cozy_room,gradient'],
+            'promptComfortThing' => ['nullable', 'string', 'max:120'],
+            'promptRambleTopic'  => ['nullable', 'string', 'max:120'],
+            'socialStyles'       => ['array', 'max:6'],
+            'socialStyles.*'     => ['string', 'in:quiet_chatter,mostly_listening,slow_replies,deep_talks,late_night,introvert_friendly'],
+        ]);
+
+        $this->expressionMessage = null;
+
+        Auth::user()->update([
+            'profile_status'       => trim($this->profileStatus) ?: null,
+            'accent_color'         => $this->accentColor ?: null,
+            'banner_style'         => $this->bannerStyle ?: null,
+            'prompt_comfort_thing' => trim($this->promptComfortThing) ?: null,
+            'prompt_ramble_topic'  => trim($this->promptRambleTopic) ?: null,
+            'social_styles'        => ! empty($this->socialStyles) ? array_values($this->socialStyles) : null,
+        ]);
+
+        $this->expressionMessage = 'Profile updated.';
     }
 
     // -------------------------------------------------------------------------

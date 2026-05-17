@@ -221,7 +221,121 @@
         </button>
     </section>
 
-    {{-- ── SECTION 7 — Read Receipts ───────────────── --}}
+    {{-- ── SECTION 7 — Your Space ────────────────── --}}
+    <section class="space-y-5">
+        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:#8B949E;border-color:#30363D;">Your Space</h2>
+        <p class="text-xs" style="color:#8B949E;">Optional details that help others get a feel for you. Nothing here is required.</p>
+
+        {{-- Profile status --}}
+        <div>
+            <label for="profileStatus" class="block text-sm font-medium mb-1" style="color:#8B949E;">
+                Short tagline <span class="font-normal opacity-70">(optional)</span>
+            </label>
+            <input id="profileStatus" type="text" wire:model.live="profileStatus" maxlength="120"
+                placeholder="e.g. mostly lurking, occasionally brave"
+                class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
+                style="background:#1C2333;border:1px solid {{ $errors->has('profileStatus') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
+                onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+            >
+            <p class="mt-1 text-xs" style="color:#8B949E;">Shows under your name on your profile. Max 120 characters.</p>
+            @error('profileStatus') <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p> @enderror
+        </div>
+
+        {{-- Accent color --}}
+        <div>
+            <p class="text-sm font-medium mb-2" style="color:#8B949E;">Profile accent <span class="font-normal opacity-70">(optional)</span></p>
+            <div class="flex items-center gap-3 flex-wrap">
+                @foreach (['green' => '#1D9E75', 'blue' => '#4A8BB5', 'amber' => '#D29922', 'purple' => '#8B5CF6', 'slate' => '#8B949E'] as $key => $color)
+                    <button type="button" wire:click="$set('accentColor', '{{ $accentColor === $key ? '' : $key }}')"
+                        class="w-8 h-8 rounded-full transition"
+                        style="background:{{ $color }};outline:{{ $accentColor === $key ? '2px solid #E6EDF3' : '2px solid transparent' }};outline-offset:2px;"
+                        title="{{ ucfirst($key) }}"
+                    ></button>
+                @endforeach
+            </div>
+            <p class="mt-1.5 text-xs" style="color:#8B949E;">Subtle color accent shown on your profile. Click again to clear.</p>
+        </div>
+
+        {{-- Banner style --}}
+        <div>
+            <p class="text-sm font-medium mb-2" style="color:#8B949E;">Atmosphere banner <span class="font-normal opacity-70">(optional)</span></p>
+            @php
+                $bannerOptions = [
+                    'rain_window' => ['label' => 'Rain window', 'gradient' => 'linear-gradient(135deg, #1a1f2e 0%, #252b3a 50%, #1e2332 100%)'],
+                    'forest'      => ['label' => 'Forest',      'gradient' => 'linear-gradient(135deg, #0d1f17 0%, #132a1e 50%, #0f2218 100%)'],
+                    'night_sky'   => ['label' => 'Night sky',   'gradient' => 'linear-gradient(135deg, #0a0d1a 0%, #141829 50%, #0d1020 100%)'],
+                    'cozy_room'   => ['label' => 'Cozy room',   'gradient' => 'linear-gradient(135deg, #1f1510 0%, #2a1c14 50%, #201410 100%)'],
+                    'gradient'    => ['label' => 'Soft glow',   'gradient' => 'linear-gradient(135deg, #1a1326 0%, #1e1c2e 50%, #13192a 100%)'],
+                ];
+            @endphp
+            <div class="flex gap-2 flex-wrap">
+                @foreach ($bannerOptions as $key => $option)
+                    <button type="button" wire:click="$set('bannerStyle', '{{ $bannerStyle === $key ? '' : $key }}')"
+                        class="rounded-lg transition overflow-hidden flex flex-col items-center gap-1 pb-1"
+                        style="width:76px;"
+                        title="{{ $option['label'] }}"
+                    >
+                        <span class="block w-full rounded-t-lg" style="height:32px;background:{{ $option['gradient'] }};outline:{{ $bannerStyle === $key ? '2px solid #E6EDF3' : '2px solid #30363D' }};outline-offset:-1px;border-radius:6px;"></span>
+                        <span class="text-xs" style="color:{{ $bannerStyle === $key ? '#E6EDF3' : '#8B949E' }};">{{ $option['label'] }}</span>
+                    </button>
+                @endforeach
+            </div>
+            <p class="mt-1.5 text-xs" style="color:#8B949E;">A thin strip at the top of your profile. Click again to remove.</p>
+        </div>
+
+        {{-- Conversation prompts --}}
+        <div class="space-y-3">
+            <p class="text-sm font-medium" style="color:#8B949E;">Conversation starters <span class="font-normal opacity-70">(optional)</span></p>
+            <div>
+                <label class="block text-xs mb-1" style="color:#8B949E;">Favorite comfort thing</label>
+                <input type="text" wire:model="promptComfortThing" maxlength="120"
+                    placeholder="e.g. tea, lo-fi music, blanket forts"
+                    class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
+                    style="background:#1C2333;border:1px solid {{ $errors->has('promptComfortThing') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
+                    onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+                >
+                @error('promptComfortThing') <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p> @enderror
+            </div>
+            <div>
+                <label class="block text-xs mb-1" style="color:#8B949E;">Topic I could ramble about</label>
+                <input type="text" wire:model="promptRambleTopic" maxlength="120"
+                    placeholder="e.g. game lore, obscure film, etymology"
+                    class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
+                    style="background:#1C2333;border:1px solid {{ $errors->has('promptRambleTopic') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
+                    onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+                >
+                @error('promptRambleTopic') <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p> @enderror
+            </div>
+        </div>
+
+        {{-- Social style indicators --}}
+        <div>
+            <p class="text-sm font-medium mb-2" style="color:#8B949E;">Social style <span class="font-normal opacity-70">(pick any that fit)</span></p>
+            <div class="flex flex-wrap gap-2">
+                @foreach (['quiet_chatter' => 'Quiet chatter', 'mostly_listening' => 'Mostly listening', 'slow_replies' => 'Slow replies OK', 'deep_talks' => 'Deep talks', 'late_night' => 'Late-night person', 'introvert_friendly' => 'Introvert-friendly'] as $key => $label)
+                    <button type="button" wire:click="toggleSocialStyle('{{ $key }}')"
+                        class="px-3 py-1.5 rounded-full text-xs transition"
+                        style="{{ in_array($key, $socialStyles) ? 'background:rgba(29,158,117,0.12);color:#1D9E75;border:1px solid rgba(29,158,117,0.35);' : 'background:#1C2333;color:#8B949E;border:1px solid #30363D;' }}"
+                    >{{ $label }}</button>
+                @endforeach
+            </div>
+            <p class="mt-1.5 text-xs" style="color:#8B949E;">Shown as quiet labels on your profile. Helps people know how you like to connect.</p>
+        </div>
+
+        @if ($expressionMessage)
+            <p class="text-sm" style="color:#1D9E75;">{{ $expressionMessage }}</p>
+        @endif
+
+        <button type="button" wire:click="saveExpression" wire:loading.attr="disabled" wire:target="saveExpression"
+            class="px-5 py-2 text-sm font-semibold rounded-lg transition disabled:opacity-50"
+            style="background:#1D9E75;color:#fff;" onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'"
+        >
+            <span wire:loading.remove wire:target="saveExpression">Save your space</span>
+            <span wire:loading wire:target="saveExpression">Saving…</span>
+        </button>
+    </section>
+
+    {{-- ── SECTION 8 — Read Receipts ────────────────── --}}
     <section class="space-y-4">
         <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:#8B949E;border-color:#30363D;">Read Receipts</h2>
 
@@ -375,5 +489,15 @@
             >Save</button>
         </div>
     </section>
+
+    <div class="mt-8 pt-5 border-t text-center" style="border-color:#21262D;">
+        <a
+            href="{{ route('report') }}"
+            wire:navigate
+            class="text-xs transition"
+            style="color:#3d4451;"
+            onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'"
+        >Report a problem</a>
+    </div>
 
 </div>

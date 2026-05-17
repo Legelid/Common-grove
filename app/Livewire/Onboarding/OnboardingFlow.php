@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Livewire\Onboarding;
 
+use App\Models\Category;
+use App\Models\Subcategory;
 use App\Models\Tag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +19,8 @@ class OnboardingFlow extends Component
     public int $step = 1;
 
     public string $displayName = '';
+
+    public ?int $onboardingCategoryId = null;
 
     /** @var list<string> */
     public array $selectedInterestIds = [];
@@ -53,21 +57,34 @@ class OnboardingFlow extends Component
     // ── Computed ──────────────────────────────────────────────────────────────
 
     /**
-     * @return Collection<int, Tag>
+     * @return Collection<int, Category>
      */
     #[Computed]
-    public function interestTags(): Collection
+    public function interestCategories(): Collection
     {
-        return Tag::approved()->ofType('interest')->orderBy('name')->get();
+        return Category::where('is_active', true)
+            ->where('slug', '!=', 'identity-support-shared-experiences')
+            ->orderBy('sort_order')
+            ->get();
     }
 
     /**
-     * @return Collection<string, Collection<int, Tag>>
+     * Subcategories with their interest tags for the selected onboarding category.
+     *
+     * @return Collection<int, Subcategory>
      */
     #[Computed]
-    public function interestTagsByCategory(): Collection
+    public function onboardingSubcats(): Collection
     {
-        return $this->interestTags->groupBy('category');
+        if ($this->onboardingCategoryId === null) {
+            return collect();
+        }
+
+        return Subcategory::where('category_id', $this->onboardingCategoryId)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->with(['tags' => fn ($q) => $q->approved()->ofType('interest')->orderBy('name')])
+            ->get();
     }
 
     /**
@@ -77,6 +94,12 @@ class OnboardingFlow extends Component
     public function experienceTags(): Collection
     {
         return Tag::approved()->ofType('shared_experience')->orderBy('name')->get();
+    }
+
+    public function setOnboardingCategory(?int $categoryId): void
+    {
+        $this->onboardingCategoryId = $this->onboardingCategoryId === $categoryId ? null : $categoryId;
+        unset($this->onboardingSubcats);
     }
 
     // ── Step navigation ───────────────────────────────────────────────────────

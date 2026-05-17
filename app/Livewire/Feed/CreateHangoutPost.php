@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Livewire\Feed;
 
+use App\Models\Category;
 use App\Models\HangoutPost;
+use App\Models\Subcategory;
 use App\Models\Tag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -35,6 +37,16 @@ class CreateHangoutPost extends Component
     /** @var list<string> Vibe tag IDs (optional, up to 3) */
     public array $selectedVibeIds = [];
 
+    /** Title for persistent rooms (required when postType === 'room'). */
+    public string $roomTitle = '';
+
+    /** Guided category browser state for the Interests section. */
+    public ?int $tagCategoryId = null;
+
+    public ?int $tagSubcategoryId = null;
+
+    public string $tagSearch = '';
+
     public bool $confirmNoBranding = false;
 
     public bool $hasUrlWarning = false;
@@ -43,22 +55,105 @@ class CreateHangoutPost extends Component
 
     public function selectType(string $type): void
     {
-        $this->postType       = $type;
+        $this->postType         = $type;
         $this->roomLimitMessage = null;
 
-        if ($type === 'room') {
+        if ($type === 'room' && ! Auth::user()->is_admin) {
             $this->checkRoomLimit();
         }
     }
 
+    // ── Guided interest tag browser ───────────────────────────────────────────
+
+    /** @return Collection<int, Category> */
+    #[Computed]
+    public function tagCategories(): Collection
+    {
+        return Category::where('is_active', true)->orderBy('sort_order')->get();
+    }
+
+    /** @return Collection<int, Subcategory> */
+    #[Computed]
+    public function tagSubcategories(): Collection
+    {
+        if ($this->tagCategoryId === null) {
+            return collect();
+        }
+
+        return Subcategory::where('category_id', $this->tagCategoryId)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+    }
+
     /**
+     * Tags to display in the interest browser.
+     * — Search ≥ 2 chars → global results (≤ 24)
+     * — Subcategory set  → that subcategory's tags
+     * — Category set     → top tags for that category (≤ 40)
+     * — Nothing set      → empty (category list shown instead)
+     *
      * @return Collection<int, Tag>
      */
     #[Computed]
-    public function interestTags(): Collection
+    public function tagSelectionTags(): Collection
     {
-        return Tag::approved()->ofType('interest')->orderBy('name')->get();
+        if (strlen($this->tagSearch) < 2 && $this->tagCategoryId === null) {
+            return collect();
+        }
+
+        if (strlen($this->tagSearch) >= 2) {
+            $tags = Tag::approved()
+                ->ofType('interest')
+                ->where('name', 'like', '%' . $this->tagSearch . '%')
+                ->orderByDesc('usage_count')
+                ->orderBy('name')
+                ->limit(24)
+                ->get();
+        } elseif ($this->tagSubcategoryId !== null) {
+            $tags = Tag::approved()
+                ->ofType('interest')
+                ->where('subcategory_id', $this->tagSubcategoryId)
+                ->orderByDesc('usage_count')
+                ->orderBy('name')
+                ->get();
+        } else {
+            $tags = Tag::approved()
+                ->ofType('interest')
+                ->where('category_id', $this->tagCategoryId)
+                ->orderByDesc('usage_count')
+                ->orderBy('name')
+                ->limit(40)
+                ->get();
+        }
+
+        return $tags->sortBy(fn (Tag $tag): array => [
+            in_array($tag->id, $this->selectedTagIds, true) ? 0 : 1,
+            -$tag->usage_count,
+            $tag->name,
+        ])->values();
     }
+
+    public function setTagCategory(int $categoryId): void
+    {
+        $this->tagCategoryId    = $this->tagCategoryId === $categoryId ? null : $categoryId;
+        $this->tagSubcategoryId = null;
+        $this->tagSearch        = '';
+    }
+
+    public function setTagSubcategory(int $subcategoryId): void
+    {
+        $this->tagSubcategoryId = $this->tagSubcategoryId === $subcategoryId ? null : $subcategoryId;
+    }
+
+    public function clearTagNav(): void
+    {
+        $this->tagCategoryId    = null;
+        $this->tagSubcategoryId = null;
+        $this->tagSearch        = '';
+    }
+
+    // ── Shared experience and vibe tags ───────────────────────────────────────
 
     /**
      * @return Collection<int, Tag>
@@ -117,6 +212,7 @@ class CreateHangoutPost extends Component
     {
         $this->validate([
             'postType'                   => ['required', 'in:hangout,room'],
+            'roomTitle'                  => ['required_if:postType,room', 'nullable', 'string', 'min:1', 'max:60'],
             'duration'                   => ['required_if:postType,hangout', 'in:1,4,12,24'],
             'content'                    => ['required', 'string', 'max:280'],
             'selectedTagIds'             => ['required', 'array', 'min:1', 'max:5'],
@@ -129,6 +225,8 @@ class CreateHangoutPost extends Component
         ], [
             'postType.required'          => 'Please choose a type.',
             'postType.in'                => 'Please choose a valid type.',
+            'roomTitle.required_if'      => 'Please give your room a name.',
+            'roomTitle.max'              => 'Room name must be 60 characters or less.',
             'content.required'           => 'Your post cannot be empty.',
             'selectedTagIds.required'    => 'Pick at least one tag.',
             'selectedTagIds.min'         => 'Pick at least one tag.',
@@ -169,6 +267,7 @@ class CreateHangoutPost extends Component
 
         $post = HangoutPost::create([
             'user_id'       => Auth::id(),
+            'title'         => $isPersistent ? trim($this->roomTitle) : null,
             'content'       => $trimmed,
             'is_persistent' => $isPersistent,
             'is_official'   => false,
@@ -191,14 +290,21 @@ class CreateHangoutPost extends Component
     /**
      * Check whether the user has hit the persistent room creation limit.
      * Sets $roomLimitMessage and returns true if the limit has been reached.
+     * Admins always return false (unlimited).
      */
     private function checkRoomLimit(): bool
     {
-        $user  = Auth::user();
+        $user = Auth::user();
+
+        if ($user->is_admin) {
+            return false;
+        }
+
         $limit = $user->is_supporter ? self::SUPPORTER_ROOM_LIMIT : self::FREE_ROOM_LIMIT;
 
         $existing = HangoutPost::where('user_id', $user->id)
             ->where('is_persistent', true)
+            ->where('is_official', false)
             ->count();
 
         if ($existing >= $limit) {

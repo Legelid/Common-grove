@@ -21,11 +21,13 @@ class HangoutPost extends Model
 
     protected $fillable = [
         'user_id',
+        'title',
         'content',
         'expires_at',
         'is_active',
         'is_persistent',
         'is_official',
+        'icon',
         'joined_count',
     ];
 

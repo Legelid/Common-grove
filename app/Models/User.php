@@ -56,6 +56,13 @@ class User extends Authenticatable implements MustVerifyEmail
         // Group 10 — onboarding
         'onboarding_completed',
         'comfort_preferences',
+        // Profile expression
+        'profile_status',
+        'accent_color',
+        'banner_style',
+        'prompt_comfort_thing',
+        'prompt_ramble_topic',
+        'social_styles',
     ];
 
     /** @var list<string> */
@@ -85,6 +92,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'show_official_rooms'           => 'boolean',
             'onboarding_completed'          => 'boolean',
             'comfort_preferences'        => 'array',
+            'social_styles'              => 'array',
         ];
     }
 
@@ -96,7 +104,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * Returns the appropriate name to show others, based on identity_mode.
      *
      * Mode 1 — gamertag only
-     * Mode 2 — gamertag · goes by display_name (if set)
+     * Mode 2 — gamertag only (preferred name shown as a tooltip via preferred_name)
      * Mode 3 — display_name if set, else gamertag
      *
      * Reads the raw database value via $this->attributes to avoid recursion.
@@ -106,10 +114,23 @@ class User extends Authenticatable implements MustVerifyEmail
         $raw = $this->attributes['display_name'] ?? null;
 
         return match ($this->identity_mode) {
-            2       => $raw ? $this->gamertag . ' · goes by ' . $raw : $this->gamertag,
+            2       => $this->gamertag,
             3       => $raw ?? $this->gamertag,
             default => $this->gamertag,
         };
+    }
+
+    /**
+     * Returns the stored display name for mode-2 users only.
+     * Consumed by the x-user-name component to render a "Prefers X" tooltip.
+     */
+    public function getPreferredNameAttribute(): ?string
+    {
+        if ($this->identity_mode !== 2) {
+            return null;
+        }
+
+        return $this->attributes['display_name'] ?? null;
     }
 
     /**

@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Low-stimulation mode: kill all motion ────────────────────────────────── */
+.low-stimulation *,
+.low-stimulation *::before,
+.low-stimulation *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ── Account dropdown ─────────────────────────────────────────────────────── */
+.account-dropdown {
+    background-color: #161B22;
+    opacity: 1;
+}

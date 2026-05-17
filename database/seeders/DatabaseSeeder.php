@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            CommonGroveTaxonomySeeder::class,
             TagSeeder::class,
             CommonGroundDemoSeeder::class,
         ]);

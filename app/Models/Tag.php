@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Tag extends Model
@@ -20,16 +21,30 @@ class Tag extends Model
         'slug',
         'type',
         'category',
+        'category_id',
+        'subcategory_id',
         'is_curated',
         'is_approved',
         'usage_count',
     ];
 
     protected $casts = [
-        'is_curated'  => 'boolean',
-        'is_approved' => 'boolean',
-        'usage_count' => 'integer',
+        'is_curated'    => 'boolean',
+        'is_approved'   => 'boolean',
+        'usage_count'   => 'integer',
+        'category_id'   => 'integer',
+        'subcategory_id' => 'integer',
     ];
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function subcategory(): BelongsTo
+    {
+        return $this->belongsTo(Subcategory::class);
+    }
 
     /**
      * Users who have selected this tag.

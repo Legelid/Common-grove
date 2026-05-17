@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Livewire\Tags;
 
+use App\Models\Category;
+use App\Models\Subcategory;
 use App\Models\Tag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +20,8 @@ class TagSelector extends Component
 
     /** @var list<string> IDs of currently selected tags */
     public array $selectedTagIds = [];
+
+    public ?int $activeCategoryId = null;
 
     public string $customTagName = '';
 
@@ -36,36 +40,76 @@ class TagSelector extends Component
     }
 
     /**
-     * Top 10 approved curated tags by usage_count.
+     * All active categories, ordered for display.
+     *
+     * @return Collection<int, Category>
+     */
+    #[Computed]
+    public function categories(): Collection
+    {
+        return Category::where('is_active', true)->orderBy('sort_order')->get();
+    }
+
+    /**
+     * Subcategories with their tags for the active category, or search results.
+     *
+     * @return Collection<int, Subcategory>
+     */
+    #[Computed]
+    public function subcategoriesWithTags(): Collection
+    {
+        $searching = trim($this->search) !== '';
+
+        if (! $searching && $this->activeCategoryId === null) {
+            return collect();
+        }
+
+        if ($searching) {
+            return Subcategory::where('is_active', true)
+                ->whereHas('tags', fn ($q) => $q
+                    ->approved()
+                    ->ofType('interest')
+                    ->where('name', 'like', '%' . $this->search . '%')
+                )
+                ->with(['tags' => fn ($q) => $q
+                    ->approved()
+                    ->ofType('interest')
+                    ->where('name', 'like', '%' . $this->search . '%')
+                    ->orderBy('name')
+                ])
+                ->orderBy('sort_order')
+                ->get();
+        }
+
+        return Subcategory::where('category_id', $this->activeCategoryId)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->with(['tags' => fn ($q) => $q->approved()->ofType('interest')->orderBy('name')])
+            ->get();
+    }
+
+    /**
+     * Tags the user has already selected, for display in the selection bar.
      *
      * @return Collection<int, Tag>
      */
     #[Computed]
-    public function popularTags(): Collection
+    public function selectedTags(): Collection
     {
-        return Tag::approved()->popular()->get();
-    }
-
-    /**
-     * Approved curated tags grouped by category, filtered by search.
-     *
-     * @return Collection<string, Collection<int, Tag>>
-     */
-    #[Computed]
-    public function tagsByCategory(): Collection
-    {
-        $query = Tag::approved()->orderBy('name');
-
-        if (trim($this->search) !== '') {
-            $query->where('name', 'like', '%' . $this->search . '%');
+        if (empty($this->selectedTagIds)) {
+            return collect();
         }
 
-        return $query->get()->groupBy('category');
+        return Tag::whereIn('id', $this->selectedTagIds)->orderBy('name')->get();
     }
 
-    /**
-     * Toggle a tag selected or unselected.
-     */
+    public function setCategory(?int $categoryId): void
+    {
+        $this->activeCategoryId = $this->activeCategoryId === $categoryId ? null : $categoryId;
+        $this->search = '';
+        $this->maxTagsMessage = null;
+    }
+
     public function toggleTag(string $tagId): void
     {
         $this->maxTagsMessage = null;
@@ -93,9 +137,6 @@ class TagSelector extends Component
         }
     }
 
-    /**
-     * Persist the current selection and surface a success message.
-     */
     public function save(): void
     {
         if (count($this->selectedTagIds) < 3) {
@@ -103,9 +144,7 @@ class TagSelector extends Component
             return;
         }
 
-        // Final reconcile — syncs pivot to match selectedTagIds without touching usage_count
-        $current = Auth::user()->tags()->pluck('tags.id')->toArray();
-
+        $current  = Auth::user()->tags()->pluck('tags.id')->toArray();
         $toAttach = array_diff($this->selectedTagIds, $current);
         $toDetach = array_diff($current, $this->selectedTagIds);
 
@@ -126,9 +165,6 @@ class TagSelector extends Component
         $this->saveMessage = 'Your interests have been saved!';
     }
 
-    /**
-     * Submit a user-created tag for moderation.
-     */
     public function submitCustomTag(): void
     {
         $this->customTagMessage = null;
@@ -156,6 +192,7 @@ class TagSelector extends Component
         Tag::create([
             'name'        => $name,
             'slug'        => $slug,
+            'type'        => 'interest',
             'category'    => 'User Submitted',
             'is_curated'  => false,
             'is_approved' => false,

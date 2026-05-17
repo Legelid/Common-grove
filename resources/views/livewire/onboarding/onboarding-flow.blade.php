@@ -80,39 +80,77 @@
             <div class="space-y-2">
                 <h1 class="text-xl font-bold" style="color:#E6EDF3;">What kinds of things feel like you?</h1>
                 <p class="text-sm leading-relaxed" style="color:#8B949E;">
-                    Pick whatever feels right — this helps us find better spaces for you.
-                    <br>You don't need to explain yourself.
+                    Pick a category, then choose whatever feels right.
+                    You don't need to explain yourself.
                 </p>
             </div>
 
             {{-- Counter --}}
             <div class="flex items-center gap-2">
                 <span class="text-xs" style="color:#8B949E;">{{ count($selectedInterestIds) }} selected</span>
-                @if (count($selectedInterestIds) < 3 && count($selectedInterestIds) > 0)
+                @if (count($selectedInterestIds) > 0 && count($selectedInterestIds) < 3)
                     <span class="text-xs" style="color:#D29922;">— a few more helps us find better rooms</span>
-                @elseif (count($selectedInterestIds) === 0)
-                    <span class="text-xs" style="color:#8B949E;">— a few interests help us find better rooms for you</span>
                 @endif
             </div>
 
-            {{-- Tags by category --}}
-            <div class="space-y-5 max-h-80 overflow-y-auto pr-1" style="scrollbar-width:thin;scrollbar-color:#30363D transparent;">
-                @foreach ($this->interestTagsByCategory as $category => $tags)
-                    <div wire:key="cat-{{ Str::slug($category) }}">
-                        <p class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#8B949E;">{{ $category }}</p>
-                        <div class="flex flex-wrap gap-2">
-                            @foreach ($tags as $tag)
-                                <x-tag-bubble
-                                    :label="$tag->name"
-                                    :selected="in_array($tag->id, $selectedInterestIds)"
-                                    wire:click="toggleInterest('{{ $tag->id }}')"
-                                    wire:key="int-{{ $tag->id }}"
-                                />
-                            @endforeach
-                        </div>
-                    </div>
+            {{-- Category chips --}}
+            <div class="flex flex-wrap gap-2">
+                @foreach ($this->interestCategories as $cat)
+                    <button
+                        type="button"
+                        wire:click="setOnboardingCategory({{ $cat->id }})"
+                        wire:key="onb-cat-{{ $cat->id }}"
+                        class="px-3.5 py-1.5 rounded-full text-sm font-medium transition"
+                        style="{{ $onboardingCategoryId === $cat->id
+                            ? 'background:#1D9E75;color:#fff;'
+                            : 'background:#21262D;color:#8B949E;border:1px solid #30363D;' }}"
+                        onmouseover="{{ $onboardingCategoryId === $cat->id ? '' : "this.style.color='#E6EDF3'" }}"
+                        onmouseout="{{ $onboardingCategoryId === $cat->id ? '' : "this.style.color='#8B949E'" }}"
+                    >{{ $cat->name }}</button>
                 @endforeach
             </div>
+
+            {{-- Subcategory tags for the selected category --}}
+            @if ($this->onboardingSubcats->isNotEmpty())
+                <div class="space-y-4 max-h-72 overflow-y-auto pr-1" style="scrollbar-width:thin;scrollbar-color:#30363D transparent;">
+                    @foreach ($this->onboardingSubcats as $subcat)
+                        @if ($subcat->tags->isNotEmpty())
+                            <div wire:key="onb-sub-{{ $subcat->id }}" x-data="{ showAll: false }">
+                                <p class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#6B737C;">{{ $subcat->name }}</p>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($subcat->tags->take(8) as $tag)
+                                        <x-tag-bubble
+                                            :label="$tag->name"
+                                            :selected="in_array($tag->id, $selectedInterestIds)"
+                                            wire:click="toggleInterest('{{ $tag->id }}')"
+                                            wire:key="int-{{ $tag->id }}"
+                                        />
+                                    @endforeach
+                                    @foreach ($subcat->tags->skip(8) as $tag)
+                                        <span x-show="showAll">
+                                            <x-tag-bubble
+                                                :label="$tag->name"
+                                                :selected="in_array($tag->id, $selectedInterestIds)"
+                                                wire:click="toggleInterest('{{ $tag->id }}')"
+                                                wire:key="int-{{ $tag->id }}"
+                                            />
+                                        </span>
+                                    @endforeach
+                                </div>
+                                @if ($subcat->tags->count() > 8)
+                                    <button type="button" @click="showAll = !showAll"
+                                        class="mt-1.5 text-xs transition" style="color:#3d4451;"
+                                        onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'"
+                                        x-text="showAll ? 'Show less' : 'See {{ $subcat->tags->count() - 8 }} more…'"
+                                    ></button>
+                                @endif
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+            @elseif ($onboardingCategoryId === null)
+                <p class="text-sm" style="color:#3d4451;">Pick a category above to see interests.</p>
+            @endif
 
             <div class="flex gap-3 pt-2">
                 <button type="button" wire:click="back" class="flex-none px-5 py-2.5 rounded-xl text-sm font-medium transition" style="background:#21262D;color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'">Back</button>

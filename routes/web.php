@@ -7,11 +7,13 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Livewire\Admin\CrisisLog;
 use App\Livewire\Admin\Dashboard as AdminDashboard;
 use App\Livewire\Admin\PlatformStats;
+use App\Livewire\Admin\ProblemReports as AdminProblemReports;
 use App\Livewire\Admin\ReportsQueue;
 use App\Livewire\Admin\TagModeration;
 use App\Livewire\Admin\UserManagement;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use App\Livewire\Reports\ProblemReportForm;
 use App\Livewire\Feed\CreateHangoutPost;
 use App\Livewire\Feed\HangoutFeed;
 use App\Livewire\Friends\FriendsList;
@@ -49,6 +51,8 @@ Route::get('/dev-login', function () {
 Route::view('/', 'landing')->name('home');
 Route::view('/privacy', 'privacy')->name('privacy');
 Route::view('/terms', 'terms')->name('terms');
+Route::view('/guidelines', 'guidelines')->name('guidelines');
+Route::get('/report', ProblemReportForm::class)->name('report');
 
 // Registration
 Route::get('/register', Register::class)->name('register');
@@ -172,9 +176,20 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
 
     Route::get('/', AdminDashboard::class)->name('admin.dashboard');
     Route::get('/reports', ReportsQueue::class)->name('admin.reports');
+    Route::get('/problem-reports', AdminProblemReports::class)->name('admin.problem-reports');
     Route::get('/users', UserManagement::class)->name('admin.users');
     Route::get('/tags', TagModeration::class)->name('admin.tags');
     Route::get('/stats', PlatformStats::class)->name('admin.stats');
     Route::get('/crisis', CrisisLog::class)->name('admin.crisis');
+
+    Route::get('/problem-reports/{id}/screenshot', function (string $id) {
+        $report = \App\Models\ProblemReport::findOrFail($id);
+        abort_if(! $report->screenshot_path, 404);
+
+        $path = storage_path('app/' . $report->screenshot_path);
+        abort_if(! file_exists($path), 404);
+
+        return response()->file($path);
+    })->name('admin.problem-reports.screenshot');
 
 });

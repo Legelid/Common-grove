@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Livewire\Feed;
 
 use App\Livewire\Rooms\PinnedRoomsSidebar;
+use App\Models\Category;
 use App\Models\Conversation;
 use App\Models\HangoutPost;
 use App\Models\PinnedRoom;
+use App\Models\Subcategory;
 use App\Models\Tag;
 use App\Services\BlockService;
 use Illuminate\Support\Collection;
@@ -25,38 +27,107 @@ class HangoutFeed extends Component
     /** @var list<string> Tag IDs currently selected in the filter panel. */
     public array $selectedFilterTagIds = [];
 
+    /** Category drill-down navigation (panel UI state only, not part of the feed query). */
+    public ?int $filterCategoryId = null;
+
+    /** Subcategory filter within the selected category. */
+    public ?int $filterSubcategoryId = null;
+
+    /** Free-text search query inside the filter panel. */
+    public string $filterSearch = '';
+
     public ?string $joinMessage = null;
 
     public ?string $pinToast = null;
 
-    // ── Computed ──────────────────────────────────────────────────────────────
+    // ── Filter panel — categories & tags ─────────────────────────────────────
 
-    /**
-     * @return Collection<int, Tag>
-     */
+    /** @return Collection<int, Category> */
     #[Computed]
-    public function filterInterestTags(): Collection
+    public function filterCategories(): Collection
     {
-        return Tag::approved()->ofType('interest')->orderByDesc('usage_count')->orderBy('name')->limit(24)->get();
+        return Category::where('is_active', true)->orderBy('sort_order')->get();
+    }
+
+    /** @return Collection<int, Subcategory> */
+    #[Computed]
+    public function filterSubcategories(): Collection
+    {
+        if ($this->filterCategoryId === null) {
+            return collect();
+        }
+
+        return Subcategory::where('category_id', $this->filterCategoryId)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
     }
 
     /**
+     * Tags to display in the panel.
+     * — Non-empty search  → global search results (≤ 24 tags)
+     * — Subcategory set   → that subcategory's tags
+     * — Category set      → top tags for that category (≤ 40)
+     * — Nothing set       → empty (category list is shown instead)
+     *
+     * Sorted: currently-selected first, then user's profile interests, then usage desc, then alpha.
+     *
      * @return Collection<int, Tag>
      */
     #[Computed]
-    public function filterExperienceTags(): Collection
+    public function filterTags(): Collection
     {
-        return Tag::approved()->ofType('shared_experience')->orderBy('name')->get();
+        if (strlen($this->filterSearch) < 2 && $this->filterCategoryId === null) {
+            return collect();
+        }
+
+        $userTagIds = Auth::user()->tags()->pluck('tag_id')->flip()->all();
+
+        if (strlen($this->filterSearch) >= 2) {
+            $tags = Tag::approved()
+                ->where('name', 'like', '%' . $this->filterSearch . '%')
+                ->orderByDesc('usage_count')
+                ->orderBy('name')
+                ->limit(24)
+                ->get();
+        } elseif ($this->filterSubcategoryId !== null) {
+            $tags = Tag::approved()
+                ->where('subcategory_id', $this->filterSubcategoryId)
+                ->orderByDesc('usage_count')
+                ->orderBy('name')
+                ->get();
+        } else {
+            $tags = Tag::approved()
+                ->where('category_id', $this->filterCategoryId)
+                ->orderByDesc('usage_count')
+                ->orderBy('name')
+                ->limit(40)
+                ->get();
+        }
+
+        return $tags->sortBy(fn (Tag $tag): array => [
+            in_array($tag->id, $this->selectedFilterTagIds, true) ? 0 : (isset($userTagIds[$tag->id]) ? 1 : 2),
+            -$tag->usage_count,
+            $tag->name,
+        ])->values();
     }
 
     /**
+     * Tags currently active as feed filters — used to display and remove them.
+     *
      * @return Collection<int, Tag>
      */
     #[Computed]
-    public function filterVibeTags(): Collection
+    public function activeFilterTags(): Collection
     {
-        return Tag::approved()->ofType('vibe')->orderBy('name')->get();
+        if (empty($this->selectedFilterTagIds)) {
+            return collect();
+        }
+
+        return Tag::whereIn('id', $this->selectedFilterTagIds)->orderBy('name')->get();
     }
+
+    // ── Feed ──────────────────────────────────────────────────────────────────
 
     /**
      * Official CommonGrove starter rooms, shown when the user hasn't opted out.
@@ -82,8 +153,6 @@ class HangoutFeed extends Component
      * Posts scored and sorted by how many selected filter tags they match.
      * Falls back to the user's interest-filtered feed when no filters are active.
      *
-     * Eagerly loads the associated conversation so pin state can be checked per card.
-     *
      * @return Collection<int, HangoutPost>
      */
     #[Computed]
@@ -91,6 +160,7 @@ class HangoutFeed extends Component
     {
         if (empty($this->selectedFilterTagIds)) {
             return HangoutPost::active()
+                ->where('is_official', false)
                 ->forUser(Auth::user())
                 ->with(['user', 'tags', 'conversation'])
                 ->latest()
@@ -98,13 +168,13 @@ class HangoutFeed extends Component
                 ->get();
         }
 
-        // Score posts by number of matching filter tags using a subquery.
         $scoreSubquery = DB::table('hangout_post_tags')
             ->selectRaw('hangout_post_id, COUNT(*) as match_score')
             ->whereIn('tag_id', $this->selectedFilterTagIds)
             ->groupBy('hangout_post_id');
 
         $posts = HangoutPost::active()
+            ->where('is_official', false)
             ->with(['user', 'tags', 'conversation'])
             ->joinSub($scoreSubquery, 'scores', 'hangout_posts.id', '=', 'scores.hangout_post_id')
             ->select('hangout_posts.*', 'scores.match_score')
@@ -126,11 +196,7 @@ class HangoutFeed extends Component
         return $posts->reject(fn ($p) => $blocked->contains($p->user_id))->values();
     }
 
-    /**
-     * Conversation IDs the current user has pinned, for fast per-card lookup.
-     *
-     * @return list<string>
-     */
+    /** @return list<string> */
     #[Computed]
     public function pinnedConversationIds(): array
     {
@@ -139,25 +205,38 @@ class HangoutFeed extends Component
             ->all();
     }
 
-    /**
-     * True when filters are active but produced no results.
-     */
     #[Computed]
     public function showingFallback(): bool
     {
         return ! empty($this->selectedFilterTagIds) && $this->posts->isEmpty();
     }
 
-    /**
-     * True when filters are active and showing scored results.
-     */
     #[Computed]
     public function filtersActive(): bool
     {
         return ! empty($this->selectedFilterTagIds);
     }
 
-    // ── Actions ───────────────────────────────────────────────────────────────
+    // ── Filter panel actions ──────────────────────────────────────────────────
+
+    public function setFilterCategory(int $categoryId): void
+    {
+        $this->filterCategoryId    = $this->filterCategoryId === $categoryId ? null : $categoryId;
+        $this->filterSubcategoryId = null;
+        $this->filterSearch        = '';
+    }
+
+    public function setFilterSubcategory(int $subcategoryId): void
+    {
+        $this->filterSubcategoryId = $this->filterSubcategoryId === $subcategoryId ? null : $subcategoryId;
+    }
+
+    public function clearFilterNav(): void
+    {
+        $this->filterCategoryId    = null;
+        $this->filterSubcategoryId = null;
+        $this->filterSearch        = '';
+    }
 
     public function toggleFilter(string $tagId): void
     {
@@ -174,6 +253,8 @@ class HangoutFeed extends Component
     {
         $this->selectedFilterTagIds = [];
     }
+
+    // ── Room actions ──────────────────────────────────────────────────────────
 
     public function joinHangout(string $postId): void
     {
@@ -207,11 +288,6 @@ class HangoutFeed extends Component
         $this->redirect(route('room.show', $conversation->id), navigate: true);
     }
 
-    /**
-     * Pin or unpin a room from a feed card.
-     * Creates the conversation (and makes the user a participant) if it doesn't exist yet,
-     * so the room is accessible immediately when navigated to from the sidebar.
-     */
     public function toggleCardPin(string $postId): void
     {
         $this->pinToast = null;
@@ -236,7 +312,6 @@ class HangoutFeed extends Component
             ]
         );
 
-        // Ensure the user is a participant so ConversationPolicy::view passes when they navigate.
         $isParticipant = $conversation->participants()
             ->where('conversation_participants.user_id', Auth::id())
             ->exists();
@@ -244,7 +319,6 @@ class HangoutFeed extends Component
         if (! $isParticipant) {
             $conversation->participants()->attach(Auth::id(), ['joined_at' => now()]);
         } else {
-            // Clear left_at if they had previously left
             $conversation->participants()->updateExistingPivot(Auth::id(), ['left_at' => null]);
         }
 
