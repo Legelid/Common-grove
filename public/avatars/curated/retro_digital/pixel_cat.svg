@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#0C1020"/>
+  <rect x="28" y="28" width="44" height="36" rx="4" fill="#9890C8"/>
+  <rect x="28" y="18" width="14" height="14" rx="2" fill="#9890C8"/>
+  <rect x="58" y="18" width="14" height="14" rx="2" fill="#9890C8"/>
+  <rect x="31" y="21" width="8" height="8" fill="#C0A8D8"/>
+  <rect x="61" y="21" width="8" height="8" fill="#C0A8D8"/>
+  <rect x="34" y="38" width="10" height="10" rx="2" fill="#1A1430"/>
+  <rect x="56" y="38" width="10" height="10" rx="2" fill="#1A1430"/>
+  <rect x="36" y="40" width="4" height="4" fill="#60A8E8"/>
+  <rect x="58" y="40" width="4" height="4" fill="#60A8E8"/>
+  <rect x="47" y="51" width="6" height="5" rx="2" fill="#D080A8"/>
+  <rect x="42" y="56" width="5" height="2" rx="1" fill="#9890C8" opacity="0.5"/>
+  <rect x="53" y="56" width="5" height="2" rx="1" fill="#9890C8" opacity="0.5"/>
+  <rect x="32" y="63" width="36" height="22" rx="4" fill="#9890C8"/>
+  <path d="M68 72 Q80 68 82 80 Q84 88 76 86" stroke="#9890C8" stroke-width="7" fill="none" stroke-linecap="round"/>
+</svg>

@@ -22,6 +22,8 @@ class OnboardingFlow extends Component
 
     public ?int $onboardingCategoryId = null;
 
+    public string $onboardingSearch = '';
+
     /** @var list<string> */
     public array $selectedInterestIds = [];
 
@@ -88,6 +90,28 @@ class OnboardingFlow extends Component
     }
 
     /**
+     * Tags matching the onboarding search query across all interest categories.
+     *
+     * @return Collection<int, Tag>
+     */
+    #[Computed]
+    public function onboardingSearchResults(): Collection
+    {
+        $q = trim($this->onboardingSearch);
+
+        if ($q === '') {
+            return collect();
+        }
+
+        return Tag::approved()
+            ->ofType('interest')
+            ->where('name', 'like', '%' . $q . '%')
+            ->orderBy('name')
+            ->limit(40)
+            ->get();
+    }
+
+    /**
      * @return Collection<int, Tag>
      */
     #[Computed]
@@ -99,7 +123,9 @@ class OnboardingFlow extends Component
     public function setOnboardingCategory(?int $categoryId): void
     {
         $this->onboardingCategoryId = $this->onboardingCategoryId === $categoryId ? null : $categoryId;
+        $this->onboardingSearch     = '';
         unset($this->onboardingSubcats);
+        unset($this->onboardingSearchResults);
     }
 
     // ── Step navigation ───────────────────────────────────────────────────────
@@ -202,7 +228,7 @@ class OnboardingFlow extends Component
             }
         });
 
-        $this->redirect(route('feed'), navigate: true);
+        $this->redirect(route('feed'));
     }
 
     public function render(): View

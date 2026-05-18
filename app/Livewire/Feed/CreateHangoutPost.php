@@ -17,6 +17,7 @@ use Livewire\Component;
 
 class CreateHangoutPost extends Component
 {
+    /** @deprecated Use $user->persistentRoomLimit() — kept for any view references. */
     public const FREE_ROOM_LIMIT      = 3;
     public const SUPPORTER_ROOM_LIMIT = 10;
 
@@ -300,7 +301,7 @@ class CreateHangoutPost extends Component
             return false;
         }
 
-        $limit = $user->is_supporter ? self::SUPPORTER_ROOM_LIMIT : self::FREE_ROOM_LIMIT;
+        $limit = $user->persistentRoomLimit();
 
         $existing = HangoutPost::where('user_id', $user->id)
             ->where('is_persistent', true)

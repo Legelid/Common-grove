@@ -38,6 +38,12 @@ class DirectMessage extends Component
     public bool   $showCwInput = false;
     public string $cwLabel     = '';
 
+    public ?string $verificationBlock = null;
+
+    // DM gradient (per-user, only you see it)
+    public string $dmGradientTheme   = '';
+    public bool   $showGradientPicker = false;
+
     public function mount(string $conversationId): void
     {
         $conversation = Conversation::findOrFail($conversationId);
@@ -57,6 +63,13 @@ class DirectMessage extends Component
             ?->pivot;
 
         $this->quietMode = (bool) ($pivot?->is_muted ?? false);
+
+        // Load DM gradient preference
+        $pref = \App\Models\UserConversationPreference::where('user_id', Auth::id())
+            ->where('conversation_id', $conversationId)
+            ->first();
+
+        $this->dmGradientTheme = $pref?->gradient_theme ?? '';
     }
 
     // -------------------------------------------------------------------------
@@ -95,6 +108,11 @@ class DirectMessage extends Component
 
     public function sendMessage(): void
     {
+        if (! Auth::user()->hasVerifiedEmail()) {
+            $this->verificationBlock = 'Please verify your email before chatting.';
+            return;
+        }
+
         $rules = ['messageContent' => ['required', 'string', 'max:2000']];
 
         if ($this->showCwInput) {
@@ -235,6 +253,27 @@ class DirectMessage extends Component
 
         $this->conversation->participants()
             ->updateExistingPivot(Auth::id(), ['is_muted' => $this->quietMode]);
+    }
+
+    // -------------------------------------------------------------------------
+    // DM gradient (per-user preference, only you see it)
+    // -------------------------------------------------------------------------
+
+    public function setDmGradient(string $theme): void
+    {
+        $allowed = array_keys(config('gradients'));
+
+        if ($theme !== '' && ! in_array($theme, $allowed, true)) {
+            return;
+        }
+
+        \App\Models\UserConversationPreference::updateOrCreate(
+            ['user_id' => Auth::id(), 'conversation_id' => $this->conversationId],
+            ['gradient_theme' => $theme ?: null],
+        );
+
+        $this->dmGradientTheme   = $theme;
+        $this->showGradientPicker = false;
     }
 
     // -------------------------------------------------------------------------

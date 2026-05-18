@@ -28,6 +28,7 @@ class HangoutPost extends Model
         'is_persistent',
         'is_official',
         'icon',
+        'gradient_theme',
         'joined_count',
     ];
 

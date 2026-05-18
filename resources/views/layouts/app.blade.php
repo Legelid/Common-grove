@@ -1,9 +1,80 @@
 @php
     $isAuthPage = request()->routeIs('login', 'register', 'password.*', 'verification.*', 'home');
     $isLowStim  = auth()->check() && auth()->user()->low_stimulation_mode;
-    $bodyBg     = $isLowStim
-        ? 'background:#0D1117;'
-        : 'background:radial-gradient(ellipse 80% 50% at 50% 100%, rgba(29,158,117,0.055) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 75% 0%, rgba(8,32,58,0.20) 0%, transparent 55%), #0D1117;';
+
+    // Advanced comfort settings (supporter-only)
+    $advancedComfort = [];
+    if (auth()->check() && !$isAuthPage) {
+        $cgUser = auth()->user();
+        if ($cgUser->is_admin || $cgUser->isSupporter()) {
+            $advancedComfort = $cgUser->advanced_comfort_settings ?? [];
+        }
+    }
+    $cgHideGradients = in_array('hide_gradients', $advancedComfort, true);
+
+    // $isBirthday = it IS their birthday and the theme is enabled (regardless of low-stim)
+    $isBirthday = auth()->check()
+        && (auth()->user()->birthday_theme_enabled ?? true)
+        && auth()->user()->isBirthday();
+
+    // Full visual experience: birthday + not low-stim
+    $showBirthdayDecorations = $isBirthday && !$isLowStim;
+
+    // Holiday atmosphere (opt-out, disabled in low-stim)
+    $holiday                = null;
+    $showHolidayDecorations = false;
+    if (!$isLowStim && auth()->check() && (auth()->user()->holiday_themes_enabled ?? true)) {
+        $holiday                = app(\App\Services\HolidayThemeService::class)->currentHoliday();
+        $showHolidayDecorations = $holiday !== null;
+    }
+
+    // Tone pack phrases (personalised rotating tagline for the sidebar)
+    $tonePackPhrases = auth()->check() && !$isAuthPage
+        ? app(\App\Services\TonePackService::class)->getPhrases(auth()->user())
+        : null;
+
+    $defaultGradientCss  = 'radial-gradient(ellipse 80% 50% at 50% 100%, rgba(29,158,117,0.055) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 75% 0%, rgba(8,32,58,0.20) 0%, transparent 55%), #0D1117';
+    $birthdayGradientCss = 'radial-gradient(ellipse 65% 45% at 50% 0%, rgba(160,80,200,0.14) 0%, transparent 65%), radial-gradient(ellipse 50% 40% at 80% 90%, rgba(200,130,160,0.10) 0%, transparent 55%), #0D1117';
+
+    if ($isLowStim || $cgHideGradients) {
+        $bodyBg = 'background:#0D1117;';
+    } elseif ($showBirthdayDecorations) {
+        $bodyBg = 'background:' . $birthdayGradientCss . ';';
+    } elseif ($showHolidayDecorations) {
+        $bodyBg = 'background:' . $holiday['gradient'] . ';';
+    } elseif (auth()->check() && auth()->user()->personal_gradient_theme) {
+        $themeKey    = auth()->user()->personal_gradient_theme;
+        $gradientDef = config('gradients.' . $themeKey);
+        $isSupporter = auth()->user()->is_supporter || auth()->user()->is_admin;
+        $isLocked    = in_array($themeKey, config('supporter.gradient_packs', []), true);
+        if ($gradientDef && (! $isLocked || $isSupporter)) {
+            $bodyBg = 'background:' . $gradientDef['css'] . ';';
+        } else {
+            $bodyBg = 'background:' . $defaultGradientCss . ';';
+        }
+    } else {
+        $bodyBg = 'background:' . $defaultGradientCss . ';';
+    }
+
+    // Build body classes
+    $cgBodyClasses = ['h-full', 'antialiased'];
+    if ($isAuthPage) $cgBodyClasses[] = 'overflow-hidden';
+    if ($isLowStim)  $cgBodyClasses[] = 'low-stimulation';
+    $cgClassMap = [
+        'ultra_minimal'    => 'cg-ultra-minimal',
+        'extra_spacing'    => 'cg-extra-spacing',
+        'simple_room_cards'=> 'cg-simple-room-cards',
+        'reduce_sidebar'   => 'cg-reduce-sidebar',
+        'hide_suggestions' => 'cg-hide-suggestions',
+        'hide_phrases'     => 'cg-hide-phrases',
+        'compact_chat'     => 'cg-compact-chat',
+        'larger_text'      => 'cg-larger-text',
+    ];
+    foreach ($cgClassMap as $settingKey => $cssClass) {
+        if (in_array($settingKey, $advancedComfort, true)) {
+            $cgBodyClasses[] = $cssClass;
+        }
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full {{ $isAuthPage ? 'overflow-hidden' : '' }}">
@@ -14,8 +85,32 @@
     <title>{{ $title ?? config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    <style>
+        /* Advanced comfort controls */
+        body.cg-hide-phrases .cg-tagline,
+        body.cg-ultra-minimal .cg-tagline { display: none; }
+        body.cg-hide-suggestions .cg-suggestion-preview,
+        body.cg-ultra-minimal .cg-suggestion-preview { display: none; }
+        body.cg-simple-room-cards .cg-room-badge,
+        body.cg-ultra-minimal .cg-room-badge { display: none; }
+        body.cg-simple-room-cards .cg-room-card-tags,
+        body.cg-ultra-minimal .cg-room-card-tags { display: none; }
+        body.cg-extra-spacing .cg-chat-messages > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem; }
+        body.cg-reduce-sidebar .cg-tagline-wrap { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        body.cg-reduce-sidebar .cg-sidebar-content a { padding-top: 0.15rem; padding-bottom: 0.15rem; }
+        body.cg-reduce-sidebar .cg-sidebar-content { gap: 0.25rem; }
+        body.cg-compact-chat .cg-chat-messages > :not([hidden]) ~ :not([hidden]) { margin-top: 0.1875rem; }
+        body.cg-compact-chat .cg-msg-bubble { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+        body.low-stimulation .cg-reaction-tray,
+        body.low-stimulation .cg-reaction-picker { transition: none !important; }
+        @media (hover: none) and (pointer: coarse) {
+            .cg-room-card:active { background: #1C2333 !important; border-color: #3d4451 !important; transition: background 0.1s, border-color 0.1s; }
+            body.low-stimulation .cg-room-card:active { background: #161B22 !important; border-color: #30363D !important; }
+        }
+    </style>
 </head>
-<body class="h-full antialiased {{ $isAuthPage ? 'overflow-hidden' : '' }} {{ $isLowStim ? 'low-stimulation' : '' }}" style="{{ $bodyBg }}color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
+<body class="{{ implode(' ', $cgBodyClasses) }}" style="{{ $bodyBg }}color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
+<script>if(document.body.classList.contains('cg-larger-text')){document.documentElement.style.fontSize='17px';}</script>
 
 @if ($isAuthPage)
 
@@ -42,6 +137,9 @@
                     <span class="font-bold tracking-tight" style="color:#E6EDF3;">CommonGround</span>
                 </a>
                 <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
+                @if ($isBirthday && !$isAuthPage)
+                    <span class="text-xs hidden sm:inline" style="color:#C4A0D4;">· Happy birthday!</span>
+                @endif
             </div>
             @auth
                 <div class="relative" x-data="{ open: false }" @click.outside="open = false">
@@ -93,6 +191,15 @@
                                 onmouseout="this.style.color='#D29922';this.style.background=''"
                             >Admin Panel</a>
                         @endif
+                        <a
+                            href="{{ route('settings.supporter') }}"
+                            wire:navigate
+                            @click="open = false"
+                            class="flex items-center px-4 py-2.5 text-sm transition"
+                            style="color:#8B949E;"
+                            onmouseover="this.style.color='#E6EDF3';this.style.background='rgba(255,255,255,0.04)'"
+                            onmouseout="this.style.color='#8B949E';this.style.background=''"
+                        >Supporter</a>
                         <div class="my-1 border-t" style="border-color:#21262D;"></div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -109,22 +216,43 @@
             @endauth
         </header>
 
+        {{-- ── Email verification banner ──────────────────────────────────── --}}
+        @auth
+            @if(! auth()->user()->hasVerifiedEmail())
+                <livewire:auth.email-verification-banner />
+            @endif
+        @endauth
+
+        {{-- ── Holiday atmosphere banner ───────────────────────────────────── --}}
+        @if ($showHolidayDecorations && !$isAuthPage)
+            @include('partials.holidays.' . $holiday['id'], ['holiday' => $holiday])
+        @endif
+
+        {{-- ── Birthday banner (full experience only) ─────────────────────── --}}
+        @if ($showBirthdayDecorations && !$isAuthPage)
+            <div class="flex-none" style="background:rgba(155,75,195,0.07);border-bottom:1px solid rgba(155,75,195,0.16);" aria-live="polite">
+                <div class="flex items-center justify-center px-4 py-2" style="min-height:2.2rem;">
+                    <span style="color:#C2A0D8;font-size:0.8rem;letter-spacing:0.01em;">Hope today is kind to you.</span>
+                </div>
+            </div>
+        @endif
+
         {{-- ── 3-column body ────────────────────────────────────────────────── --}}
         <div class="flex flex-1 overflow-hidden">
 
             {{-- ── LEFT: Discovery ──────────────────────────────────────────── --}}
-            <aside class="w-52 flex-none flex flex-col border-r overflow-y-auto" style="background:#161B22;border-color:#30363D;">
+            <aside class="cg-discovery-sidebar w-52 flex-none flex flex-col border-r overflow-y-auto" style="background:#161B22;border-color:#30363D;">
 
                 {{-- Rotating tagline --}}
                 <div
-                    x-data="tagline({{ (auth()->check() && auth()->user()->low_stimulation_mode) ? 'true' : 'false' }})"
-                    class="px-4 pt-5 pb-4 border-b flex-none"
+                    x-data="tagline({{ $isLowStim ? 'true' : 'false' }}, {{ $tonePackPhrases ? \Illuminate\Support\Js::from($tonePackPhrases) : 'null' }})"
+                    class="cg-tagline-wrap px-4 pt-5 pb-4 border-b flex-none"
                     style="border-color:#21262D;"
                 >
                     <p
                         x-text="phrases[idx]"
                         :style="{ opacity: visible ? '1' : '0', transition: 'opacity 0.6s ease' }"
-                        class="text-xs leading-relaxed"
+                        class="cg-tagline text-xs leading-relaxed"
                         style="color:#8B949E;min-height:2.5rem;"
                         aria-live="polite"
                         aria-atomic="true"
@@ -133,8 +261,11 @@
 
                 {{-- Your rooms + discovery cards --}}
                 @auth
-                    <div class="px-3 py-3 space-y-2.5 overflow-y-auto">
+                    <div class="cg-sidebar-content px-3 py-3 space-y-2.5 overflow-y-auto">
                         <livewire:rooms.pinned-rooms-sidebar />
+                        @if(auth()->user()->isSupporter())
+                            <livewire:rooms.room-collections-sidebar />
+                        @endif
                         <livewire:rooms.recent-rooms-sidebar />
                         <livewire:sidebar.sidebar-discovery />
                     </div>
@@ -249,6 +380,14 @@
                             onmouseover="this.style.color='#8B949E';this.style.background='rgba(255,255,255,0.03)'"
                             onmouseout="this.style.color='#3d4451';this.style.background=''"
                         >Report a problem</a>
+                        <a
+                            href="{{ route('support') }}"
+                            wire:navigate
+                            class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition"
+                            style="color:#3d4451;"
+                            onmouseover="this.style.color='#8B949E';this.style.background='rgba(255,255,255,0.03)'"
+                            onmouseout="this.style.color='#3d4451';this.style.background=''"
+                        >Support CommonGrove</a>
                     </div>
                 @endauth
 
@@ -261,8 +400,8 @@
 
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('tagline', (lowStim) => ({
-        phrases: [
+    Alpine.data('tagline', (lowStim, customPhrases) => ({
+        phrases: customPhrases || [
             'A place to find your people',
             "You don't have to rush here",
             'Just being here is enough',

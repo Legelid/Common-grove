@@ -611,10 +611,11 @@
                             @endphp
                             <div
                                 wire:key="official-{{ $official->id }}"
-                                class="rounded-xl border flex flex-col"
+                                x-data="{ isTouch: ('ontouchstart' in window || window.matchMedia('(pointer:coarse)').matches) }"
+                                @click="if (isTouch && !$event.target.closest('[data-no-card-tap]')) $wire.joinHangout('{{ $official->id }}')"
+                                :class="isTouch ? 'cursor-pointer' : ''"
+                                class="cg-room-card rounded-xl border flex flex-col"
                                 style="background:{{ $cardBg }};border-color:{{ $cardBorder }};box-shadow:{{ $cardShadow }};"
-                                onmouseover="this.style.background='#1C2333';this.style.borderColor='#3d4451';this.style.boxShadow='{{ $hoverShadow }}';"
-                                onmouseout="this.style.background='{{ $cardBg }}';this.style.borderColor='{{ $cardBorder }}';this.style.boxShadow='{{ $cardShadow }}';"
                             >
                                 {{-- Top: icon + badge + "Always open" + pin --}}
                                 <div class="flex items-start justify-between gap-1.5 px-3 pt-3 pb-2">
@@ -648,6 +649,7 @@
                                         <span class="text-xs leading-none" style="color:#3d4451;">Always open</span>
                                     </div>
                                     <button
+                                        data-no-card-tap
                                         type="button"
                                         wire:click="toggleCardPin('{{ $official->id }}')"
                                         title="{{ $officialIsPinned ? 'Remove from Your Rooms' : 'Save to Your Rooms' }}"
@@ -676,6 +678,7 @@
                                 {{-- Bottom: Step in button, always flush to the card bottom --}}
                                 <div class="px-3 pb-3">
                                     <button
+                                        data-no-card-tap
                                         type="button"
                                         wire:click="joinHangout('{{ $official->id }}')"
                                         wire:loading.attr="disabled"
@@ -738,13 +741,12 @@
             {{-- Feed content --}}
             @if ($this->showingFallback)
                 <div class="rounded-2xl border px-6 py-8 text-sm space-y-3 text-center" style="background:#161B22;border-color:#30363D;color:#8B949E;box-shadow:0 1px 4px rgba(0,0,0,0.25);">
-                    <p>It's quiet right now — no rooms match those filters.</p>
+                    <p>@tone('empty_feed', "It's quiet right now — no rooms match those filters.")</p>
                     <a href="{{ route('feed.post') }}" wire:navigate class="inline-block text-sm underline transition" style="color:#1D9E75;">Open one →</a>
                 </div>
             @elseif ($this->posts->isEmpty())
                 <div class="text-center py-24 space-y-3">
-                    <p class="text-sm" style="color:#8B949E;">No active rooms right now.</p>
-                    <p class="text-xs leading-relaxed" style="color:#8B949E;">It's quiet. You could open a room, or come back a little later.</p>
+                    <p class="text-sm" style="color:#8B949E;">@tone('empty_feed', 'No active rooms right now.')</p>
                     <a href="{{ route('feed.post') }}" wire:navigate class="inline-block text-sm underline transition" style="color:#1D9E75;">Open a room →</a>
                 </div>
             @else
@@ -761,10 +763,11 @@
                         @endphp
                         <article
                             wire:key="post-{{ $post->id }}"
-                            class="rounded-2xl border p-7 space-y-5 transition-all duration-150"
+                            x-data="{ isTouch: ('ontouchstart' in window || window.matchMedia('(pointer:coarse)').matches) }"
+                            @click="if (isTouch && !$event.target.closest('[data-no-card-tap]')) $wire.joinHangout('{{ $post->id }}')"
+                            :class="isTouch ? 'cursor-pointer' : ''"
+                            class="cg-room-card rounded-2xl border p-7 space-y-5"
                             style="background:#161B22;border-color:#30363D;box-shadow:0 1px 3px rgba(0,0,0,0.25),0 0 0 1px rgba(255,255,255,0.03) inset;"
-                            onmouseover="this.style.background='#1C2333';this.style.borderColor='#3d4451';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3),0 0 0 1px rgba(255,255,255,0.04) inset';"
-                            onmouseout="this.style.background='#161B22';this.style.borderColor='#30363D';this.style.boxShadow='0 1px 3px rgba(0,0,0,0.25),0 0 0 1px rgba(255,255,255,0.03) inset';"
                         >
                             {{-- Card header: badge + author (hangouts/untitled) or badge alone (titled rooms) --}}
                             <div class="flex items-start justify-between gap-3">
@@ -781,12 +784,12 @@
                                 @endif
 
                                 @if ($isPersistent)
-                                    <span class="flex-none text-xs px-2.5 py-1 rounded-full font-medium"
+                                    <span class="cg-room-badge flex-none text-xs px-2.5 py-1 rounded-full font-medium"
                                         style="background:rgba(29,158,117,0.1);color:#1D9E75;border:1px solid rgba(29,158,117,0.25);">
                                         Always-open room
                                     </span>
                                 @else
-                                    <span class="flex-none text-xs px-2.5 py-1 rounded-full font-medium"
+                                    <span class="cg-room-badge flex-none text-xs px-2.5 py-1 rounded-full font-medium"
                                         style="background:rgba(210,153,34,0.1);color:#D29922;border:1px solid rgba(210,153,34,0.25);">
                                         Temporary hangout
                                     </span>
@@ -811,7 +814,7 @@
 
                             {{-- Tags --}}
                             @if ($post->tags->isNotEmpty())
-                                <div class="flex flex-wrap gap-2">
+                                <div class="cg-room-card-tags flex flex-wrap gap-2">
                                     @foreach ($post->tags as $tag)
                                         <span
                                             class="px-2.5 py-0.5 rounded-full text-xs"
@@ -839,6 +842,7 @@
                                 <div class="flex items-center gap-2">
                                     {{-- Pin button --}}
                                     <button
+                                        data-no-card-tap
                                         type="button"
                                         wire:click="toggleCardPin('{{ $post->id }}')"
                                         wire:loading.attr="disabled"
@@ -871,6 +875,7 @@
 
                                     {{-- Join / enter button --}}
                                     <button
+                                        data-no-card-tap
                                         type="button"
                                         wire:click="joinHangout('{{ $post->id }}')"
                                         wire:loading.attr="disabled"

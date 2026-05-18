@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\PayPal\SubscriptionController;
+use App\Http\Controllers\PayPal\WebhookController as PayPalWebhookController;
+use App\Livewire\Account\SupporterSettings;
 use App\Livewire\Admin\CrisisLog;
 use App\Livewire\Admin\Dashboard as AdminDashboard;
 use App\Livewire\Admin\PlatformStats;
@@ -11,8 +14,10 @@ use App\Livewire\Admin\ProblemReports as AdminProblemReports;
 use App\Livewire\Admin\ReportsQueue;
 use App\Livewire\Admin\TagModeration;
 use App\Livewire\Admin\UserManagement;
+use App\Livewire\Account\CollectDateOfBirth;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Reports\ProblemReportForm;
 use App\Livewire\Feed\CreateHangoutPost;
 use App\Livewire\Feed\HangoutFeed;
@@ -20,8 +25,11 @@ use App\Livewire\Friends\FriendsList;
 use App\Livewire\Messaging\ConversationList;
 use App\Livewire\Messaging\DirectMessage;
 use App\Livewire\Messaging\Room;
+use App\Livewire\Profile\EditProfileCustomization;
 use App\Livewire\Profile\ProfileSettings;
 use App\Livewire\Profile\PublicProfile;
+use App\Livewire\Support\ComparePage;
+use App\Livewire\Support\SupportPage;
 use App\Livewire\Onboarding\OnboardingFlow;
 use App\Livewire\Tags\TagSelector;
 use Illuminate\Support\Facades\Auth;
@@ -53,6 +61,11 @@ Route::view('/privacy', 'privacy')->name('privacy');
 Route::view('/terms', 'terms')->name('terms');
 Route::view('/guidelines', 'guidelines')->name('guidelines');
 Route::get('/report', ProblemReportForm::class)->name('report');
+Route::get('/support', SupportPage::class)->name('support');
+Route::get('/support/compare', ComparePage::class)->name('support.compare');
+
+// PayPal webhook — no CSRF (exempted in bootstrap/app.php)
+Route::post('/paypal/webhook', PayPalWebhookController::class)->name('paypal.webhook');
 
 // Registration
 Route::get('/register', Register::class)->name('register');
@@ -94,22 +107,23 @@ Route::post('/reset-password', [NewPasswordController::class, 'store'])
 
 Route::middleware('auth')->group(function () {
 
-    // Email verification notice
-    Route::get('/email/verify', function () {
-        return view('auth.verify-email');
-    })->name('verification.notice');
+    // Date of birth collection (for existing users prompted after login)
+    Route::get('/account/birthday', CollectDateOfBirth::class)->name('account.birthday');
 
-    // Resend verification email
+    // Email verification notice (Livewire — handles resend with rate limiting)
+    Route::get('/email/verify', VerifyEmail::class)->name('verification.notice');
+
+    // Resend verification email — fallback POST route (used by Laravel internals; UI uses Livewire)
     Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
         $request->user()->sendEmailVerificationNotification();
         return back()->with('status', 'verification-link-sent');
-    })->middleware('throttle:6,1')->name('verification.send');
+    })->middleware('throttle:3,10')->name('verification.send');
 
-    // Handle the verification link click (signed URL)
+    // Handle the verification link click (signed URL, expires after 60 minutes)
     Route::get('/email/verify/{id}/{hash}', function (\Illuminate\Foundation\Auth\EmailVerificationRequest $request) {
         $request->fulfill();
         return redirect()->route('onboarding');
-    })->middleware('signed')->name('verification.verify');
+    })->middleware(['signed', 'throttle:10,1'])->name('verification.verify');
 
     // Logout
     Route::post('/logout', LogoutController::class)->name('logout');
@@ -128,18 +142,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/onboarding', OnboardingFlow::class)->name('onboarding');
 });
 
-Route::middleware(['auth', 'verified', 'onboarded'])->group(function () {
-
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+// Browseable without email verification — read-only views
+Route::middleware(['auth', 'onboarded'])->group(function () {
 
     // Interest tag selection
     Route::get('/tags', TagSelector::class)->name('tags.select');
 
-    // Hangout Feed
+    // Hangout Feed (browseable; posting requires verified below)
     Route::get('/feed', HangoutFeed::class)->name('feed');
-    Route::get('/feed/post', CreateHangoutPost::class)->name('feed.post');
 
     // Hangout room — redirect to room if one exists, otherwise placeholder
     Route::get('/hangout/{id}', function (string $id) {
@@ -162,7 +172,28 @@ Route::middleware(['auth', 'verified', 'onboarded'])->group(function () {
 
     // Profile
     Route::get('/profile/settings', ProfileSettings::class)->name('profile.settings');
+    Route::get('/profile/edit', EditProfileCustomization::class)->name('profile.edit');
     Route::get('/profile/{gamertag}', PublicProfile::class)->name('profile.show');
+
+});
+
+// Requires verified email — write/create actions
+Route::middleware(['auth', 'verified', 'onboarded'])->group(function () {
+
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    // Creating a hangout post requires verified
+    Route::get('/feed/post', CreateHangoutPost::class)->name('feed.post');
+
+    // Supporter settings
+    Route::get('/settings/supporter', SupporterSettings::class)->name('settings.supporter');
+
+    // PayPal subscription flow
+    Route::get('/support/subscribe', [SubscriptionController::class, 'redirect'])->name('support.subscribe');
+    Route::get('/support/subscribe/return', [SubscriptionController::class, 'return'])->name('support.subscribe.return');
+    Route::get('/support/subscribe/cancel', [SubscriptionController::class, 'cancel'])->name('support.subscribe.cancel');
 
 });
 

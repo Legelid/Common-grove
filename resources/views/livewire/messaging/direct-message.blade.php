@@ -1,4 +1,11 @@
-<div class="flex flex-col h-full">
+@php
+    $isLowStim     = auth()->user()?->low_stimulation_mode;
+    $dmGradientDef = (!$isLowStim && $dmGradientTheme)
+        ? config('gradients.' . $dmGradientTheme)
+        : null;
+    $dmBg = $dmGradientDef ? 'background:' . $dmGradientDef['css'] . ';' : '';
+@endphp
+<div class="flex flex-col h-full" style="{{ $dmBg }}">
 
     {{-- Header --}}
     <div class="flex items-center gap-3 px-4 py-3 border-b flex-none" style="background:#161B22;border-color:#30363D;">
@@ -12,6 +19,50 @@
                 @endif
             @else
                 <p class="font-semibold text-sm" style="color:#E6EDF3;">{{ $this->conversation->name }}</p>
+            @endif
+        </div>
+
+        {{-- DM gradient picker --}}
+        <div class="flex-none relative">
+            <button
+                type="button"
+                wire:click="$toggle('showGradientPicker')"
+                title="Set your chat gradient"
+                class="text-xs px-2.5 py-1.5 rounded-lg transition"
+                style="{{ $dmGradientTheme ? 'background:rgba(255,255,255,0.06);color:#8B949E;border:1px solid #30363D;' : 'color:#8B949E;border:1px solid #30363D;' }}"
+                onmouseover="this.style.color='#C9D1D9'" onmouseout="this.style.color='#8B949E'"
+            >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Gradient
+            </button>
+
+            @if ($showGradientPicker)
+                <div
+                    class="absolute right-0 top-full mt-2 w-64 rounded-xl p-3 z-50"
+                    style="background:#161B22;border:1px solid #30363D;box-shadow:0 8px 24px rgba(0,0,0,0.5);"
+                >
+                    <p class="text-xs font-semibold mb-1" style="color:#8B949E;">Your chat gradient</p>
+                    <p class="text-xs mb-2" style="color:#3d4451;">Only you will see this.</p>
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <button
+                            type="button"
+                            wire:click="setDmGradient('')"
+                            class="flex flex-col items-center gap-1"
+                        >
+                            <div class="w-full h-8 rounded border-2 transition" style="background:#0D1117;{{ $dmGradientTheme === '' ? 'border-color:#1D9E75;' : 'border-color:#30363D;' }}"></div>
+                            <span class="text-xs" style="color:{{ $dmGradientTheme === '' ? '#E6EDF3' : '#8B949E' }};">None</span>
+                        </button>
+                        @foreach (config('gradients') as $key => $gradient)
+                            <button
+                                type="button"
+                                wire:click="setDmGradient('{{ $key }}')"
+                                class="flex flex-col items-center gap-1"
+                            >
+                                <div class="w-full h-8 rounded border-2 transition" style="background:{{ $gradient['css'] }};{{ $dmGradientTheme === $key ? 'border-color:#1D9E75;' : 'border-color:#30363D;' }}"></div>
+                                <span class="text-xs text-center leading-tight" style="color:{{ $dmGradientTheme === $key ? '#E6EDF3' : '#8B949E' }};">{{ $gradient['label'] }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
             @endif
         </div>
 
@@ -157,6 +208,9 @@
 
     {{-- Compose --}}
     <div class="px-4 pb-4 pt-2 border-t flex-none" style="border-color:#30363D;">
+        @if ($verificationBlock)
+            <p class="mb-1.5 text-xs" style="color:#C9A83C;">{{ $verificationBlock }}</p>
+        @endif
         @error('messageContent')
             <p class="mb-1 text-xs" style="color:#E24B4A;">{{ $message }}</p>
         @enderror

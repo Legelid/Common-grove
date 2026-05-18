@@ -76,7 +76,7 @@ class Login extends Component
 
         session()->regenerate();
 
-        $this->redirect(route('feed'), navigate: true);
+        $this->redirect(route('feed'));
     }
 
     /**

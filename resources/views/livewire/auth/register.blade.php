@@ -100,6 +100,55 @@
             >
         </div>
 
+        {{-- Date of birth --}}
+        <div>
+            <label class="block text-sm font-medium mb-1" style="color:#8B949E;">Date of birth</label>
+            <p class="text-xs mb-2" style="color:#3d4451;">
+                We use your date of birth for age eligibility. You must be 18 or older to use CommonGrove.
+            </p>
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <select wire:model="birthMonth"
+                        class="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:#1C2333;border:1px solid {{ $errors->has('birthMonth') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
+                        onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+                    >
+                        <option value="">Month</option>
+                        @foreach ([1=>'Jan',2=>'Feb',3=>'Mar',4=>'Apr',5=>'May',6=>'Jun',7=>'Jul',8=>'Aug',9=>'Sep',10=>'Oct',11=>'Nov',12=>'Dec'] as $num => $abbr)
+                            <option value="{{ $num }}">{{ $abbr }}</option>
+                        @endforeach
+                    </select>
+                    @error('birthMonth') <p class="mt-1 text-xs" style="color:#E24B4A;">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <select wire:model="birthDay"
+                        class="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:#1C2333;border:1px solid {{ $errors->has('birthDay') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
+                        onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+                    >
+                        <option value="">Day</option>
+                        @for ($d = 1; $d <= 31; $d++)
+                            <option value="{{ $d }}">{{ $d }}</option>
+                        @endfor
+                    </select>
+                    @error('birthDay') <p class="mt-1 text-xs" style="color:#E24B4A;">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <select wire:model="birthYear"
+                        class="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:#1C2333;border:1px solid {{ $errors->has('birthYear') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
+                        onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+                    >
+                        <option value="">Year</option>
+                        @for ($y = now()->year; $y >= now()->year - 120; $y--)
+                            <option value="{{ $y }}">{{ $y }}</option>
+                        @endfor
+                    </select>
+                    @error('birthYear') <p class="mt-1 text-xs" style="color:#E24B4A;">{{ $message }}</p> @enderror
+                </div>
+            </div>
+        </div>
+
         {{-- Submit --}}
         <button
             type="submit"

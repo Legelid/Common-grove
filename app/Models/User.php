@@ -8,9 +8,12 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\UserSubscription;
+use App\Models\RoomCollection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -33,6 +36,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password_reset_required',
         'bio',
         'avatar_path',
+        'avatar_id',
         'last_seen_at',
         'last_gamertag_changed_at',
         'suspended_at',
@@ -52,17 +56,28 @@ class User extends Authenticatable implements MustVerifyEmail
         'show_connection_suggestions',
         'low_stimulation_mode',
         'is_supporter',
+        'show_supporter_icon',
         'show_official_rooms',
         // Group 10 — onboarding
         'onboarding_completed',
         'comfort_preferences',
+        // Age gate & birthday
+        'date_of_birth',
+        'birthday_theme_enabled',
+        'holiday_themes_enabled',
+        'tone_pack',
         // Profile expression
         'profile_status',
         'accent_color',
         'banner_style',
-        'prompt_comfort_thing',
-        'prompt_ramble_topic',
+        'personal_gradient_theme',
+        'comfort_things',
+        'open_to',
         'social_styles',
+        'show_conversation_prompts',
+        'enabled_prompt_packs',
+        'advanced_comfort_settings',
+        'hide_reactions',
     ];
 
     /** @var list<string> */
@@ -89,9 +104,20 @@ class User extends Authenticatable implements MustVerifyEmail
             'show_connection_suggestions'   => 'boolean',
             'low_stimulation_mode'          => 'boolean',
             'is_supporter'                  => 'boolean',
+            'show_supporter_icon'           => 'boolean',
             'show_official_rooms'           => 'boolean',
             'onboarding_completed'          => 'boolean',
             'comfort_preferences'        => 'array',
+            'date_of_birth'              => 'date',
+            'birthday_theme_enabled'     => 'boolean',
+            'holiday_themes_enabled'     => 'boolean',
+            'tone_pack'                  => 'string',
+            'show_conversation_prompts'   => 'boolean',
+            'enabled_prompt_packs'        => 'array',
+            'advanced_comfort_settings'   => 'array',
+            'hide_reactions'              => 'boolean',
+            'comfort_things'             => 'array',
+            'open_to'                    => 'array',
             'social_styles'              => 'array',
         ];
     }
@@ -135,9 +161,31 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Returns the absolute URL to the user's avatar, or a placeholder.
+     *
+     * Resolution order:
+     *  1. avatar_id → Avatar record: show if active or retired; fall back to
+     *     default if disabled (hidden everywhere) or record missing.
+     *  2. avatar_path starting with "curated:" — legacy pre-migration path.
+     *  3. avatar_path as an S3 key — legacy file upload (no longer created).
+     *  4. Default placeholder SVG.
      */
     public function getAvatarUrlAttribute(): string
     {
+        if ($this->avatar_id !== null) {
+            $avatar = $this->avatar;
+
+            if ($avatar === null || $avatar->status === 'disabled') {
+                return asset('images/default-avatar.svg');
+            }
+
+            return asset($avatar->image_path);
+        }
+
+        // Legacy: curated: path written before the avatar_id migration
+        if ($this->avatar_path && str_starts_with($this->avatar_path, 'curated:')) {
+            return asset('avatars/curated/' . substr($this->avatar_path, 8) . '.svg');
+        }
+
         if ($this->avatar_path) {
             return Storage::disk('s3')->url($this->avatar_path);
         }
@@ -148,6 +196,39 @@ class User extends Authenticatable implements MustVerifyEmail
     // -------------------------------------------------------------------------
     // Methods
     // -------------------------------------------------------------------------
+
+    /**
+     * True when the user has an active supporter subscription.
+     * Prefer this over reading is_supporter directly so gating logic is one call.
+     */
+    public function isSupporter(): bool
+    {
+        return (bool) $this->is_supporter;
+    }
+
+    /**
+     * Maximum number of active persistent rooms this user may own.
+     * Admins are unlimited. Read from config so the value has one source of truth.
+     */
+    public function persistentRoomLimit(): int
+    {
+        if ($this->is_admin) {
+            return PHP_INT_MAX;
+        }
+
+        $key = $this->is_supporter ? 'supporter' : 'free';
+
+        return (int) config("supporter.limits.persistent_rooms.{$key}", $this->is_supporter ? 10 : 3);
+    }
+
+    /**
+     * Returns true if today is the user's birthday (month + day match).
+     */
+    public function isBirthday(): bool
+    {
+        return $this->date_of_birth !== null
+            && $this->date_of_birth->format('m-d') === now()->format('m-d');
+    }
 
     /**
      * Returns true if the user was seen within the last 15 minutes.
@@ -204,6 +285,36 @@ class User extends Authenticatable implements MustVerifyEmail
     public function notificationPreferences(): HasOne
     {
         return $this->hasOne(NotificationPreference::class);
+    }
+
+    /** Selected curated avatar. */
+    public function avatar(): BelongsTo
+    {
+        return $this->belongsTo(Avatar::class);
+    }
+
+    /** Per-conversation display preferences (gradient, etc.) for this user. */
+    public function conversationPreferences(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserConversationPreference::class);
+    }
+
+    /** PayPal and other payment subscriptions. */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    /** Room collections (supporter feature). */
+    public function roomCollections(): HasMany
+    {
+        return $this->hasMany(RoomCollection::class)->orderBy('sort_order');
+    }
+
+    /** Returns the active subscription if one exists. */
+    public function activeSubscription(): ?UserSubscription
+    {
+        return $this->subscriptions()->where('status', 'active')->latest()->first();
     }
 
     // -------------------------------------------------------------------------

@@ -23,7 +23,7 @@
     role="checkbox"
     aria-checked="{{ $selected ? 'true' : 'false' }}"
     @if($disabled) disabled aria-disabled="true" @endif
-    {{ $attributes->class([$baseClass]) }}
+    {{ $attributes->merge(['class' => $baseClass]) }}
     style="{{ $style }}"
     @if(!$selected && !$disabled)
         onmouseover="this.style.background='#21262D';this.style.color='#C9D1D9';this.style.borderColor='#3d4451';"

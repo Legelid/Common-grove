@@ -65,7 +65,8 @@
             <div class="space-y-3 text-sm leading-relaxed" style="color:#C9D1D9;">
                 <ul class="space-y-3">
                     @foreach ([
-                        'You must be 16 or older to use CommonGround.',
+                        'CommonGrove is an 18+ community. You must be at least 18 years old to create an account.',
+                        'You must provide your accurate date of birth during registration. Providing a false date of birth to bypass the age requirement is a violation of these terms.',
                         'You are responsible for keeping your account credentials secure. Do not share your password.',
                         'You may only have one account. Creating duplicate accounts to evade a moderation action is not permitted.',
                         'You must provide a working email address for account verification.',
@@ -151,7 +152,7 @@
         <section id="crisis">
             <h2 class="text-lg font-semibold mb-4 pb-3 border-b" style="color:#E6EDF3;border-color:#21262D;">Crisis disclaimer</h2>
             <div class="rounded-xl border px-5 py-4 text-sm leading-relaxed" style="background:#161B22;border-color:#30363D;color:#C9D1D9;">
-                <p><span style="color:#E6EDF3;font-weight:500;">CommonGround is not a crisis service or emergency resource.</span> If you or someone you know is in immediate danger, please contact emergency services in your area. CommonGround is a community platform — it cannot respond to emergencies.</p>
+                <p><span style="color:#E6EDF3;font-weight:500;">CommonGrove is not a crisis service, therapy platform, or emergency support system.</span> It is a social space for conversation and connection. If you or someone you know is in immediate danger, please contact emergency services in your area.</p>
             </div>
         </section>
 

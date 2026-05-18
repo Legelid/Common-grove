@@ -38,7 +38,7 @@
                 $match = $this->weeklyMatch;
                 $sharedCount = $match->matchedUser->tags->pluck('id')->intersect(auth()->user()->tags()->pluck('tags.id'))->count();
             @endphp
-            <div class="mb-6 p-4 rounded-xl border" style="background:rgba(29,158,117,0.08);border-color:rgba(29,158,117,0.3);">
+            <div class="cg-suggestion-preview mb-6 p-4 rounded-xl border" style="background:rgba(29,158,117,0.08);border-color:rgba(29,158,117,0.3);">
                 <p class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:#1D9E75;">Suggested this week</p>
                 <div class="flex items-center justify-between">
                     <div>
@@ -56,7 +56,10 @@
         @endif
 
         @if ($this->onlineFriends->isEmpty() && $this->offlineFriends->isEmpty())
-            <p class="text-sm" style="color:#8B949E;">You have no friends yet. Visit someone's profile to send a request.</p>
+            <div class="space-y-1 py-2">
+                <p class="text-sm" style="color:#8B949E;">@tone('empty_friends', 'No friends yet.')</p>
+                <p class="text-sm" style="color:#3d4451;">That's okay — these things take time.</p>
+            </div>
         @else
             {{-- Online friends --}}
             @foreach ($this->onlineFriends as $friend)
@@ -96,7 +99,10 @@
                             <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2" style="background:#30363D;border-color:#0D1117;" title="Offline"></span>
                         </div>
                         <div>
-                            <p class="font-medium text-sm" style="color:#E6EDF3;">{{ $this->visibleName($friend) }}</p>
+                            <p class="font-medium text-sm inline-flex items-center gap-1" style="color:#E6EDF3;">
+                                <span>{{ $this->visibleName($friend) }}</span>
+                                @if ($friend->is_supporter && ($friend->show_supporter_icon ?? true))<x-supporter-icon />@endif
+                            </p>
                             @if ($friend->hasActiveStatus())
                                 <p class="text-xs" style="color:#8B949E;">
                                     @if ($friend->status_mood)<span class="capitalize">{{ $friend->status_mood }}</span>@if ($friend->status_text) · @endif@endif
@@ -123,7 +129,10 @@
     {{-- Requests tab --}}
     @if ($activeTab === 'requests')
         @if ($this->pendingRequests->isEmpty())
-            <p class="text-sm" style="color:#8B949E;">No pending friend requests.</p>
+            <div class="space-y-1 py-2">
+                <p class="text-sm" style="color:#8B949E;">No requests right now.</p>
+                <p class="text-sm" style="color:#3d4451;">Nothing needs your attention.</p>
+            </div>
         @else
             @foreach ($this->pendingRequests as $friendship)
                 <div class="flex items-center justify-between py-3 border-b" style="border-color:#30363D;">

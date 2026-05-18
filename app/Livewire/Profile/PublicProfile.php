@@ -6,6 +6,7 @@ namespace App\Livewire\Profile;
 
 use App\Models\Block;
 use App\Models\Friendship;
+use App\Models\HangoutPost;
 use App\Models\Mute;
 use App\Models\User;
 use App\Services\BlockService;
@@ -105,16 +106,37 @@ class PublicProfile extends Component
     {
         $viewerTagIds = Auth::user()->tags()->pluck('tags.id');
 
-        return $this->profileUser->tags()->get()->map(fn ($tag) => [
-            'tag'       => $tag,
-            'is_shared' => $viewerTagIds->contains($tag->id),
-        ]);
+        return $this->profileUser->tags()->orderByDesc('usage_count')->get()
+            ->map(fn ($tag) => [
+                'tag'       => $tag,
+                'is_shared' => $viewerTagIds->contains($tag->id),
+            ])
+            ->sortByDesc('is_shared')
+            ->values();
     }
 
     #[Computed]
     public function sharedTagCount(): int
     {
         return $this->profileTags->where('is_shared', true)->count();
+    }
+
+    /**
+     * Up to 3 active persistent rooms the profile owner has created.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, HangoutPost>
+     */
+    #[Computed]
+    public function usualRooms(): \Illuminate\Database\Eloquent\Collection
+    {
+        return HangoutPost::where('user_id', $this->profileUser->id)
+            ->where('is_persistent', true)
+            ->where('is_active', true)
+            ->where('is_official', false)
+            ->whereNotNull('title')
+            ->orderByDesc('joined_count')
+            ->limit(3)
+            ->get();
     }
 
     // -------------------------------------------------------------------------

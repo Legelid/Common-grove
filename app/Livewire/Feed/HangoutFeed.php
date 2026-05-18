@@ -258,6 +258,11 @@ class HangoutFeed extends Component
 
     public function joinHangout(string $postId): void
     {
+        if (! Auth::user()->hasVerifiedEmail()) {
+            $this->joinMessage = 'Please verify your email before joining hangouts.';
+            return;
+        }
+
         $post = HangoutPost::active()->find($postId);
 
         if ($post === null) {

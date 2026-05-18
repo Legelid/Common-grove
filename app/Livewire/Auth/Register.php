@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Rules\ValidGamertag;
 use App\Services\GamertagSuggestionService;
 use App\Services\PasswordService;
+use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -28,6 +29,11 @@ class Register extends Component
     public string $email               = '';
     public string $password            = '';
     public string $password_confirmation = '';
+
+    // Date of birth
+    public string $birthMonth = '';
+    public string $birthDay   = '';
+    public string $birthYear  = '';
 
     /** @var string|null Availability status: 'available', 'taken', or null (unchecked) */
     public ?string $gamertagStatus = null;
@@ -132,22 +138,57 @@ class Register extends Component
                 'confirmed',
                 Password::min(10)->uncompromised(),
             ],
+            'birthMonth' => ['required', 'integer', 'min:1', 'max:12'],
+            'birthDay'   => ['required', 'integer', 'min:1', 'max:31'],
+            'birthYear'  => [
+                'required',
+                'integer',
+                'min:' . (now()->year - 120),
+                'max:' . now()->year,
+                function (string $attr, mixed $value, \Closure $fail): void {
+                    $month = (int) $this->birthMonth;
+                    $day   = (int) $this->birthDay;
+                    $year  = (int) $value;
+
+                    if ($month < 1 || $month > 12 || $day < 1 || $day > 31) {
+                        return;
+                    }
+
+                    $dob = Carbon::createSafe($year, $month, $day);
+
+                    if ($dob === false) {
+                        $fail('Please enter a valid date of birth.');
+                        return;
+                    }
+
+                    if ($dob->diffInYears(now()) < 18) {
+                        $fail('CommonGrove is currently only available to adults.');
+                    }
+                },
+            ],
         ]);
 
         /** @var PasswordService $passwordService */
         $passwordService = app(PasswordService::class);
 
+        $dob = Carbon::createSafe(
+            (int) $this->birthYear,
+            (int) $this->birthMonth,
+            (int) $this->birthDay,
+        );
+
         $user = User::create([
-            'gamertag' => $validated['gamertag'],
-            'email'    => $validated['email'],
-            'password' => $passwordService->hash($validated['password']),
+            'gamertag'      => $validated['gamertag'],
+            'email'         => $validated['email'],
+            'password'      => $passwordService->hash($validated['password']),
+            'date_of_birth' => $dob !== false ? $dob->toDateString() : null,
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        $this->redirect(route('verification.notice'), navigate: true);
+        $this->redirect(route('verification.notice'));
     }
 
     /**

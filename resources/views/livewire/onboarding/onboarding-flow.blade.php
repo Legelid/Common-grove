@@ -93,63 +93,101 @@
                 @endif
             </div>
 
-            {{-- Category chips --}}
-            <div class="flex flex-wrap gap-2">
-                @foreach ($this->interestCategories as $cat)
-                    <button
-                        type="button"
-                        wire:click="setOnboardingCategory({{ $cat->id }})"
-                        wire:key="onb-cat-{{ $cat->id }}"
-                        class="px-3.5 py-1.5 rounded-full text-sm font-medium transition"
-                        style="{{ $onboardingCategoryId === $cat->id
-                            ? 'background:#1D9E75;color:#fff;'
-                            : 'background:#21262D;color:#8B949E;border:1px solid #30363D;' }}"
-                        onmouseover="{{ $onboardingCategoryId === $cat->id ? '' : "this.style.color='#E6EDF3'" }}"
-                        onmouseout="{{ $onboardingCategoryId === $cat->id ? '' : "this.style.color='#8B949E'" }}"
-                    >{{ $cat->name }}</button>
-                @endforeach
+            {{-- Search --}}
+            <div class="relative">
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="onboardingSearch"
+                    placeholder="Search interests…"
+                    class="w-full rounded-lg px-4 py-2 text-sm focus:outline-none"
+                    style="background:#0D1117;border:1px solid #30363D;color:#E6EDF3;"
+                    onfocus="this.style.borderColor='rgba(29,158,117,0.5)'" onblur="this.style.borderColor='#30363D'"
+                >
+                @if ($onboardingSearch !== '')
+                    <button type="button" wire:click="$set('onboardingSearch','')"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-xs transition"
+                        style="color:#3d4451;"
+                        onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'"
+                        aria-label="Clear search"
+                    >✕</button>
+                @endif
             </div>
 
-            {{-- Subcategory tags for the selected category --}}
-            @if ($this->onboardingSubcats->isNotEmpty())
-                <div class="space-y-4 max-h-72 overflow-y-auto pr-1" style="scrollbar-width:thin;scrollbar-color:#30363D transparent;">
-                    @foreach ($this->onboardingSubcats as $subcat)
-                        @if ($subcat->tags->isNotEmpty())
-                            <div wire:key="onb-sub-{{ $subcat->id }}" x-data="{ showAll: false }">
-                                <p class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#6B737C;">{{ $subcat->name }}</p>
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach ($subcat->tags->take(8) as $tag)
-                                        <x-tag-bubble
-                                            :label="$tag->name"
-                                            :selected="in_array($tag->id, $selectedInterestIds)"
-                                            wire:click="toggleInterest('{{ $tag->id }}')"
-                                            wire:key="int-{{ $tag->id }}"
-                                        />
-                                    @endforeach
-                                    @foreach ($subcat->tags->skip(8) as $tag)
-                                        <span x-show="showAll">
+            {{-- Search results --}}
+            @if ($onboardingSearch !== '')
+                @if ($this->onboardingSearchResults->isNotEmpty())
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($this->onboardingSearchResults as $tag)
+                            <x-tag-bubble
+                                :label="$tag->name"
+                                :selected="in_array($tag->id, $selectedInterestIds)"
+                                wire:click="toggleInterest('{{ $tag->id }}')"
+                                wire:key="srch-{{ $tag->id }}"
+                            />
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-sm" style="color:#3d4451;">Nothing found yet.</p>
+                @endif
+            @else
+                {{-- Category chips --}}
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($this->interestCategories as $cat)
+                        <button
+                            type="button"
+                            wire:click="setOnboardingCategory({{ $cat->id }})"
+                            wire:key="onb-cat-{{ $cat->id }}"
+                            class="px-3.5 py-1.5 rounded-full text-sm font-medium transition"
+                            style="{{ $onboardingCategoryId === $cat->id
+                                ? 'background:#1D9E75;color:#fff;'
+                                : 'background:#21262D;color:#8B949E;border:1px solid #30363D;' }}"
+                            onmouseover="{{ $onboardingCategoryId === $cat->id ? '' : "this.style.color='#E6EDF3'" }}"
+                            onmouseout="{{ $onboardingCategoryId === $cat->id ? '' : "this.style.color='#8B949E'" }}"
+                        >{{ $cat->name }}</button>
+                    @endforeach
+                </div>
+
+                {{-- Subcategory tags for the selected category --}}
+                @if ($this->onboardingSubcats->isNotEmpty())
+                    <div class="space-y-4 max-h-72 overflow-y-auto pr-1" style="scrollbar-width:thin;scrollbar-color:#30363D transparent;">
+                        @foreach ($this->onboardingSubcats as $subcat)
+                            @if ($subcat->tags->isNotEmpty())
+                                <div wire:key="onb-sub-{{ $subcat->id }}" x-data="{ showAll: false }">
+                                    <p class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#6B737C;">{{ $subcat->name }}</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach ($subcat->tags->take(8) as $tag)
                                             <x-tag-bubble
                                                 :label="$tag->name"
                                                 :selected="in_array($tag->id, $selectedInterestIds)"
                                                 wire:click="toggleInterest('{{ $tag->id }}')"
                                                 wire:key="int-{{ $tag->id }}"
                                             />
-                                        </span>
-                                    @endforeach
+                                        @endforeach
+                                        @foreach ($subcat->tags->skip(8) as $tag)
+                                            <span x-show="showAll">
+                                                <x-tag-bubble
+                                                    :label="$tag->name"
+                                                    :selected="in_array($tag->id, $selectedInterestIds)"
+                                                    wire:click="toggleInterest('{{ $tag->id }}')"
+                                                    wire:key="int-{{ $tag->id }}"
+                                                />
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                    @if ($subcat->tags->count() > 8)
+                                        <button type="button" @click="showAll = !showAll"
+                                            class="mt-1.5 text-xs transition" style="color:#3d4451;"
+                                            onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'"
+                                            x-text="showAll ? 'Show less' : 'See {{ $subcat->tags->count() - 8 }} more…'"
+                                        ></button>
+                                    @endif
                                 </div>
-                                @if ($subcat->tags->count() > 8)
-                                    <button type="button" @click="showAll = !showAll"
-                                        class="mt-1.5 text-xs transition" style="color:#3d4451;"
-                                        onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'"
-                                        x-text="showAll ? 'Show less' : 'See {{ $subcat->tags->count() - 8 }} more…'"
-                                    ></button>
-                                @endif
-                            </div>
-                        @endif
-                    @endforeach
-                </div>
-            @elseif ($onboardingCategoryId === null)
-                <p class="text-sm" style="color:#3d4451;">Pick a category above to see interests.</p>
+                            @endif
+                        @endforeach
+                    </div>
+                @elseif ($onboardingCategoryId === null)
+                    <p class="text-sm" style="color:#3d4451;">Pick a category above or search to find interests.</p>
+                @endif
             @endif
 
             <div class="flex gap-3 pt-2">

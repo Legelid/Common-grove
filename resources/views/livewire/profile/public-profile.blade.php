@@ -1,4 +1,4 @@
-<div>
+<div class="relative" style="min-height:100vh;">
     @php
         $accentMap = [
             'green'  => '#1D9E75',
@@ -7,51 +7,124 @@
             'purple' => '#8B5CF6',
             'slate'  => '#8B949E',
         ];
-        $bannerGradients = [
-            'rain_window' => 'linear-gradient(135deg, #1a1f2e 0%, #252b3a 60%, #1e2332 100%)',
-            'forest'      => 'linear-gradient(135deg, #0d1f17 0%, #132a1e 60%, #0f2218 100%)',
-            'night_sky'   => 'linear-gradient(135deg, #0a0d1a 0%, #141829 60%, #0d1020 100%)',
-            'cozy_room'   => 'linear-gradient(135deg, #1f1510 0%, #2a1c14 60%, #201410 100%)',
-            'gradient'    => 'linear-gradient(135deg, #1a1326 0%, #1e1c2e 60%, #13192a 100%)',
+        $atmosphereGradients = [
+            'night_rain'    => 'linear-gradient(160deg, #163055 0%, #0d1f3a 60%, #0a1828 100%)',
+            'forest'        => 'linear-gradient(160deg, #0d3318 0%, #062210 60%, #041a0c 100%)',
+            'cozy_room'     => 'radial-gradient(ellipse at bottom right, #5c2a00 0%, #3c1c00 60%, #2a1200 100%)',
+            'pixel_sky'     => 'linear-gradient(180deg, #1a2070 0%, #0e1452 60%, #0a1040 100%)',
+            'aquarium'      => 'radial-gradient(ellipse at center, #003d5c 0%, #002840 60%, #001e2e 100%)',
+            'snowfall'      => 'linear-gradient(160deg, #2a3a60 0%, #1e2a48 60%, #141e38 100%)',
+            'sunset_fog'    => 'linear-gradient(160deg, #4a1a44 0%, #300e2c 60%, #200820 100%)',
+            'moonlight'     => 'radial-gradient(ellipse at top right, #1a1a40 0%, #10102a 60%, #080814 100%)',
+            'coffee_shop'   => 'radial-gradient(ellipse at bottom, #3c2a10 0%, #281a08 60%, #1c1004 100%)',
+            'soft_abstract' => 'linear-gradient(135deg, #24183c 0%, #1a2030 60%, #101820 100%)',
+            'deep_blue'     => 'linear-gradient(180deg, #042060 0%, #031840 60%, #021028 100%)',
+            'warm_lamp'     => 'radial-gradient(ellipse at top left, #3c2800 0%, #281a00 60%, #1a1000 100%)',
         ];
-        $accentColor    = $accentMap[$profileUser->accent_color ?? ''] ?? null;
-        $bannerGradient = $bannerGradients[$profileUser->banner_style ?? ''] ?? null;
-        $styleLabels    = [
-            'quiet_chatter'      => 'Quiet chatter',
-            'mostly_listening'   => 'Mostly listening',
-            'slow_replies'       => 'Slow replies OK',
-            'deep_talks'         => 'Deep talks',
-            'late_night'         => 'Late-night person',
-            'introvert_friendly' => 'Introvert-friendly',
+        $accentColor        = $accentMap[$profileUser->accent_color ?? ''] ?? null;
+        $atmosphere         = $atmosphereGradients[$profileUser->banner_style ?? ''] ?? null;
+        $lowStim            = auth()->user()->low_stimulation_mode;
+        $atmosphereOpacity  = $atmosphere ? ($lowStim ? '0.06' : '0.22') : '0';
+        $styleLabels        = [
+            'quiet_chatter'        => 'Quiet chatter',
+            'mostly_listening'     => 'Mostly listening',
+            'slow_replies'         => 'Slow replies OK',
+            'deep_talks'           => 'Deep talks',
+            'late_night'           => 'Late-night person',
+            'introvert_friendly'   => 'Introvert-friendly',
+            'listener_first'       => 'Listener first',
+            'casual_conversations' => 'Casual conversations',
+            'low_pressure'         => 'Low-pressure vibes',
+            'group_chats_okay'     => 'Group chats are OK',
+            'one_on_one_preferred' => 'One-on-one preferred',
+            'small_groups'         => 'Small groups feel safer',
+            'usually_multitasking' => 'Usually multitasking',
+            'social_battery'       => 'Social battery varies',
+            'thoughtful_replies'   => 'Thoughtful replies',
+            'cozy_energy'          => 'Cozy energy',
+            'random_conversations' => 'Likes random chats',
+            'comfortable_online'   => 'More comfortable online',
+            'sometimes_awkward'    => 'Sometimes awkward at first',
+            'better_warmed_up'     => 'Better once warmed up',
+            'open_to_friends'      => 'Open to new friends',
+            'quiet_but_friendly'   => 'Quiet but friendly',
+            'easygoing'            => 'Easygoing',
+            'rambles_sometimes'    => 'Rambles sometimes',
+            'comfortable_silence'  => 'Comfortable with silence',
+        ];
+        $openToLabels = [
+            'new_friends'              => 'New friends',
+            'quiet_conversations'      => 'Quiet conversations',
+            'group_chats'              => 'Group chats',
+            'one_on_one_chats'         => 'One-on-one chats',
+            'shared_hobbies'           => 'Shared hobbies',
+            'deep_talks'               => 'Deep talks',
+            'casual_conversation'      => 'Casual conversation',
+            'listening_more'           => 'Listening more than talking',
+            'gaming_together'          => 'Gaming together',
+            'book_discussions'         => 'Book discussions',
+            'slow_conversations'       => 'Slow conversations',
+            'creative_discussions'     => 'Creative discussions',
+            'nighttime_chats'          => 'Night-time chats',
+            'similar_experiences'      => 'Similar experiences',
+            'just_existing'            => 'Just existing together',
+            'advice_support'           => 'Advice and support',
+            'meeting_slowly'           => 'Meeting people slowly',
+            'cozy_conversation'        => 'Cozy conversation',
+            'joining_quietly'          => 'Joining rooms quietly',
+            'talking_when_comfortable' => 'Talking when comfortable',
         ];
     @endphp
 
-    {{-- Banner strip --}}
-    @if ($bannerGradient)
-        <div class="max-w-lg mx-auto h-14 rounded-t-xl" style="background: {{ $bannerGradient }};"></div>
+    {{-- Atmospheric background overlay --}}
+    @if ($atmosphere && $atmosphereOpacity !== '0')
+        <div class="fixed inset-0 pointer-events-none" style="background:{{ $atmosphere }};opacity:{{ $atmosphereOpacity }};z-index:0;" aria-hidden="true"></div>
     @endif
 
-    <div class="px-6 max-w-lg mx-auto space-y-6" style="padding-top: {{ $bannerGradient ? '1.5rem' : '2.5rem' }}; padding-bottom: 2.5rem;">
+    <div class="relative z-10 px-6 py-10 max-w-lg mx-auto space-y-6">
 
         {{-- Avatar + name --}}
         <div class="flex items-center gap-5">
-            <img
-                src="{{ $profileUser->avatar_url }}"
-                alt="{{ $profileUser->gamertag }}"
-                class="w-20 h-20 rounded-full object-cover ring-2"
-                style="background:#1C2333;ring-color:{{ $accentColor ?? '#30363D' }};"
-            >
-            <div>
-                <h1 class="text-xl font-bold" style="color:#E6EDF3;">{{ $visibleName }}</h1>
+            @if (auth()->id() === $profileUser->id)
+                <div class="relative flex-none" style="width:5rem;height:5rem;">
+                    <img
+                        src="{{ $profileUser->avatar_url }}"
+                        alt="{{ $profileUser->gamertag }}"
+                        class="w-20 h-20 rounded-full object-cover"
+                        style="background:#1C2333;outline:2px solid {{ $accentColor ?? '#30363D' }};outline-offset:2px;"
+                    >
+                    <a href="{{ route('profile.edit') }}#avatar" wire:navigate
+                       class="absolute inset-0 rounded-full flex items-center justify-center"
+                       style="background:rgba(0,0,0,0.55);opacity:0;transition:opacity 0.15s;"
+                       onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'"
+                       onfocus="this.style.opacity='1'" onblur="this.style.opacity='0'"
+                       aria-label="Change profile photo"
+                    >
+                        <span class="text-xs font-medium" style="color:#E6EDF3;">Change photo</span>
+                    </a>
+                </div>
+            @else
+                <img
+                    src="{{ $profileUser->avatar_url }}"
+                    alt="{{ $profileUser->gamertag }}"
+                    class="w-20 h-20 rounded-full object-cover flex-none"
+                    style="background:#1C2333;outline:2px solid {{ $accentColor ?? '#30363D' }};outline-offset:2px;"
+                >
+            @endif
+            <div class="min-w-0">
+                <h1 class="text-xl font-bold inline-flex items-center gap-1.5" style="color:#E6EDF3;">
+                    <span class="truncate">{{ $visibleName }}</span>
+                    @if ($profileUser->is_supporter && ($profileUser->show_supporter_icon ?? true))<x-supporter-icon />@endif
+                </h1>
 
-                {{-- Profile tagline --}}
+                {{-- Tagline --}}
                 @if ($profileUser->profile_status)
-                    <p class="text-xs leading-relaxed" style="color:#6B7790;margin-top:2px;">{{ $profileUser->profile_status }}</p>
+                    <p class="text-xs leading-snug mt-0.5" style="color:#6B7790;">{{ $profileUser->profile_status }}</p>
                 @endif
 
                 <p class="mt-1 flex items-center gap-1.5 text-xs font-medium" style="color:{{ $profileUser->isOnline() ? '#1D9E75' : '#8B949E' }};">
                     @if ($profileUser->isOnline())
-                        <span class="w-2 h-2 rounded-full inline-block" style="background:#1D9E75;"></span>
+                        <span class="w-2 h-2 rounded-full inline-block flex-none" style="background:#1D9E75;"></span>
                         Online now
                     @else
                         Last seen {{ $profileUser->last_seen_at?->diffForHumans() ?? 'a while ago' }}
@@ -87,41 +160,61 @@
             <p class="text-sm leading-relaxed" style="color:#E6EDF3;">{{ $profileUser->bio }}</p>
         @endif
 
-        {{-- Currently Into + conversation prompts --}}
+        {{-- Currently Into + comfort things --}}
         @php
             $hasCurrently = $profileUser->currently_playing || $profileUser->currently_reading || $profileUser->currently_watching;
-            $hasPrompts   = $profileUser->prompt_comfort_thing || $profileUser->prompt_ramble_topic;
+            $hasComfort   = !empty($profileUser->comfort_things);
         @endphp
-        @if ($hasCurrently || $hasPrompts)
+        @if ($hasCurrently || $hasComfort)
             <div class="rounded-xl border p-4 space-y-1.5" style="background:#161B22;border-color:#30363D;">
                 @if ($hasCurrently)
-                    <h2 class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#8B949E;">Currently Into</h2>
+                    <h2 class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#8B949E;">Comfort lately</h2>
                     @if ($profileUser->currently_playing)
-                        <p class="text-sm" style="color:#E6EDF3;"><span style="color:#8B949E;">Playing:</span> {{ $profileUser->currently_playing }}</p>
+                        <p class="text-sm" style="color:#E6EDF3;"><span style="color:#8B949E;">Returning to</span> · {{ $profileUser->currently_playing }}</p>
                     @endif
                     @if ($profileUser->currently_reading)
-                        <p class="text-sm" style="color:#E6EDF3;"><span style="color:#8B949E;">Reading:</span> {{ $profileUser->currently_reading }}</p>
+                        <p class="text-sm" style="color:#E6EDF3;"><span style="color:#8B949E;">Comforting lately</span> · {{ $profileUser->currently_reading }}</p>
                     @endif
                     @if ($profileUser->currently_watching)
-                        <p class="text-sm" style="color:#E6EDF3;"><span style="color:#8B949E;">Watching:</span> {{ $profileUser->currently_watching }}</p>
+                        <p class="text-sm" style="color:#E6EDF3;"><span style="color:#8B949E;">On my mind</span> · {{ $profileUser->currently_watching }}</p>
                     @endif
                 @endif
-                @if ($hasPrompts)
+
+                @if ($hasComfort)
                     @if ($hasCurrently)
-                        <div class="pt-1.5 border-t" style="border-color:#21262D;"></div>
+                        <div class="pt-2 border-t" style="border-color:#21262D;"></div>
                     @endif
-                    @if ($profileUser->prompt_comfort_thing)
-                        <p class="text-sm" style="color:#E6EDF3;"><span style="color:#8B949E;">Comfort thing:</span> {{ $profileUser->prompt_comfort_thing }}</p>
-                    @endif
-                    @if ($profileUser->prompt_ramble_topic)
-                        <p class="text-sm" style="color:#E6EDF3;"><span style="color:#8B949E;">Could talk about:</span> {{ $profileUser->prompt_ramble_topic }}</p>
-                    @endif
+                    @foreach ($profileUser->comfort_things as $thing)
+                        @if (!empty(trim($thing['value'] ?? '')))
+                            <p class="text-sm" style="color:#E6EDF3;">
+                                @if (!empty(trim($thing['label'] ?? '')))
+                                    <span style="color:#8B949E;">{{ $thing['label'] }}</span> ·
+                                @endif
+                                {{ $thing['value'] }}
+                            </p>
+                        @endif
+                    @endforeach
                 @endif
             </div>
         @endif
 
-        {{-- Shared interests (Group 4) --}}
-        @if ($this->profileTags->isNotEmpty())
+        {{-- Open To --}}
+        @if (!empty($profileUser->open_to))
+            <div>
+                <h2 class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#8B949E;">Open To</h2>
+                <div class="flex flex-wrap gap-1.5">
+                    @foreach ($profileUser->open_to as $option)
+                        @if (isset($openToLabels[$option]))
+                            <span class="px-2.5 py-1 rounded-full text-xs" style="background:rgba(74,139,181,0.08);color:#4A8BB5;border:1px solid rgba(74,139,181,0.2);">{{ $openToLabels[$option] }}</span>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        {{-- Shared interests --}}
+        @php $tags = $this->profileTags->take(8); @endphp
+        @if ($tags->isNotEmpty())
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <h2 class="text-xs font-semibold uppercase tracking-wider" style="color:#8B949E;">Interests</h2>
@@ -130,16 +223,34 @@
                     @endif
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    @foreach ($this->profileTags as $item)
+                    @foreach ($tags as $item)
                         <a
                             href="{{ route('feed') }}?tag={{ $item['tag']->id }}"
                             wire:navigate
-                            class="px-3 py-1 rounded-full text-xs transition tag--shared"
+                            class="px-3 py-1 rounded-full text-xs transition"
                             style="{{ ($item['is_shared'] && !$profileUser->is(auth()->user())) ? 'background:rgba(29,158,117,0.15);color:#1D9E75;outline:1px solid #1D9E75;' : 'background:#1C2333;color:#8B949E;' }}"
                             onmouseover="this.style.color='#E6EDF3'" onmouseout=""
                         >{{ $item['tag']->name }}</a>
                     @endforeach
+                    @if ($this->profileTags->count() > 8)
+                        <span class="px-3 py-1 text-xs" style="color:#8B949E;">+{{ $this->profileTags->count() - 8 }} more</span>
+                    @endif
                 </div>
+            </div>
+        @endif
+
+        {{-- Usually found in --}}
+        @if ($this->usualRooms->isNotEmpty())
+            <div>
+                <h2 class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#8B949E;">Usually Found In</h2>
+                <ul class="space-y-1">
+                    @foreach ($this->usualRooms as $room)
+                        <li class="text-sm flex items-center gap-2" style="color:#C9D1D9;">
+                            <span style="color:#8B949E;">·</span>
+                            {{ $room->title }}
+                        </li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
@@ -160,7 +271,6 @@
                     style="background:#21262D;color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
                 >Back to feed</a>
 
-                {{-- Friend request (Group 1) --}}
                 @php $friendState = $this->friendshipState; @endphp
                 @if ($friendState === 'none')
                     <button type="button" wire:click="sendFriendRequest"
@@ -186,7 +296,6 @@
                     >Friends · Unfriend</button>
                 @endif
 
-                {{-- Block / Unblock --}}
                 @if ($this->isBlocked)
                     <button type="button" wire:click="unblock"
                         class="px-4 py-2.5 text-sm font-semibold rounded-lg transition"
@@ -198,7 +307,6 @@
                     >Block</button>
                 @endif
 
-                {{-- Mute / Unmute --}}
                 @if ($this->isMuted)
                     <button type="button" wire:click="unmute"
                         class="px-4 py-2.5 text-sm font-semibold rounded-lg transition"
@@ -209,7 +317,6 @@
                         style="background:#21262D;color:#8B949E;">Mute</button>
                 @endif
 
-                {{-- Report --}}
                 <button
                     type="button"
                     x-on:click="$dispatch('open-report-modal', { reportedUserId: '{{ $profileUser->id }}', reportableType: 'App\\\\Models\\\\User', reportableId: '{{ $profileUser->id }}' })"
@@ -218,7 +325,12 @@
                 >Report</button>
             </div>
         @else
-            <div class="pt-2">
+            <div class="pt-2 flex flex-wrap gap-3">
+                <a href="{{ route('profile.edit') }}" wire:navigate
+                    class="px-5 py-2.5 text-sm font-semibold rounded-lg transition inline-block"
+                    style="background:#1C2333;color:#E6EDF3;border:1px solid #30363D;"
+                    onmouseover="this.style.borderColor='#4B5563'" onmouseout="this.style.borderColor='#30363D'"
+                >Edit profile</a>
                 <a href="{{ route('feed') }}" wire:navigate
                     class="px-5 py-2.5 text-sm font-semibold rounded-lg transition inline-block"
                     style="background:#21262D;color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"

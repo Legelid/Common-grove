@@ -69,6 +69,10 @@
                     <p>Problem reports or safety reports you submit, including any context you provide.</p>
                 </div>
                 <div>
+                    <p class="font-medium mb-1.5" style="color:#E6EDF3;">Date of birth</p>
+                    <p>Your date of birth is collected during registration. We use it to verify that you meet the minimum age requirement (18 years old) and for optional account features. Your date of birth is never displayed on your profile and is not visible to other users.</p>
+                </div>
+                <div>
                     <p class="font-medium mb-1.5" style="color:#E6EDF3;">Technical data</p>
                     <p>IP address, browser type, device type, timestamps, and session data. This is collected automatically as part of operating any web service and is used for security and debugging.</p>
                 </div>
@@ -83,6 +87,8 @@
                     @foreach ([
                         'Operate the platform — authentication, rooms, messaging, profiles.',
                         'Match you with relevant rooms and hangout posts based on your interests and tags.',
+                        'Verify that you meet the minimum age requirement of 18 years old.',
+                        'Enable optional account features tied to your date of birth.',
                         'Moderate the community and respond to safety reports.',
                         'Investigate and fix bugs.',
                         'Detect and prevent abuse, spam, and bots.',
@@ -111,6 +117,10 @@
                     <li class="flex gap-3">
                         <span class="w-1 h-1 rounded-full flex-none mt-2" style="background:#1D9E75;"></span>
                         <span>Your data is not shared with third parties beyond the infrastructure providers described below, or where legally required.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="w-1 h-1 rounded-full flex-none mt-2" style="background:#1D9E75;"></span>
+                        <span><span style="color:#E6EDF3;">Your date of birth is never made public.</span> It is not shown on your profile and is not visible to other users. CommonGrove is an 18+ community and does not allow accounts for users under 18.</span>
                     </li>
                 </ul>
             </div>

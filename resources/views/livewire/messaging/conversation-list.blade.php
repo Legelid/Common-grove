@@ -59,7 +59,7 @@
                 </div>
             </a>
         @empty
-            <p class="text-center text-sm py-10" style="color:#8B949E;">No conversations yet.</p>
+            <p class="text-center text-sm py-10" style="color:#8B949E;">@tone('empty_messages', 'No conversations yet.')</p>
         @endforelse
     @endif
 

@@ -38,9 +38,15 @@ class Room extends Component
     // Room pin
     public ?string $roomPinMessage = null;
 
+    public ?string $verificationBlock = null;
+
     // Group 8 — content warning compose state
     public bool   $showCwInput = false;
     public string $cwLabel     = '';
+
+    // Room gradient
+    public string $roomGradientTheme  = '';
+    public bool   $showGradientPicker = false;
 
     public function mount(string $conversationId): void
     {
@@ -59,6 +65,8 @@ class Room extends Component
             ['user_id' => Auth::id(), 'conversation_id' => $conversationId],
             ['last_visited_at' => now()],
         );
+
+        $this->roomGradientTheme = $conversation->hangoutPost?->gradient_theme ?? '';
     }
 
     // -------------------------------------------------------------------------
@@ -99,6 +107,11 @@ class Room extends Component
 
     public function sendMessage(): void
     {
+        if (! Auth::user()->hasVerifiedEmail()) {
+            $this->verificationBlock = 'Please verify your email before chatting.';
+            return;
+        }
+
         $rules = ['messageContent' => ['required', 'string', 'max:2000']];
 
         if ($this->showCwInput) {
@@ -301,6 +314,105 @@ class Room extends Component
             ->updateExistingPivot(Auth::id(), ['left_at' => now()]);
 
         $this->redirect(route('messages.index'), navigate: true);
+    }
+
+    // -------------------------------------------------------------------------
+    // Room atmosphere (owner / admin only)
+    // -------------------------------------------------------------------------
+
+    #[Computed]
+    public function isRoomOwner(): bool
+    {
+        return $this->conversation->hangoutPost?->user_id === Auth::id()
+            || $this->conversation->created_by === Auth::id()
+            || Auth::user()->is_admin;
+    }
+
+    /**
+     * Gradient keys that are locked for the current user as room owner.
+     * Empty for supporters and admins.
+     *
+     * @return list<string>
+     */
+    #[Computed]
+    public function lockedRoomAtmosphereKeys(): array
+    {
+        if (Auth::user()->is_admin || Auth::user()->isSupporter()) {
+            return [];
+        }
+
+        return config('supporter.gradient_packs', []);
+    }
+
+    /**
+     * Flat array of prompts to show in this room.
+     * Empty when low-stim mode is on or the user has prompts disabled.
+     *
+     * @return list<string>
+     */
+    #[Computed]
+    public function enabledPrompts(): array
+    {
+        $user = Auth::user();
+
+        if ($user->low_stimulation_mode || ! ($user->show_conversation_prompts ?? true)) {
+            return [];
+        }
+
+        $allPacks    = config('prompts.packs', []);
+        $isSupporter = $user->is_admin || $user->isSupporter();
+
+        $selectedPacks = ! empty($user->enabled_prompt_packs) ? $user->enabled_prompt_packs : ['general'];
+
+        $prompts = [];
+
+        foreach ($selectedPacks as $packKey) {
+            if (! isset($allPacks[$packKey])) {
+                continue;
+            }
+
+            $pack = $allPacks[$packKey];
+
+            if (($pack['supporter_only'] ?? false) && ! $isSupporter) {
+                continue;
+            }
+
+            foreach ($pack['prompts'] as $prompt) {
+                $prompts[] = $prompt;
+            }
+        }
+
+        if (empty($prompts) && isset($allPacks['general'])) {
+            $prompts = $allPacks['general']['prompts'];
+        }
+
+        return $prompts;
+    }
+
+    public function setRoomGradient(string $theme): void
+    {
+        if (! $this->isRoomOwner) {
+            return;
+        }
+
+        $allowed = array_keys(config('gradients'));
+
+        if ($theme !== '' && ! in_array($theme, $allowed, true)) {
+            return;
+        }
+
+        // Silently reject if the user is not eligible for a supporter atmosphere.
+        if ($theme !== '' && in_array($theme, $this->lockedRoomAtmosphereKeys, true)) {
+            return;
+        }
+
+        $this->conversation->hangoutPost?->update([
+            'gradient_theme' => $theme ?: null,
+        ]);
+
+        $this->roomGradientTheme  = $theme;
+        $this->showGradientPicker = false;
+        unset($this->lockedRoomAtmosphereKeys);
     }
 
     // -------------------------------------------------------------------------

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<rect width="100" height="100" fill="#0C1020"/>
+<rect x="14" y="20" width="72" height="60" rx="4" fill="#0A0E18"/>
+<rect x="14" y="20" width="72" height="12" rx="4" fill="#1E2A3A"/>
+<rect x="14" y="28" width="72" height="4" fill="#1E2A3A"/>
+<circle cx="24" cy="26" r="3" fill="#FF5F56"/>
+<circle cx="34" cy="26" r="3" fill="#FFBD2E"/>
+<circle cx="44" cy="26" r="3" fill="#27C93F"/>
+<text x="18" y="46" font-family="monospace" font-size="7" fill="#50FFB0" opacity="0.9">$ hello world</text>
+<text x="18" y="56" font-family="monospace" font-size="7" fill="#A0B0C0" opacity="0.7">loading...</text>
+<text x="18" y="66" font-family="monospace" font-size="7" fill="#50FFB0" opacity="0.9">$ _</text>
+<rect x="34" y="60" width="6" height="8" rx="1" fill="#50FFB0" opacity="0.6"/>
+</svg>

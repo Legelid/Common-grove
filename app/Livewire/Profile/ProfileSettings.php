@@ -8,28 +8,18 @@ use App\Enums\MoodOption;
 use App\Models\Tag;
 use App\Rules\ValidGamertag;
 use App\Services\GamertagSuggestionService;
+use App\Services\SupporterService;
+use App\Services\TonePackService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Intervention\Image\Drivers\Gd\Driver as GdDriver;
-use Intervention\Image\Encoders\JpegEncoder;
-use Intervention\Image\Encoders\PngEncoder;
-use Intervention\Image\Encoders\WebpEncoder;
-use Intervention\Image\Exceptions\DecoderException;
-use Intervention\Image\Exceptions\RuntimeException as ImageRuntimeException;
-use Intervention\Image\ImageManager;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 
 class ProfileSettings extends Component
 {
-    use WithFileUploads;
-
     // -------------------------------------------------------------------------
     // Identity section
     // -------------------------------------------------------------------------
@@ -43,13 +33,6 @@ class ProfileSettings extends Component
     // -------------------------------------------------------------------------
 
     public string $bio = '';
-
-    // -------------------------------------------------------------------------
-    // Avatar section
-    // -------------------------------------------------------------------------
-
-    #[Validate(['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'])]
-    public $avatarUpload = null;
 
     // -------------------------------------------------------------------------
     // Gamertag change section
@@ -79,14 +62,57 @@ class ProfileSettings extends Component
     // Profile expression section
     // -------------------------------------------------------------------------
 
-    public string $profileStatus      = '';
-    public string $accentColor        = '';
-    public string $bannerStyle        = '';
-    public string $promptComfortThing = '';
-    public string $promptRambleTopic  = '';
+    public string $profileStatus = '';
+    public string $accentColor   = '';
+    public string $bannerStyle   = '';
+
+    /** @var list<array{label: string, value: string}> */
+    public array $comfortThings = [];
 
     /** @var list<string> */
     public array $socialStyles = [];
+
+    /** @var list<string> */
+    public array $openTo = [];
+
+    // -------------------------------------------------------------------------
+    // Appearance section
+    // -------------------------------------------------------------------------
+
+    public string $personalGradientTheme = '';
+    public bool   $birthdayThemeEnabled  = true;
+    public bool   $holidayThemesEnabled  = true;
+
+    // -------------------------------------------------------------------------
+    // Tone pack section
+    // -------------------------------------------------------------------------
+
+    public string  $tonePackKey     = 'default';
+    public ?string $tonePackMessage = null;
+
+    // -------------------------------------------------------------------------
+    // Advanced comfort section
+    // -------------------------------------------------------------------------
+
+    /** @var list<string> */
+    public array   $advancedComfortSettings = [];
+    public ?string $advancedComfortMessage  = null;
+
+    // -------------------------------------------------------------------------
+    // Prompt packs section
+    // -------------------------------------------------------------------------
+
+    public bool    $showConversationPrompts = true;
+    /** @var list<string> */
+    public array   $enabledPromptPacks  = [];
+    public ?string $promptPacksMessage  = null;
+
+    // -------------------------------------------------------------------------
+    // Reaction visibility section
+    // -------------------------------------------------------------------------
+
+    public bool    $hideReactions        = false;
+    public ?string $hideReactionsMessage = null;
 
     // -------------------------------------------------------------------------
     // Discovery section (Group 11)
@@ -102,7 +128,6 @@ class ProfileSettings extends Component
 
     public ?string $identityMessage      = null;
     public ?string $bioMessage           = null;
-    public ?string $avatarMessage        = null;
     public ?string $gamertagMessage      = null;
     public ?string $currentlyMessage     = null;
     public ?string $expressionMessage    = null;
@@ -110,6 +135,7 @@ class ProfileSettings extends Component
     public ?string $discoveryMessage     = null;
     public ?string $officialRoomsMessage = null;
     public ?string $comfortMessage       = null;
+    public ?string $appearanceMessage    = null;
 
     public function mount(): void
     {
@@ -123,21 +149,112 @@ class ProfileSettings extends Component
         $this->currentlyPlaying  = $user->currently_playing ?? '';
         $this->currentlyReading  = $user->currently_reading ?? '';
         $this->currentlyWatching = $user->currently_watching ?? '';
-        $this->profileStatus      = $user->profile_status ?? '';
-        $this->accentColor        = $user->accent_color ?? '';
-        $this->bannerStyle        = $user->banner_style ?? '';
-        $this->promptComfortThing = $user->prompt_comfort_thing ?? '';
-        $this->promptRambleTopic  = $user->prompt_ramble_topic ?? '';
-        $this->socialStyles       = $user->social_styles ?? [];
+        $this->profileStatus = $user->profile_status ?? '';
+        $this->accentColor   = $user->accent_color ?? '';
+        $this->bannerStyle   = $user->banner_style ?? '';
+        $this->comfortThings = $user->comfort_things ?? [];
+        $this->socialStyles  = $user->social_styles ?? [];
+        $this->openTo        = $user->open_to ?? [];
+        $this->personalGradientTheme     = $user->personal_gradient_theme ?? '';
+        $this->birthdayThemeEnabled      = (bool) ($user->birthday_theme_enabled ?? true);
+        $this->holidayThemesEnabled      = (bool) ($user->holiday_themes_enabled ?? true);
+        $this->tonePackKey               = $user->tone_pack ?: 'default';
+        $this->advancedComfortSettings   = $user->advanced_comfort_settings ?? [];
+        $this->showConversationPrompts   = (bool) ($user->show_conversation_prompts ?? true);
+        $this->enabledPromptPacks        = $user->enabled_prompt_packs ?? [];
         $this->showReadReceipts          = (bool) $user->show_read_receipts;
+        $this->hideReactions             = (bool) ($user->hide_reactions ?? false);
         $this->showConnectionSuggestions = (bool) ($user->show_connection_suggestions ?? true);
         $this->lowStimulationMode        = (bool) ($user->low_stimulation_mode ?? false);
         $this->showOfficialRooms         = (bool) ($user->show_official_rooms ?? true);
     }
 
     // -------------------------------------------------------------------------
+    // Unified save
+    // -------------------------------------------------------------------------
+
+    /**
+     * Save every settings section at once. Called by the sticky save bar.
+     * Individual section validation failures are recorded in the error bag but
+     * do not prevent the remaining sections from saving.
+     */
+    public function saveAll(): void
+    {
+        $sections = [
+            'saveIdentity', 'saveBio', 'saveCurrently', 'saveExpression',
+            'saveReadReceiptPref', 'saveDiscoveryPreferences', 'saveOfficialRoomsPref',
+            'saveComfortPreferences', 'saveHideReactions', 'saveAdvancedComfort',
+            'savePromptPreferences', 'saveAppearance', 'saveTonePack',
+        ];
+
+        foreach ($sections as $method) {
+            try {
+                $this->$method();
+            } catch (\Illuminate\Validation\ValidationException) {
+                // Error bag is populated; continue saving remaining sections
+            }
+        }
+
+        $this->dispatch('settings-saved');
+    }
+
+    // -------------------------------------------------------------------------
     // Computed
     // -------------------------------------------------------------------------
+
+    /**
+     * Gradient keys the current user cannot select (empty for supporters/admins).
+     *
+     * @return list<string>
+     */
+    #[Computed]
+    public function lockedGradientKeys(): array
+    {
+        return app(SupporterService::class)->lockedGradientKeys(Auth::user());
+    }
+
+    #[Computed]
+    public function userIsSupporter(): bool
+    {
+        return Auth::user()->is_admin || Auth::user()->isSupporter();
+    }
+
+    /**
+     * All prompt pack definitions, each annotated with whether it is locked.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    #[Computed]
+    public function promptPacks(): array
+    {
+        $isSupporter = Auth::user()->is_admin || Auth::user()->isSupporter();
+        $packs       = config('prompts.packs', []);
+
+        foreach ($packs as &$pack) {
+            $pack['locked'] = ($pack['supporter_only'] ?? false) && ! $isSupporter;
+        }
+
+        return $packs;
+    }
+
+    /**
+     * All tone pack definitions, each annotated with whether it is locked.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    #[Computed]
+    public function tonePacks(): array
+    {
+        $service = app(TonePackService::class);
+        $user    = Auth::user();
+        $packs   = $service->allPacks();
+
+        foreach ($packs as $key => &$pack) {
+            $pack['locked'] = $service->isLocked($user, $key);
+        }
+
+        return $packs;
+    }
 
     /**
      * Live preview of how the user's name will appear to others.
@@ -148,7 +265,7 @@ class ProfileSettings extends Component
         $raw = trim($this->displayNameInput);
 
         return match ($this->identityMode) {
-            2       => $raw ? Auth::user()->gamertag . ' · goes by ' . $raw : Auth::user()->gamertag,
+            2       => Auth::user()->gamertag . ($raw ? ' (tooltip: Prefers ' . $raw . ')' : ''),
             3       => $raw ?: Auth::user()->gamertag,
             default => Auth::user()->gamertag,
         };
@@ -194,63 +311,6 @@ class ProfileSettings extends Component
     }
 
     // -------------------------------------------------------------------------
-    // Avatar section
-    // -------------------------------------------------------------------------
-
-    public function saveAvatar(): void
-    {
-        $this->validateOnly('avatarUpload', [
-            'avatarUpload' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-        ]);
-
-        $this->avatarMessage = null;
-
-        $user      = Auth::user();
-        $ext       = strtolower($this->avatarUpload->getClientOriginalExtension());
-        $outputExt = in_array($ext, ['png', 'webp'], true) ? $ext : 'jpg';
-        $filename  = Str::uuid() . '.' . $outputExt;
-        $path      = 'avatars/' . $user->id . '/' . $filename;
-
-        try {
-            $manager = new ImageManager(new GdDriver());
-            $image   = $manager->read($this->avatarUpload->getPathname());
-
-            $imageData = match ($outputExt) {
-                'png'  => (string) $image->encode(new PngEncoder()),
-                'webp' => (string) $image->encode(new WebpEncoder(quality: 85)),
-                default => (string) $image->encode(new JpegEncoder(quality: 85)),
-            };
-        } catch (DecoderException | ImageRuntimeException) {
-            $this->avatarMessage = "We couldn't process that image. Try a different one.";
-            $this->avatarUpload  = null;
-            return;
-        }
-
-        // Delete the previous avatar before storing the new one
-        if ($user->avatar_path) {
-            Storage::disk('s3')->delete($user->avatar_path);
-        }
-
-        Storage::disk('s3')->put($path, $imageData);
-
-        $user->update(['avatar_path' => $path]);
-
-        $this->avatarUpload  = null;
-        $this->avatarMessage = 'Avatar updated.';
-    }
-
-    public function removeAvatar(): void
-    {
-        $user = Auth::user();
-
-        if ($user->avatar_path) {
-            Storage::disk('s3')->delete($user->avatar_path);
-            $user->update(['avatar_path' => null]);
-        }
-
-        $this->avatarMessage = 'Avatar removed.';
-    }
-
     // -------------------------------------------------------------------------
     // Gamertag change section
     // -------------------------------------------------------------------------
@@ -358,51 +418,106 @@ class ProfileSettings extends Component
             'currently_watching' => trim($this->currentlyWatching) ?: null,
         ]);
 
-        $this->currentlyMessage = 'Currently Into saved.';
+        $this->currentlyMessage = 'Comfort lately saved.';
     }
 
     // -------------------------------------------------------------------------
     // Profile expression section
     // -------------------------------------------------------------------------
 
+    private const BANNER_STYLES = [
+        'night_rain', 'forest', 'cozy_room', 'pixel_sky', 'aquarium', 'snowfall',
+        'sunset_fog', 'moonlight', 'coffee_shop', 'soft_abstract', 'deep_blue', 'warm_lamp',
+    ];
+
+    private const SOCIAL_STYLES = [
+        'quiet_chatter', 'mostly_listening', 'slow_replies', 'deep_talks', 'late_night',
+        'introvert_friendly', 'listener_first', 'casual_conversations', 'low_pressure',
+        'group_chats_okay', 'one_on_one_preferred', 'small_groups', 'usually_multitasking',
+        'social_battery', 'thoughtful_replies', 'cozy_energy', 'random_conversations',
+        'comfortable_online', 'sometimes_awkward', 'better_warmed_up', 'open_to_friends',
+        'quiet_but_friendly', 'easygoing', 'rambles_sometimes', 'comfortable_silence',
+    ];
+
+    private const OPEN_TO_OPTIONS = [
+        'new_friends', 'quiet_conversations', 'group_chats', 'one_on_one_chats',
+        'shared_hobbies', 'deep_talks', 'casual_conversation', 'listening_more',
+        'gaming_together', 'book_discussions', 'slow_conversations', 'creative_discussions',
+        'nighttime_chats', 'similar_experiences', 'just_existing', 'advice_support',
+        'meeting_slowly', 'cozy_conversation', 'joining_quietly', 'talking_when_comfortable',
+    ];
+
+    public function addComfortThing(): void
+    {
+        if (count($this->comfortThings) < 5) {
+            $this->comfortThings[] = ['label' => '', 'value' => ''];
+        }
+    }
+
+    public function removeComfortThing(int $index): void
+    {
+        array_splice($this->comfortThings, $index, 1);
+        $this->comfortThings = array_values($this->comfortThings);
+    }
+
     public function toggleSocialStyle(string $style): void
     {
-        $allowed = ['quiet_chatter', 'mostly_listening', 'slow_replies', 'deep_talks', 'late_night', 'introvert_friendly'];
-
-        if (! in_array($style, $allowed, true)) {
+        if (! in_array($style, self::SOCIAL_STYLES, true)) {
             return;
         }
 
         if (in_array($style, $this->socialStyles, true)) {
             $this->socialStyles = array_values(array_diff($this->socialStyles, [$style]));
-        } else {
+        } elseif (count($this->socialStyles) < 5) {
             $this->socialStyles[] = $style;
+        }
+    }
+
+    public function toggleOpenTo(string $option): void
+    {
+        if (! in_array($option, self::OPEN_TO_OPTIONS, true)) {
+            return;
+        }
+
+        if (in_array($option, $this->openTo, true)) {
+            $this->openTo = array_values(array_diff($this->openTo, [$option]));
+        } else {
+            $this->openTo[] = $option;
         }
     }
 
     public function saveExpression(): void
     {
         $this->validate([
-            'profileStatus'      => ['nullable', 'string', 'max:120'],
-            'accentColor'        => ['nullable', 'string', 'in:green,blue,amber,purple,slate'],
-            'bannerStyle'        => ['nullable', 'string', 'in:rain_window,forest,night_sky,cozy_room,gradient'],
-            'promptComfortThing' => ['nullable', 'string', 'max:120'],
-            'promptRambleTopic'  => ['nullable', 'string', 'max:120'],
-            'socialStyles'       => ['array', 'max:6'],
-            'socialStyles.*'     => ['string', 'in:quiet_chatter,mostly_listening,slow_replies,deep_talks,late_night,introvert_friendly'],
+            'profileStatus'          => ['nullable', 'string', 'max:120'],
+            'accentColor'            => ['nullable', 'string', 'in:green,blue,amber,purple,slate'],
+            'bannerStyle'            => ['nullable', 'string', 'in:' . implode(',', self::BANNER_STYLES)],
+            'comfortThings'          => ['array', 'max:5'],
+            'comfortThings.*.label'  => ['nullable', 'string', 'max:60'],
+            'comfortThings.*.value'  => ['nullable', 'string', 'max:120'],
+            'socialStyles'           => ['array', 'max:5'],
+            'socialStyles.*'         => ['string', 'in:' . implode(',', self::SOCIAL_STYLES)],
+            'openTo'                 => ['array'],
+            'openTo.*'               => ['string', 'in:' . implode(',', self::OPEN_TO_OPTIONS)],
         ]);
 
         $this->expressionMessage = null;
 
+        $comfortFiltered = array_values(array_filter(
+            $this->comfortThings,
+            static fn (array $t): bool => trim($t['value'] ?? '') !== '',
+        ));
+
         Auth::user()->update([
-            'profile_status'       => trim($this->profileStatus) ?: null,
-            'accent_color'         => $this->accentColor ?: null,
-            'banner_style'         => $this->bannerStyle ?: null,
-            'prompt_comfort_thing' => trim($this->promptComfortThing) ?: null,
-            'prompt_ramble_topic'  => trim($this->promptRambleTopic) ?: null,
-            'social_styles'        => ! empty($this->socialStyles) ? array_values($this->socialStyles) : null,
+            'profile_status' => trim($this->profileStatus) ?: null,
+            'accent_color'   => $this->accentColor ?: null,
+            'banner_style'   => $this->bannerStyle ?: null,
+            'comfort_things' => ! empty($comfortFiltered) ? $comfortFiltered : null,
+            'social_styles'  => ! empty($this->socialStyles) ? array_values($this->socialStyles) : null,
+            'open_to'        => ! empty($this->openTo) ? array_values($this->openTo) : null,
         ]);
 
+        $this->comfortThings     = $comfortFiltered;
         $this->expressionMessage = 'Profile updated.';
     }
 
@@ -447,6 +562,175 @@ class ProfileSettings extends Component
         $this->officialRoomsMessage = $this->showOfficialRooms
             ? 'CommonGrove starter rooms will show in your feed.'
             : "Got it — we'll keep your feed more personal.";
+    }
+
+    // -------------------------------------------------------------------------
+    // Appearance section
+    // -------------------------------------------------------------------------
+
+    public function saveAppearance(): void
+    {
+        $this->validate([
+            'personalGradientTheme' => ['nullable', 'string', 'in:' . implode(',', array_keys(config('gradients')))],
+        ]);
+
+        // Silently clear a supporter-only gradient if the user no longer qualifies.
+        if ($this->personalGradientTheme !== '' && in_array($this->personalGradientTheme, $this->lockedGradientKeys, true)) {
+            $this->personalGradientTheme = '';
+        }
+
+        $this->appearanceMessage = null;
+
+        Auth::user()->update([
+            'personal_gradient_theme' => $this->personalGradientTheme ?: null,
+            'birthday_theme_enabled'  => $this->birthdayThemeEnabled,
+            'holiday_themes_enabled'  => $this->holidayThemesEnabled,
+        ]);
+
+        $this->appearanceMessage = 'Appearance saved.';
+    }
+
+    // -------------------------------------------------------------------------
+    // Tone pack section
+    // -------------------------------------------------------------------------
+
+    public function saveTonePack(): void
+    {
+        $validKeys = array_keys(config('tone_packs', []));
+
+        if (! in_array($this->tonePackKey, $validKeys, true)) {
+            return;
+        }
+
+        // Silently reset to default if the user selects a supporter pack without access.
+        if (app(TonePackService::class)->isLocked(Auth::user(), $this->tonePackKey)) {
+            $this->tonePackKey = 'default';
+        }
+
+        Auth::user()->update([
+            'tone_pack' => $this->tonePackKey !== 'default' ? $this->tonePackKey : null,
+        ]);
+
+        $this->tonePackMessage = 'Tone pack saved. Refresh to hear the new voice.';
+    }
+
+    // -------------------------------------------------------------------------
+    // Advanced comfort section
+    // -------------------------------------------------------------------------
+
+    private const ADVANCED_COMFORT_KEYS = [
+        'ultra_minimal', 'extra_spacing', 'simple_room_cards', 'hide_gradients',
+        'reduce_sidebar', 'hide_suggestions', 'hide_phrases', 'compact_chat', 'larger_text',
+    ];
+
+    public function toggleAdvancedComfort(string $key): void
+    {
+        if (! in_array($key, self::ADVANCED_COMFORT_KEYS, true)) {
+            return;
+        }
+
+        if (! $this->userIsSupporter) {
+            return;
+        }
+
+        if (in_array($key, $this->advancedComfortSettings, true)) {
+            $this->advancedComfortSettings = array_values(
+                array_diff($this->advancedComfortSettings, [$key]),
+            );
+        } else {
+            $this->advancedComfortSettings[] = $key;
+        }
+    }
+
+    public function saveAdvancedComfort(): void
+    {
+        $this->advancedComfortMessage = null;
+
+        if (! $this->userIsSupporter) {
+            $this->advancedComfortSettings = [];
+        }
+
+        $validated = array_values(array_filter(
+            $this->advancedComfortSettings,
+            static fn (string $k): bool => in_array($k, self::ADVANCED_COMFORT_KEYS, true),
+        ));
+
+        $this->advancedComfortSettings = $validated;
+
+        Auth::user()->update([
+            'advanced_comfort_settings' => ! empty($validated) ? $validated : null,
+        ]);
+
+        $this->advancedComfortMessage = 'Comfort settings saved.';
+    }
+
+    // -------------------------------------------------------------------------
+    // Prompt packs section
+    // -------------------------------------------------------------------------
+
+    public function togglePromptPack(string $packKey): void
+    {
+        $allPacks = config('prompts.packs', []);
+
+        if (! isset($allPacks[$packKey])) {
+            return;
+        }
+
+        $pack        = $allPacks[$packKey];
+        $isSupporter = Auth::user()->is_admin || Auth::user()->isSupporter();
+
+        if (($pack['supporter_only'] ?? false) && ! $isSupporter) {
+            return;
+        }
+
+        if (in_array($packKey, $this->enabledPromptPacks, true)) {
+            $this->enabledPromptPacks = array_values(array_diff($this->enabledPromptPacks, [$packKey]));
+        } else {
+            $this->enabledPromptPacks[] = $packKey;
+        }
+    }
+
+    public function savePromptPreferences(): void
+    {
+        $this->promptPacksMessage = null;
+
+        $allPacks    = config('prompts.packs', []);
+        $isSupporter = Auth::user()->is_admin || Auth::user()->isSupporter();
+
+        $validated = array_values(array_filter(
+            $this->enabledPromptPacks,
+            static function (string $k) use ($allPacks, $isSupporter): bool {
+                if (! isset($allPacks[$k])) {
+                    return false;
+                }
+
+                return ! (($allPacks[$k]['supporter_only'] ?? false) && ! $isSupporter);
+            },
+        ));
+
+        $this->enabledPromptPacks = $validated;
+
+        Auth::user()->update([
+            'show_conversation_prompts' => $this->showConversationPrompts,
+            'enabled_prompt_packs'      => ! empty($validated) ? $validated : null,
+        ]);
+
+        $this->promptPacksMessage = 'Conversation prompt preferences saved.';
+    }
+
+    // -------------------------------------------------------------------------
+    // Reaction visibility section
+    // -------------------------------------------------------------------------
+
+    public function saveHideReactions(): void
+    {
+        $this->hideReactionsMessage = null;
+
+        Auth::user()->update(['hide_reactions' => $this->hideReactions]);
+
+        $this->hideReactionsMessage = $this->hideReactions
+            ? 'Reactions hidden.'
+            : 'Reactions visible.';
     }
 
     // -------------------------------------------------------------------------

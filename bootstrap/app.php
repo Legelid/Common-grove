@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\CheckSuspended;
+use App\Http\Middleware\EnsureDateOfBirth;
 use App\Http\Middleware\EnsureOnboardingComplete;
 use App\Http\Middleware\RequireAdmin;
 use App\Http\Middleware\SecurityHeaders;
@@ -20,10 +21,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(SecurityHeaders::class);
-        $middleware->web(append: [UpdateLastSeen::class, CheckSuspended::class]);
+        $middleware->web(append: [UpdateLastSeen::class, CheckSuspended::class, EnsureDateOfBirth::class]);
         $middleware->alias([
             'admin'      => RequireAdmin::class,
             'onboarded'  => EnsureOnboardingComplete::class,
+        ]);
+        $middleware->validateCsrfTokens(except: [
+            '/paypal/webhook',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
