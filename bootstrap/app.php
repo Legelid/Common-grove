@@ -40,5 +40,46 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Log every exception that resolves to a 419 response so Livewire update failures
+        // are captured regardless of exception type (TokenMismatchException, LivewireReleaseTokenMismatchException, etc.)
+        $exceptions->report(function (\Throwable $e) {
+            $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : null;
+            $is419  = $status === 419 || $e instanceof \Illuminate\Session\TokenMismatchException;
+
+            if (! $is419) {
+                return false; // let default reporter handle everything else
+            }
+
+            $request = app('request');
+            $cookie  = config('session.cookie');
+
+            $body       = json_decode((string) $request->getContent(), true) ?? [];
+            $lwToken    = (string) ($body['_token'] ?? '');
+            $lwSnapshot = $body['components'][0]['snapshot'] ?? null;
+            $release    = $lwSnapshot
+                ? (json_decode($lwSnapshot, true)['memo']['release'] ?? '(not set)')
+                : '(no snapshot)';
+
+            \Illuminate\Support\Facades\Log::warning('Global.419', [
+                'exception_class'    => get_class($e),
+                'exception_message'  => $e->getMessage(),
+                'path'               => $request->path(),
+                'method'             => $request->method(),
+                'has_session_cookie' => $request->cookies->has($cookie),
+                'x_csrf_header'      => substr((string) ($request->header('X-CSRF-TOKEN') ?? ''), 0, 10),
+                'x_xsrf_header'      => substr((string) ($request->header('X-XSRF-TOKEN') ?? ''), 0, 10),
+                'x_livewire_header'  => $request->hasHeader('X-Livewire') ? 'yes' : 'no',
+                'session_id'         => session()->getId(),
+                'session_token'      => substr(session()->token() ?? '', 0, 10),
+                'livewire_token'     => substr($lwToken, 0, 10),
+                'release_in_snapshot'=> $release,
+                'auth_id'            => \Illuminate\Support\Facades\Auth::id(),
+                'route_name'         => $request->route()?->getName(),
+                'db_row_exists'      => \Illuminate\Support\Facades\DB::table('sessions')
+                                            ->where('id', session()->getId())
+                                            ->exists(),
+            ]);
+
+            return false; // still let default reporter run
+        });
     })->create();
