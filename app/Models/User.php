@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\UserSubscription;
 use App\Models\RoomCollection;
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -119,6 +120,14 @@ class User extends Authenticatable implements MustVerifyEmail
             'open_to'                    => 'array',
             'social_styles'              => 'array',
         ];
+    }
+
+    /**
+     * Send the email verification notification using the custom CommonGrove branded email.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification());
     }
 
     // -------------------------------------------------------------------------
