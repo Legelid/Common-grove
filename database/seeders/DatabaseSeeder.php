@@ -13,8 +13,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AvatarSeeder::class,
             CommonGroveTaxonomySeeder::class,
-            TagSeeder::class,
-            CommonGroundDemoSeeder::class,
+            CrisisKeywordSeeder::class,
+            CommonGroveOfficialRoomsSeeder::class,
         ]);
     }
 }

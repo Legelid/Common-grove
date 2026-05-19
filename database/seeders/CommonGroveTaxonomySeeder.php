@@ -1306,14 +1306,13 @@ class CommonGroveTaxonomySeeder extends Seeder
                     ]
                 );
 
-                // Determine type from the parent category
-                $type = $categoryName === 'Identity, Support & Shared Experiences'
-                    ? 'shared_experience'
-                    : 'interest';
-
-                // Special case: the low-stimulation subcategory mixes interest and vibe tags;
-                // the specific vibe slugs keep their existing type via updateOrCreate (only
-                // category_id / subcategory_id are overwritten — type is not in the update array).
+                // 'Low-stimulation spaces' holds vibe tags (Quiet, Casual, etc.) even
+                // though its parent category is Identity/Support — give it the correct type.
+                $type = match(true) {
+                    $subcategoryName === 'Low-stimulation spaces'                       => 'vibe',
+                    $categoryName    === 'Identity, Support & Shared Experiences'       => 'shared_experience',
+                    default                                                             => 'interest',
+                };
 
                 foreach ($subcategoryData['tags'] as $tagName => $slug) {
                     $slug = $slug ?? Str::slug($tagName);
@@ -1323,6 +1322,7 @@ class CommonGroveTaxonomySeeder extends Seeder
                         [
                             'name'           => $tagName,
                             'slug'           => $slug,
+                            'type'           => $type,
                             'category'       => $categoryName,
                             'category_id'    => $category->id,
                             'subcategory_id' => $subcategory->id,
@@ -1331,14 +1331,6 @@ class CommonGroveTaxonomySeeder extends Seeder
                         ]
                     );
                 }
-
-                // Stamp `type` only on rows that don't already have one
-                Tag::where('subcategory_id', $subcategory->id)
-                    ->whereNull('type')
-                    ->orWhere(function ($q) use ($subcategory): void {
-                        $q->where('subcategory_id', $subcategory->id)->where('type', '');
-                    })
-                    ->update(['type' => $type]);
             }
         }
 
