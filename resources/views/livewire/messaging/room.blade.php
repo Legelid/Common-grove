@@ -1,7 +1,7 @@
-<div class="flex h-full">
+<div class="flex h-full" x-data="{ showParticipants: false }">
 
-    {{-- Participant sidebar --}}
-    <aside class="w-48 flex-none border-r flex flex-col" style="background:#161B22;border-color:#30363D;">
+    {{-- Participant sidebar — desktop only --}}
+    <aside class="hidden md:flex md:flex-col w-48 flex-none border-r" style="background:#161B22;border-color:#30363D;">
         <div class="px-3 py-3 border-b" style="border-color:#30363D;">
             <p class="text-xs font-semibold uppercase tracking-wider" style="color:#8B949E;">
                 @php $activeParticipants = $this->conversation->participants->filter(fn($p) => !$p->pivot->left_at); @endphp
@@ -72,15 +72,33 @@
     <div class="flex flex-col flex-1 min-w-0" style="{{ $chatAreaBg }}">
 
         {{-- Header --}}
-        <div class="flex items-center gap-3 px-4 py-3 border-b flex-none" style="background:#161B22;border-color:#30363D;">
-            <a href="{{ route('messages.index') }}" wire:navigate class="transition" style="color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'">←</a>
+        <div class="flex items-center gap-2 px-4 py-3 border-b flex-none" style="background:#161B22;border-color:#30363D;">
+            <a href="{{ route('messages.index') }}" wire:navigate class="transition flex-none" style="color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'">←</a>
             <div class="flex-1 min-w-0">
                 <p class="font-semibold text-sm truncate" style="color:#E6EDF3;">{{ $this->conversation->name ?? 'Hangout Room' }}</p>
                 <p class="text-xs" style="color:#8B949E;">{{ $activeParticipants->count() }} participants</p>
             </div>
 
-            {{-- Room pin --}}
-            <div class="flex-none flex flex-col items-end gap-0.5">
+            {{-- Mobile: People button --}}
+            <button
+                type="button"
+                @click="showParticipants = true"
+                class="md:hidden flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition flex-none"
+                style="color:#8B949E;border:1px solid #30363D;"
+                onmouseover="this.style.color='#C9D1D9';this.style.borderColor='#3d4451'"
+                onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
+            >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                {{ $activeParticipants->count() }}
+            </button>
+
+            {{-- Desktop: Room pin --}}
+            <div class="hidden md:flex md:flex-col md:items-end gap-0.5 flex-none">
                 <button
                     type="button"
                     wire:click="togglePin"
@@ -114,10 +132,10 @@
                 @endif
             </div>
 
-            {{-- Room appearance panel (owner / admin only) --}}
+            {{-- Desktop: Room appearance panel (owner / admin only) --}}
             @if ($this->isRoomOwner)
                 <div
-                    class="flex-none relative"
+                    class="hidden md:block flex-none relative"
                     x-data="{ open: @entangle('showGradientPicker') }"
                     @click.outside="open = false"
                 >
@@ -591,4 +609,93 @@
         </div>
 
     </div>
+
+    {{-- ── Mobile participants sheet ─────────────────────────────────────────── --}}
+    <div
+        x-show="showParticipants"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex md:hidden"
+        style="display:none;"
+    >
+        {{-- Backdrop --}}
+        <div class="absolute inset-0" @click="showParticipants = false" style="background:rgba(0,0,0,0.6);"></div>
+
+        {{-- Sheet slides in from the right --}}
+        <div class="absolute inset-y-0 right-0 w-72 flex flex-col" style="background:#161B22;border-left:1px solid #30363D;">
+
+            {{-- Sheet header --}}
+            <div class="flex items-center justify-between px-4 py-4 border-b flex-none" style="border-color:#21262D;">
+                <p class="text-sm font-semibold" style="color:#E6EDF3;">In this room · {{ $activeParticipants->count() }}</p>
+                <button
+                    type="button"
+                    @click="showParticipants = false"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg transition text-lg leading-none"
+                    style="color:#8B949E;"
+                    aria-label="Close"
+                >×</button>
+            </div>
+
+            {{-- Participants list --}}
+            <div class="flex-1 overflow-y-auto py-2 space-y-0.5">
+                @foreach ($activeParticipants as $participant)
+                    <a
+                        href="{{ route('profile.show', $participant->gamertag) }}"
+                        wire:navigate
+                        @click="showParticipants = false"
+                        class="flex items-center gap-3 px-4 py-2.5 transition"
+                        style="color:#8B949E;"
+                        onmouseover="this.style.background='#21262D'" onmouseout="this.style.background=''"
+                    >
+                        <img src="{{ $participant->avatar_url }}" alt="" class="w-8 h-8 rounded-full object-cover flex-none" style="background:#21262D;">
+                        <x-user-name :user="$participant" class="text-sm truncate" style="color:#E6EDF3;" />
+                        @if ($participant->isOnline())
+                            <span class="ml-auto w-1.5 h-1.5 rounded-full flex-none" style="background:#1D9E75;"></span>
+                        @endif
+                    </a>
+                @endforeach
+            </div>
+
+            {{-- Hangout timer --}}
+            @if ($this->conversation->hangoutPost && !$this->conversation->hangoutPost->is_persistent)
+                @if ($this->conversation->hangoutPost->isExpired())
+                    <div class="px-4 py-3 border-t flex-none" style="border-color:#30363D;">
+                        <p class="text-xs" style="color:#8B949E;">This hangout has ended.</p>
+                    </div>
+                @else
+                    <div class="px-4 py-3 border-t flex-none" style="border-color:#30363D;">
+                        <p class="text-xs" style="color:#D29922;">
+                            Hangout closes in {{ $this->conversation->hangoutPost->expiresInFormatted() }}
+                        </p>
+                    </div>
+                @endif
+            @endif
+
+            {{-- Collections (supporter only) --}}
+            @if(auth()->user()->isSupporter())
+                <div class="px-4 py-3 border-t flex-none" style="border-color:#30363D;">
+                    <livewire:rooms.add-to-collection :conversationId="$conversationId" :key="'atc-mobile-'.$conversationId" />
+                </div>
+            @endif
+
+            {{-- Leave quietly --}}
+            <div class="px-4 py-4 border-t flex-none" style="border-color:#30363D;">
+                <button
+                    type="button"
+                    wire:click="leaveQuietly"
+                    wire:confirm="Leave this room quietly? No one will be notified."
+                    @click="showParticipants = false"
+                    class="w-full text-sm py-2.5 rounded-xl transition"
+                    style="color:#8B949E;border:1px solid #30363D;"
+                    onmouseover="this.style.color='#E24B4A';this.style.borderColor='rgba(226,75,74,0.3)'"
+                    onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
+                >Leave quietly</button>
+            </div>
+        </div>
+    </div>
+
 </div>

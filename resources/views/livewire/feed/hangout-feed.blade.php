@@ -536,69 +536,123 @@
                 </div>
             </div>
 
-            {{-- ── Starter rooms (horizontal row) ───────────────────────────── --}}
+            {{-- ── Starter rooms ─────────────────────────────────────────────── --}}
             @if ($this->officialRooms->isNotEmpty())
-                @php $lowStim = auth()->check() && auth()->user()->low_stimulation_mode; @endphp
-                <div class="space-y-3">
+                @php
+                    $lowStim = auth()->check() && auth()->user()->low_stimulation_mode;
+                    $vibeMap = [
+                        'Just Existing' => 'Quiet room',
+                        'Casual Chat'   => 'Easy conversation',
+                        'Brain Dump'    => 'Say what\'s on your mind',
+                        'Starting Slow' => 'Gentle pace',
+                    ];
+                    $accentMap = [
+                        'Just Existing' => [
+                            'color'          => '#7A9FBF',
+                            'badge_bg'       => 'rgba(100,130,160,0.08)',
+                            'badge_border'   => 'rgba(100,130,160,0.18)',
+                            'btn_bg'         => 'rgba(100,130,160,0.07)',
+                            'btn_border'     => 'rgba(100,130,160,0.16)',
+                            'btn_hover_bg'   => 'rgba(100,130,160,0.16)',
+                            'btn_hover_brd'  => 'rgba(100,130,160,0.3)',
+                            'glow_base'      => 'rgba(100,130,160,0.07)',
+                            'glow_hover'     => 'rgba(100,130,160,0.13)',
+                        ],
+                        'Casual Chat' => [
+                            'color'          => '#1D9E75',
+                            'badge_bg'       => 'rgba(29,158,117,0.08)',
+                            'badge_border'   => 'rgba(29,158,117,0.15)',
+                            'btn_bg'         => 'rgba(29,158,117,0.08)',
+                            'btn_border'     => 'rgba(29,158,117,0.18)',
+                            'btn_hover_bg'   => 'rgba(29,158,117,0.18)',
+                            'btn_hover_brd'  => 'rgba(29,158,117,0.3)',
+                            'glow_base'      => 'rgba(29,158,117,0.09)',
+                            'glow_hover'     => 'rgba(29,158,117,0.16)',
+                        ],
+                        'Brain Dump' => [
+                            'color'          => '#9B8DD9',
+                            'badge_bg'       => 'rgba(148,120,210,0.08)',
+                            'badge_border'   => 'rgba(148,120,210,0.18)',
+                            'btn_bg'         => 'rgba(148,120,210,0.07)',
+                            'btn_border'     => 'rgba(148,120,210,0.16)',
+                            'btn_hover_bg'   => 'rgba(148,120,210,0.18)',
+                            'btn_hover_brd'  => 'rgba(148,120,210,0.32)',
+                            'glow_base'      => 'rgba(148,120,210,0.10)',
+                            'glow_hover'     => 'rgba(148,120,210,0.18)',
+                        ],
+                        'Starting Slow' => [
+                            'color'          => '#C8A055',
+                            'badge_bg'       => 'rgba(180,148,80,0.08)',
+                            'badge_border'   => 'rgba(180,148,80,0.18)',
+                            'btn_bg'         => 'rgba(180,148,80,0.07)',
+                            'btn_border'     => 'rgba(180,148,80,0.16)',
+                            'btn_hover_bg'   => 'rgba(180,148,80,0.16)',
+                            'btn_hover_brd'  => 'rgba(180,148,80,0.3)',
+                            'glow_base'      => 'rgba(180,148,80,0.07)',
+                            'glow_hover'     => 'rgba(180,148,80,0.13)',
+                        ],
+                    ];
+                @endphp
+                {{-- Alpine scope shared by the mobile scroll row and the bottom sheet --}}
+                <div
+                    x-data="{ sheetOpen: false, room: {} }"
+                    class="space-y-3"
+                >
                     <div>
                         <p class="text-sm font-medium" style="color:#8B949E;">Starter rooms from CommonGrove</p>
                         <p class="text-xs mt-0.5" style="color:#3d4451;">Always-open spaces you can step into anytime.</p>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {{-- ── Mobile: horizontal scroll row ─────────────────────────── --}}
+                    <div class="md:hidden">
+                        {{-- Bleeds past the parent's px-6 so cards reach the viewport edge --}}
+                        <div class="flex gap-3 overflow-x-auto -mx-6 px-6 pb-1" style="scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+                            @foreach ($this->officialRooms as $official)
+                                @php
+                                    $accent = $accentMap[$official->title] ?? $accentMap['Casual Chat'];
+                                    $vibe   = $vibeMap[$official->title] ?? '';
+                                    $icon   = $official->icon ?? 'room';
+                                    $roomJs = \Illuminate\Support\Js::from([
+                                        'id'      => $official->id,
+                                        'title'   => $official->title ?? '',
+                                        'content' => $official->content,
+                                        'icon'    => $icon,
+                                        'vibe'    => $vibe,
+                                        'accent'  => $accent,
+                                    ]);
+                                @endphp
+                                <button
+                                    type="button"
+                                    wire:key="mob-official-{{ $official->id }}"
+                                    @click="room = {{ $roomJs }}; sheetOpen = true"
+                                    class="flex-none w-36 rounded-xl border flex flex-col items-start gap-2.5 p-3.5 text-left active:opacity-70 transition-opacity"
+                                    style="scroll-snap-align:start;background:#121820;border-color:#253040;box-shadow:inset 0 0 0 1px {{ $accent['glow_base'] }};"
+                                    aria-label="Open {{ $official->title }} room"
+                                >
+                                    <span style="color:{{ $accent['color'] }};" aria-hidden="true">
+                                        @switch($icon)
+                                            @case('moon') <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> @break
+                                            @case('brain') <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.16Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.16Z"/></svg> @break
+                                            @case('leaf') <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8C8 10 5.9 16.17 3.82 20.6c-.26.57.56 1.04.97.55C7 18 10 16 15 16c4.58 0 7-3.5 7-3.5C24 9.5 17 8 17 8z"/></svg> @break
+                                            @case('chat') <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> @break
+                                            @default <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                                        @endswitch
+                                    </span>
+                                    <p class="text-sm font-semibold leading-snug" style="color:#E6EDF3;">{{ $official->title }}</p>
+                                    <p class="text-xs leading-snug" style="color:#6B737C;">{{ $vibe }}</p>
+                                    <span class="w-1 h-1 rounded-full flex-none mt-auto" style="background:{{ $accent['color'] }};opacity:0.45;" aria-hidden="true"></span>
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- ── Desktop: 4-card grid ────────────────────────────────────── --}}
+                    <div class="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-3">
                         @foreach ($this->officialRooms as $official)
                             @php
                                 $officialConvId   = $official->conversation?->id;
                                 $officialIsPinned = $officialConvId && in_array($officialConvId, $this->pinnedConversationIds);
                                 $icon             = $official->icon ?? 'room';
-
-                                // Per-room accent palette — subtle tints only
-                                $accentMap = [
-                                    'Just Existing' => [
-                                        'color'          => '#7A9FBF',
-                                        'badge_bg'       => 'rgba(100,130,160,0.08)',
-                                        'badge_border'   => 'rgba(100,130,160,0.18)',
-                                        'btn_bg'         => 'rgba(100,130,160,0.07)',
-                                        'btn_border'     => 'rgba(100,130,160,0.16)',
-                                        'btn_hover_bg'   => 'rgba(100,130,160,0.16)',
-                                        'btn_hover_brd'  => 'rgba(100,130,160,0.3)',
-                                        'glow_base'      => 'rgba(100,130,160,0.07)',
-                                        'glow_hover'     => 'rgba(100,130,160,0.13)',
-                                    ],
-                                    'Casual Chat' => [
-                                        'color'          => '#1D9E75',
-                                        'badge_bg'       => 'rgba(29,158,117,0.08)',
-                                        'badge_border'   => 'rgba(29,158,117,0.15)',
-                                        'btn_bg'         => 'rgba(29,158,117,0.08)',
-                                        'btn_border'     => 'rgba(29,158,117,0.18)',
-                                        'btn_hover_bg'   => 'rgba(29,158,117,0.18)',
-                                        'btn_hover_brd'  => 'rgba(29,158,117,0.3)',
-                                        'glow_base'      => 'rgba(29,158,117,0.09)',
-                                        'glow_hover'     => 'rgba(29,158,117,0.16)',
-                                    ],
-                                    'Brain Dump' => [
-                                        'color'          => '#9B8DD9',
-                                        'badge_bg'       => 'rgba(148,120,210,0.08)',
-                                        'badge_border'   => 'rgba(148,120,210,0.18)',
-                                        'btn_bg'         => 'rgba(148,120,210,0.07)',
-                                        'btn_border'     => 'rgba(148,120,210,0.16)',
-                                        'btn_hover_bg'   => 'rgba(148,120,210,0.18)',
-                                        'btn_hover_brd'  => 'rgba(148,120,210,0.32)',
-                                        'glow_base'      => 'rgba(148,120,210,0.10)',
-                                        'glow_hover'     => 'rgba(148,120,210,0.18)',
-                                    ],
-                                    'Starting Slow' => [
-                                        'color'          => '#C8A055',
-                                        'badge_bg'       => 'rgba(180,148,80,0.08)',
-                                        'badge_border'   => 'rgba(180,148,80,0.18)',
-                                        'btn_bg'         => 'rgba(180,148,80,0.07)',
-                                        'btn_border'     => 'rgba(180,148,80,0.16)',
-                                        'btn_hover_bg'   => 'rgba(180,148,80,0.16)',
-                                        'btn_hover_brd'  => 'rgba(180,148,80,0.3)',
-                                        'glow_base'      => 'rgba(180,148,80,0.07)',
-                                        'glow_hover'     => 'rgba(180,148,80,0.13)',
-                                    ],
-                                ];
                                 $accent     = $accentMap[$official->title] ?? $accentMap['Casual Chat'];
                                 $cardBg     = '#121820';
                                 $cardBorder = '#253040';
@@ -695,6 +749,95 @@
                             </div>
                         @endforeach
                     </div>
+
+                    {{-- ── Mobile bottom sheet ───────────────────────────────────── --}}
+                    {{--
+                        Outer: fixed overlay fades in (covers the backdrop).
+                        Inner: sheet panel sits at the bottom of the flex column.
+                        md:hidden keeps it invisible on desktop even if sheetOpen fires.
+                    --}}
+                    <div
+                        x-show="sheetOpen"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex flex-col justify-end md:hidden"
+                        style="display:none;"
+                    >
+                        {{-- Backdrop --}}
+                        <div
+                            class="absolute inset-0"
+                            @click="sheetOpen = false"
+                            style="background:rgba(0,0,0,0.65);"
+                        ></div>
+
+                        {{-- Sheet panel --}}
+                        <div class="relative rounded-t-2xl overflow-hidden" style="background:#161B22;border-top:1px solid #30363D;">
+
+                            {{-- Drag handle --}}
+                            <div class="flex justify-center pt-3 pb-0.5" aria-hidden="true">
+                                <div class="w-10 h-1 rounded-full" style="background:#30363D;"></div>
+                            </div>
+
+                            <div class="px-6 pt-5 pb-8 space-y-5">
+
+                                {{-- Header: icon + title/vibe + close --}}
+                                <div class="flex items-start gap-4">
+                                    {{-- Icon — one SVG per possible value, Alpine toggles which is visible --}}
+                                    <span class="flex-none mt-0.5" :style="{ color: room.accent?.color ?? '#8B949E' }" aria-hidden="true">
+                                        <svg x-show="room.icon === 'moon'" style="display:none;" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                                        <svg x-show="room.icon === 'chat'" style="display:none;" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                        <svg x-show="room.icon === 'brain'" style="display:none;" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.16Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.16Z"/></svg>
+                                        <svg x-show="room.icon === 'leaf'" style="display:none;" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8C8 10 5.9 16.17 3.82 20.6c-.26.57.56 1.04.97.55C7 18 10 16 15 16c4.58 0 7-3.5 7-3.5C24 9.5 17 8 17 8z"/></svg>
+                                        <svg x-show="!['moon','chat','brain','leaf'].includes(room.icon)" style="display:none;" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                                    </span>
+
+                                    <div class="flex-1 min-w-0">
+                                        <h2 class="text-base font-semibold leading-snug" style="color:#E6EDF3;" x-text="room.title"></h2>
+                                        <p class="text-xs mt-0.5" style="color:#6B737C;" x-text="room.vibe"></p>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        @click="sheetOpen = false"
+                                        class="flex-none w-8 h-8 flex items-center justify-center rounded-lg text-lg leading-none transition"
+                                        style="color:#8B949E;"
+                                        onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
+                                        aria-label="Close"
+                                    >×</button>
+                                </div>
+
+                                {{-- Description --}}
+                                <p class="text-sm leading-relaxed" style="color:#8B949E;" x-text="room.content"></p>
+
+                                {{-- Badges --}}
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span
+                                        class="text-xs px-2 py-0.5 rounded font-medium"
+                                        :style="{ background: room.accent?.badge_bg, color: room.accent?.color, border: '1px solid ' + (room.accent?.badge_border ?? 'transparent') }"
+                                    >Open Grove</span>
+                                    <span class="text-xs" style="color:#3d4451;">Always open</span>
+                                </div>
+
+                                {{-- Step in --}}
+                                <button
+                                    type="button"
+                                    @click="sheetOpen = false; $wire.joinHangout(room.id)"
+                                    class="w-full py-4 text-sm font-semibold rounded-xl transition"
+                                    :style="{
+                                        background: room.accent?.btn_hover_bg,
+                                        color:      room.accent?.color,
+                                        border:     '1px solid ' + (room.accent?.btn_border ?? 'transparent')
+                                    }"
+                                >Step in</button>
+
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="border-t" style="border-color:#21262D;"></div>

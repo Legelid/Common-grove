@@ -75,6 +75,17 @@
             $cgBodyClasses[] = $cssClass;
         }
     }
+
+    $navItems = [];
+    if (auth()->check() && !$isAuthPage) {
+        $navItems = [
+            ['href' => route('feed'),             'patterns' => ['feed', 'feed.post'],                 'label' => 'Feed'],
+            ['href' => route('friends.index'),    'patterns' => ['friends.*'],                         'label' => 'Friends'],
+            ['href' => route('messages.index'),   'patterns' => ['messages.*', 'room.*'],              'label' => 'Messages'],
+            ['href' => route('tags.select'),      'patterns' => ['tags.*'],                            'label' => 'Interests'],
+            ['href' => route('profile.settings'), 'patterns' => ['profile.settings', 'profile.show'], 'label' => 'Settings'],
+        ];
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full {{ $isAuthPage ? 'overflow-hidden' : '' }}">
@@ -128,11 +139,26 @@
 @else
 
     {{-- ── App shell: header + 3-column body ──────────────────────────────── --}}
-    <div class="flex flex-col h-full">
+    <div class="flex flex-col h-full" x-data="{ navOpen: false }">
 
         {{-- ── Top header: branding only ───────────────────────────────────── --}}
-        <header class="h-14 flex-none flex items-center justify-between px-6 border-b z-30" style="background:#161B22;border-color:#30363D;box-shadow:0 1px 0 rgba(0,0,0,0.2);">
+        <header class="h-14 flex-none flex items-center justify-between px-4 sm:px-6 border-b z-30" style="background:#161B22;border-color:#30363D;box-shadow:0 1px 0 rgba(0,0,0,0.2);">
             <div class="flex items-center gap-3">
+                {{-- Hamburger — mobile only --}}
+                @auth
+                    <button
+                        type="button"
+                        @click="navOpen = true"
+                        class="md:hidden flex items-center justify-center w-8 h-8 rounded-lg transition -ml-1"
+                        style="color:#8B949E;"
+                        aria-label="Open navigation"
+                        :aria-expanded="navOpen.toString()"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                @endauth
                 <a href="{{ route('feed') }}" wire:navigate class="flex items-center gap-2">
                     <span class="font-bold tracking-tight" style="color:#E6EDF3;">CommonGround</span>
                 </a>
@@ -241,7 +267,7 @@
         <div class="flex flex-1 overflow-hidden">
 
             {{-- ── LEFT: Discovery ──────────────────────────────────────────── --}}
-            <aside class="cg-discovery-sidebar w-52 flex-none flex flex-col border-r overflow-y-auto" style="background:#161B22;border-color:#30363D;">
+            <aside class="cg-discovery-sidebar hidden md:flex md:flex-col w-52 flex-none border-r overflow-y-auto" style="background:#161B22;border-color:#30363D;">
 
                 {{-- Rotating tagline --}}
                 <div
@@ -295,7 +321,7 @@
             </main>
 
             {{-- ── RIGHT: Navigation rail ────────────────────────────────────── --}}
-            <nav class="w-44 flex-none flex flex-col border-l" style="background:#161B22;border-color:#30363D;box-shadow:-1px 0 0 rgba(0,0,0,0.15);">
+            <nav class="hidden md:flex md:flex-col w-44 flex-none border-l" style="background:#161B22;border-color:#30363D;box-shadow:-1px 0 0 rgba(0,0,0,0.15);">
 
                 {{-- Nav section label --}}
                 <div class="px-5 pt-6 pb-2">
@@ -304,36 +330,6 @@
 
                 {{-- Nav links --}}
                 @auth
-                    @php
-                        $navItems = [
-                            [
-                                'href'     => route('feed'),
-                                'patterns' => ['feed', 'feed.post'],
-                                'label'    => 'Feed',
-                            ],
-                            [
-                                'href'     => route('friends.index'),
-                                'patterns' => ['friends.*'],
-                                'label'    => 'Friends',
-                            ],
-                            [
-                                'href'     => route('messages.index'),
-                                'patterns' => ['messages.*', 'room.*'],
-                                'label'    => 'Messages',
-                            ],
-                            [
-                                'href'     => route('tags.select'),
-                                'patterns' => ['tags.*'],
-                                'label'    => 'Interests',
-                            ],
-                            [
-                                'href'     => route('profile.settings'),
-                                'patterns' => ['profile.settings', 'profile.show'],
-                                'label'    => 'Settings',
-                            ],
-                        ];
-                    @endphp
-
                     <div class="flex-1 overflow-y-auto px-3 space-y-0.5">
                         @foreach ($navItems as $item)
                             @php
@@ -394,6 +390,154 @@
             </nav>
 
         </div>
+
+        {{-- ── Mobile nav drawer ───────────────────────────────────────────────── --}}
+        @auth
+            {{-- Backdrop --}}
+            <div
+                x-show="navOpen"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                @click="navOpen = false"
+                class="fixed inset-0 z-40 md:hidden"
+                style="display:none;background:rgba(0,0,0,0.6);"
+                aria-hidden="true"
+            ></div>
+
+            {{-- Drawer panel --}}
+            <div
+                x-show="navOpen"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="-translate-x-full"
+                x-transition:enter-end="translate-x-0"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="translate-x-0"
+                x-transition:leave-end="-translate-x-full"
+                class="fixed inset-y-0 left-0 z-50 w-72 flex flex-col md:hidden"
+                style="display:none;background:#161B22;border-right:1px solid #30363D;"
+            >
+                {{-- Drawer header --}}
+                <div class="flex items-center justify-between px-5 py-4 flex-none border-b" style="border-color:#21262D;">
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold tracking-tight" style="color:#E6EDF3;">CommonGround</span>
+                        <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
+                    </div>
+                    <button
+                        type="button"
+                        @click="navOpen = false"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg transition"
+                        style="color:#8B949E;"
+                        aria-label="Close menu"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Nav links --}}
+                <div class="flex-1 overflow-y-auto px-3 py-4">
+                    <p class="text-xs font-medium uppercase tracking-widest px-3 pb-3" style="color:#3d4451;">Navigate</p>
+                    <div class="space-y-0.5">
+                        @foreach ($navItems as $item)
+                            @php $drawerActive = collect($item['patterns'])->contains(fn ($p) => request()->routeIs($p)); @endphp
+                            <a
+                                href="{{ $item['href'] }}"
+                                wire:navigate
+                                @click="navOpen = false"
+                                class="flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition"
+                                style="{{ $drawerActive
+                                    ? 'background:rgba(29,158,117,0.1);color:#E6EDF3;'
+                                    : 'color:#8B949E;' }}"
+                                onmouseover="{{ $drawerActive ? '' : "this.style.color='#C9D1D9';this.style.background='rgba(255,255,255,0.04)'" }}"
+                                onmouseout="{{ $drawerActive ? '' : "this.style.color='#8B949E';this.style.background=''" }}"
+                            >
+                                <span class="w-1.5 h-1.5 rounded-full flex-none" style="background:{{ $drawerActive ? '#1D9E75' : 'transparent' }};"></span>
+                                {{ $item['label'] }}
+                            </a>
+                        @endforeach
+                    </div>
+
+                    <div class="mt-5 pt-5 border-t" style="border-color:#21262D;">
+                        <p class="text-xs font-medium uppercase tracking-widest px-3 pb-3" style="color:#3d4451;">Community</p>
+                        <div class="space-y-0.5">
+                            <a
+                                href="{{ route('guidelines') }}"
+                                @click="navOpen = false"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition"
+                                style="color:#3d4451;"
+                                onmouseover="this.style.color='#8B949E';this.style.background='rgba(255,255,255,0.03)'"
+                                onmouseout="this.style.color='#3d4451';this.style.background=''"
+                            >Community Guidelines</a>
+                            <a
+                                href="{{ route('report') }}"
+                                wire:navigate
+                                @click="navOpen = false"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition"
+                                style="color:#3d4451;"
+                                onmouseover="this.style.color='#8B949E';this.style.background='rgba(255,255,255,0.03)'"
+                                onmouseout="this.style.color='#3d4451';this.style.background=''"
+                            >Report a problem</a>
+                            <a
+                                href="{{ route('support') }}"
+                                wire:navigate
+                                @click="navOpen = false"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition"
+                                style="color:#3d4451;"
+                                onmouseover="this.style.color='#8B949E';this.style.background='rgba(255,255,255,0.03)'"
+                                onmouseout="this.style.color='#3d4451';this.style.background=''"
+                            >Support CommonGrove</a>
+                        </div>
+                    </div>
+
+                    @if (auth()->user()->is_admin)
+                        <div class="mt-5 pt-5 border-t" style="border-color:#21262D;">
+                            <a
+                                href="{{ route('admin.dashboard') }}"
+                                wire:navigate
+                                @click="navOpen = false"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition"
+                                style="color:#D29922;"
+                                onmouseover="this.style.background='rgba(210,153,34,0.06)'" onmouseout="this.style.background=''"
+                            >Admin Panel</a>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Drawer footer: avatar + sign out --}}
+                <div class="flex-none px-4 py-4 border-t" style="border-color:#21262D;">
+                    <div class="flex items-center justify-between gap-3">
+                        <a
+                            href="{{ route('profile.show', auth()->user()->gamertag) }}"
+                            wire:navigate
+                            @click="navOpen = false"
+                            class="flex items-center gap-3 min-w-0"
+                        >
+                            <img src="{{ auth()->user()->avatar_url }}" alt="" class="w-9 h-9 rounded-full object-cover flex-none" style="background:#21262D;">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium truncate" style="color:#C9D1D9;">{{ auth()->user()->display_name ?? auth()->user()->gamertag }}</p>
+                                <p class="text-xs truncate" style="color:#8B949E;">{{ auth()->user()->gamertag }}</p>
+                            </div>
+                        </a>
+                        <form method="POST" action="/logout" class="flex-none">
+                            @csrf
+                            <button
+                                type="submit"
+                                class="text-xs px-2.5 py-1.5 rounded-lg transition"
+                                style="color:#8B949E;border:1px solid #30363D;"
+                                onmouseover="this.style.color='#E24B4A';this.style.borderColor='rgba(226,75,74,0.4)'"
+                                onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
+                            >Sign out</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endauth
+
     </div>
 
 @endif

@@ -144,7 +144,9 @@ class HangoutFeed extends Component
         return HangoutPost::where('is_official', true)
             ->where('is_active', true)
             ->where('is_persistent', true)
+            ->whereNotNull('title')
             ->with(['tags', 'conversation'])
+            ->orderBy('created_at')
             ->limit(4)
             ->get();
     }

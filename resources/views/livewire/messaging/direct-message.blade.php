@@ -8,17 +8,17 @@
 <div class="flex flex-col h-full" style="{{ $dmBg }}">
 
     {{-- Header --}}
-    <div class="flex items-center gap-3 px-4 py-3 border-b flex-none" style="background:#161B22;border-color:#30363D;">
-        <a href="{{ route('messages.index') }}" wire:navigate class="transition" style="color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'">←</a>
-        <div class="flex-1">
+    <div class="flex items-center gap-2 px-4 py-3 border-b flex-none" style="background:#161B22;border-color:#30363D;">
+        <a href="{{ route('messages.index') }}" wire:navigate class="transition flex-none" style="color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'">←</a>
+        <div class="flex-1 min-w-0">
             @if ($this->conversation->isDirect())
                 @php $other = $this->conversation->participants->firstWhere('id', '!=', auth()->id()); @endphp
-                <p class="font-semibold text-sm" style="color:#E6EDF3;">{{ $other?->display_name ?? 'Unknown' }}</p>
+                <p class="font-semibold text-sm truncate" style="color:#E6EDF3;">{{ $other?->display_name ?? 'Unknown' }}</p>
                 @if ($other?->isOnline())
                     <p class="text-xs" style="color:#1D9E75;">Online now</p>
                 @endif
             @else
-                <p class="font-semibold text-sm" style="color:#E6EDF3;">{{ $this->conversation->name }}</p>
+                <p class="font-semibold text-sm truncate" style="color:#E6EDF3;">{{ $this->conversation->name }}</p>
             @endif
         </div>
 
@@ -28,11 +28,12 @@
                 type="button"
                 wire:click="$toggle('showGradientPicker')"
                 title="Set your chat gradient"
-                class="text-xs px-2.5 py-1.5 rounded-lg transition"
+                class="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1.5 rounded-lg transition text-xs"
                 style="{{ $dmGradientTheme ? 'background:rgba(255,255,255,0.06);color:#8B949E;border:1px solid #30363D;' : 'color:#8B949E;border:1px solid #30363D;' }}"
                 onmouseover="this.style.color='#C9D1D9'" onmouseout="this.style.color='#8B949E'"
             >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Gradient
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline;vertical-align:middle;"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                <span class="hidden sm:inline ml-1">Gradient</span>
             </button>
 
             @if ($showGradientPicker)
@@ -71,9 +72,12 @@
             type="button"
             wire:click="toggleQuietMode"
             title="{{ $quietMode ? 'Quiet mode on — click to disable' : 'Enable quiet mode' }}"
-            class="text-xs px-3 py-1.5 rounded-lg font-medium transition"
+            class="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-lg font-medium transition text-xs flex-none"
             style="{{ $quietMode ? 'background:rgba(210,153,34,0.2);color:#D29922;' : 'background:#21262D;color:#8B949E;' }}"
-        >{{ $quietMode ? 'Quiet mode on' : 'Quiet mode' }}</button>
+        >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="sm:hidden"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+            <span class="hidden sm:inline">{{ $quietMode ? 'Quiet mode on' : 'Quiet mode' }}</span>
+        </button>
     </div>
 
     {{-- Message request banner --}}

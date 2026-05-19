@@ -14,42 +14,36 @@ use Illuminate\Support\Str;
 class CommonGroveOfficialRoomsSeeder extends Seeder
 {
     /**
-     * Official starter rooms created by CommonGrove.
-     * Each entry: [content, tag_slugs[]]
+     * Canonical starter rooms.
+     * title  — stable key used for upsert matching and accent colour lookup in the feed view.
+     * icon   — must match a case in the feed view's @switch block.
+     * content — short description shown on the card (≤ 60 chars fits without truncation).
      *
-     * @var list<array{content:string, tags:list<string>}>
+     * @var list<array{title:string, content:string, icon:string, tags:list<string>}>
      */
     private const ROOMS = [
         [
-            'content' => 'A quiet room for people who want company without pressure. No agenda. Just existing together.',
+            'title'   => 'Just Existing',
+            'content' => 'Sit quietly or stay in the background.',
+            'icon'    => 'moon',
             'tags'    => ['introvert-friendly', 'quiet', 'casual', 'low-key'],
         ],
         [
-            'content' => 'For night owls, overthinkers, and anyone awake when the world gets quiet. Late-night calm chat.',
-            'tags'    => ['quiet', 'casual', 'chill', 'listener-friendly'],
+            'title'   => 'Casual Chat',
+            'content' => 'Talk about anything, no pressure.',
+            'icon'    => 'chat',
+            'tags'    => ['casual', 'listener-friendly', 'low-key'],
         ],
         [
-            'content' => 'Talk about books, comfort reads, stories, and fictional worlds. A book corner for readers of all kinds.',
-            'tags'    => ['fantasy-books', 'sci-fi-books', 'book-club', 'quiet'],
-        ],
-        [
-            'content' => 'For casual gamers who want friendly conversation without competition. Cozy gamers, no sweat.',
-            'tags'    => ['cozy-games', 'gaming', 'casual', 'low-key'],
-        ],
-        [
-            'content' => 'A low-pressure space for scattered thoughts, hyperfixations, and random ideas. ADHD brain dump.',
+            'title'   => 'Brain Dump',
+            'content' => 'Say whatever\'s on your mind.',
+            'icon'    => 'brain',
             'tags'    => ['adhd-friendly', 'neurodivergent-friendly', 'casual'],
         ],
         [
-            'content' => 'A calmer space where special interests, slower replies, and low-pressure chatting are welcome. Autism-friendly quiet room.',
-            'tags'    => ['autism-friendly', 'neurodivergent-friendly', 'quiet', 'low-stimulation-spaces'],
-        ],
-        [
-            'content' => 'Share ideas, unfinished projects, writing, art, music, or things you might someday finish. Creative projects corner.',
-            'tags'    => ['writing', 'art', 'music', 'casual'],
-        ],
-        [
-            'content' => 'A gentle room for people who want to ease into conversation slowly. Social anxiety soft landing.',
+            'title'   => 'Starting Slow',
+            'content' => 'Ease into conversation at your pace.',
+            'icon'    => 'leaf',
             'tags'    => ['social-anxiety-friendly', 'anxiety-friendly', 'quiet', 'listener-friendly'],
         ],
     ];
@@ -58,41 +52,61 @@ class CommonGroveOfficialRoomsSeeder extends Seeder
     {
         $system = $this->ensureSystemUser();
 
-        $this->command->info('Creating official CommonGrove starter rooms...');
+        $this->command->info('Creating canonical CommonGrove starter rooms…');
 
         foreach (self::ROOMS as $def) {
             $post = HangoutPost::where('user_id', $system->id)
-                ->where('is_official', true)
-                ->where('content', 'LIKE', '%' . Str::words($def['content'], 4, '') . '%')
+                ->where('title', $def['title'])
                 ->first();
 
             if ($post === null) {
                 $post = HangoutPost::create([
                     'user_id'       => $system->id,
+                    'title'         => $def['title'],
                     'content'       => $def['content'],
+                    'icon'          => $def['icon'],
                     'is_persistent' => true,
                     'is_official'   => true,
                     'is_active'     => true,
                     'expires_at'    => null,
                     'joined_count'  => 0,
                 ]);
+                $this->command->info('  + Created: ' . $def['title']);
             } else {
                 $post->update([
+                    'content'       => $def['content'],
+                    'icon'          => $def['icon'],
                     'is_persistent' => true,
                     'is_official'   => true,
                     'is_active'     => true,
                     'expires_at'    => null,
                 ]);
+                $this->command->info('  ✓ Updated: ' . $def['title']);
             }
 
             $tagIds = Tag::whereIn('slug', $def['tags'])->pluck('id');
             $post->tags()->syncWithoutDetaching($tagIds);
+        }
 
-            $this->command->info('  ✓ ' . Str::limit($def['content'], 60));
+        // Retire any official rooms that are no longer in the canonical list.
+        // They keep their conversations and messages — they just stop appearing
+        // in the starter-rooms row on the feed.
+        // Note: MySQL's NOT IN silently skips NULL rows, so we also include IS NULL.
+        $canonicalTitles = array_column(self::ROOMS, 'title');
+        $retired = HangoutPost::where('user_id', $system->id)
+            ->where('is_official', true)
+            ->where(function ($q) use ($canonicalTitles): void {
+                $q->whereNotIn('title', $canonicalTitles)
+                  ->orWhereNull('title');
+            })
+            ->update(['is_official' => false]);
+
+        if ($retired > 0) {
+            $this->command->warn("  Retired {$retired} stale official room(s) (set is_official = false).");
         }
 
         $this->command->info('');
-        $this->command->info('Official rooms: ' . HangoutPost::where('is_official', true)->count());
+        $this->command->info('Active official rooms: ' . HangoutPost::where('is_official', true)->count());
     }
 
     private function ensureSystemUser(): User
