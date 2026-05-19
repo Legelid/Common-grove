@@ -123,6 +123,7 @@ class OnboardingFlow extends Component
 
     public function setOnboardingCategory(?int $categoryId): void
     {
+        Log::info('Onboarding.action', ['action' => 'setOnboardingCategory', 'step' => $this->step, 'auth' => Auth::id()]);
         $this->onboardingCategoryId = $this->onboardingCategoryId === $categoryId ? null : $categoryId;
         $this->onboardingSearch     = '';
         unset($this->onboardingSubcats);
@@ -133,6 +134,7 @@ class OnboardingFlow extends Component
 
     public function next(): void
     {
+        Log::info('Onboarding.action', ['action' => 'next', 'step' => $this->step, 'auth' => Auth::id()]);
         if ($this->step === 2) {
             $trimmed = trim($this->displayName);
             if ($trimmed !== '') {
@@ -145,11 +147,13 @@ class OnboardingFlow extends Component
 
     public function back(): void
     {
+        Log::info('Onboarding.action', ['action' => 'back', 'step' => $this->step, 'auth' => Auth::id()]);
         $this->step = max($this->step - 1, 1);
     }
 
     public function skipToStep(int $target): void
     {
+        Log::info('Onboarding.action', ['action' => 'skipToStep', 'target' => $target, 'auth' => Auth::id()]);
         $this->step = $target;
     }
 
@@ -157,6 +161,7 @@ class OnboardingFlow extends Component
 
     public function toggleInterest(string $tagId): void
     {
+        Log::info('Onboarding.action', ['action' => 'toggleInterest', 'step' => $this->step, 'auth' => Auth::id()]);
         if (in_array($tagId, $this->selectedInterestIds, true)) {
             $this->selectedInterestIds = array_values(
                 array_diff($this->selectedInterestIds, [$tagId])
@@ -170,6 +175,7 @@ class OnboardingFlow extends Component
 
     public function toggleExperience(string $tagId): void
     {
+        Log::info('Onboarding.action', ['action' => 'toggleExperience', 'step' => $this->step, 'auth' => Auth::id()]);
         if (in_array($tagId, $this->selectedExperienceIds, true)) {
             $this->selectedExperienceIds = array_values(
                 array_diff($this->selectedExperienceIds, [$tagId])
@@ -181,6 +187,7 @@ class OnboardingFlow extends Component
 
     public function toggleComfort(string $key): void
     {
+        Log::info('Onboarding.action', ['action' => 'toggleComfort', 'step' => $this->step, 'auth' => Auth::id()]);
         if (in_array($key, $this->selectedComfortOptions, true)) {
             $this->selectedComfortOptions = array_values(
                 array_diff($this->selectedComfortOptions, [$key])
@@ -198,6 +205,7 @@ class OnboardingFlow extends Component
      */
     public function complete(): void
     {
+        Log::info('Onboarding.action', ['action' => 'complete', 'step' => $this->step, 'auth' => Auth::id()]);
         $user = Auth::user();
 
         $updates = ['onboarding_completed' => true];

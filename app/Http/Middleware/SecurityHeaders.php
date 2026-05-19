@@ -40,16 +40,22 @@ class SecurityHeaders
             throw $e;
         }
 
-        // Fires AFTER StartSession has saved the session and added the Set-Cookie header.
-        $sid = session()->getId();
-        Log::debug('SH.after', [
-            'method'        => $request->method(),
-            'path'          => $request->path(),
-            'status'        => $response->getStatusCode(),
-            'session_id'    => $sid,
-            'csrf_token'    => substr(session()->token() ?? '', 0, 10),
-            'db_row_exists' => DB::table('sessions')->where('id', $sid)->exists(),
-            'sets_cookie'   => $response->headers->has('Set-Cookie'),
+        // Fires AFTER the response is received from the inner pipeline.
+        // Uses WARNING for 4xx/5xx so it appears in standard log searches.
+        $sid    = session()->getId();
+        $status = $response->getStatusCode();
+        $logFn  = $status >= 400 ? 'warning' : 'debug';
+        Log::{$logFn}('SH.after', [
+            'method'           => $request->method(),
+            'path'             => $request->path(),
+            'status'           => $status,
+            'session_id'       => $sid,
+            'csrf_token'       => substr(session()->token() ?? '', 0, 10),
+            'db_row_exists'    => DB::table('sessions')->where('id', $sid)->exists(),
+            'sets_cookie'      => $response->headers->has('Set-Cookie'),
+            'response_snippet' => $status >= 400
+                ? substr((string) $response->getContent(), 0, 300)
+                : null,
         ]);
 
         $viteDevSources = app()->isLocal()
