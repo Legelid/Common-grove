@@ -28,6 +28,7 @@ class TagModeration extends Component
         return match ($this->tab) {
             'pending'  => Tag::where('is_curated', false)
                 ->where('is_approved', false)
+                ->with('createdBy:id,gamertag')
                 ->orderBy('created_at', 'asc')
                 ->paginate(25),
             'approved' => Tag::where('is_curated', true)
@@ -50,7 +51,12 @@ class TagModeration extends Component
 
     public function approve(string $tagId): void
     {
-        Tag::where('id', $tagId)->update(['is_curated' => true, 'is_approved' => true]);
+        Tag::where('id', $tagId)->update([
+            'is_curated'  => true,
+            'is_approved' => true,
+            'source'      => 'curated',
+            'approved_at' => now(),
+        ]);
         unset($this->tags, $this->tabCounts);
     }
 

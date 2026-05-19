@@ -20,21 +20,31 @@ class Tag extends Model
         'name',
         'slug',
         'type',
+        'source',
         'category',
         'category_id',
         'subcategory_id',
         'is_curated',
         'is_approved',
         'usage_count',
+        'created_by_user_id',
+        'approved_at',
     ];
 
     protected $casts = [
-        'is_curated'    => 'boolean',
-        'is_approved'   => 'boolean',
-        'usage_count'   => 'integer',
-        'category_id'   => 'integer',
+        'is_curated'     => 'boolean',
+        'is_approved'    => 'boolean',
+        'usage_count'    => 'integer',
+        'category_id'    => 'integer',
         'subcategory_id' => 'integer',
+        'approved_at'    => 'datetime',
     ];
+
+    /** User who submitted this tag (null for curated/seeded tags). */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
+    }
 
     public function category(): BelongsTo
     {

@@ -39,11 +39,21 @@
                                 <span class="font-medium" style="color:#E6EDF3;">{{ $tag->name }}</span>
                                 @if ($tag->is_curated)
                                     <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full" style="background:rgba(29,158,117,0.15);color:#1D9E75;">Curated</span>
+                                @elseif ($tag->source === 'custom')
+                                    <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full" style="background:rgba(210,153,34,0.15);color:#D29922;">Custom</span>
+                                @endif
+                                @if ($tab === 'pending' && $tag->createdBy)
+                                    <div class="mt-0.5 text-xs" style="color:#6B737C;">by {{ $tag->createdBy->gamertag }}</div>
                                 @endif
                             </td>
                             <td class="py-3 pr-6 text-xs" style="color:#8B949E;">{{ $tag->category ?? '—' }}</td>
                             <td class="py-3 pr-6 text-xs" style="color:#8B949E;">{{ number_format($tag->usage_count ?? 0) }}</td>
-                            <td class="py-3 pr-6 text-xs" style="color:#8B949E;">{{ $tag->created_at->format('Y-m-d') }}</td>
+                            <td class="py-3 pr-6 text-xs" style="color:#8B949E;">
+                                {{ $tag->created_at->format('Y-m-d') }}
+                                @if ($tab === 'approved' && $tag->approved_at)
+                                    <div style="color:#6B737C;">approved {{ $tag->approved_at->format('Y-m-d') }}</div>
+                                @endif
+                            </td>
                             <td class="py-3">
                                 <div class="flex flex-wrap gap-1.5">
                                     @if ($tab === 'pending')

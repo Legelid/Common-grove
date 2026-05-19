@@ -7,10 +7,13 @@ namespace App\Livewire\Onboarding;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Tag;
+use App\Rules\ValidCustomTag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -24,6 +27,8 @@ class OnboardingFlow extends Component
     public ?int $onboardingCategoryId = null;
 
     public string $onboardingSearch = '';
+
+    public ?string $onboardingCustomMessage = null;
 
     /** @var list<string> */
     public array $selectedInterestIds = [];
@@ -171,6 +176,73 @@ class OnboardingFlow extends Component
                 $this->selectedInterestIds[] = $tagId;
             }
         }
+    }
+
+    /**
+     * Create a personal custom interest from the onboarding search term and
+     * queue it for selection on complete(). The tag itself is persisted
+     * immediately so complete() can attach it via selectTag().
+     */
+    public function addCustomInterest(): void
+    {
+        $this->onboardingCustomMessage = null;
+        Log::info('Onboarding.action', ['action' => 'addCustomInterest', 'step' => $this->step, 'auth' => Auth::id()]);
+
+        $name = (string) preg_replace('/\s+/', ' ', trim($this->onboardingSearch));
+
+        if ($name === '') {
+            return;
+        }
+
+        if (count($this->selectedInterestIds) >= 30) {
+            $this->onboardingCustomMessage = 'You\'ve reached the maximum of 30 interests.';
+            return;
+        }
+
+        if (Tag::where('source', 'custom')->where('created_by_user_id', Auth::id())->count() >= 10) {
+            $this->onboardingCustomMessage = 'You\'ve reached the limit of 10 personal interests.';
+            return;
+        }
+
+        $validator = Validator::make(
+            ['interest' => $name],
+            ['interest' => ['required', 'string', new ValidCustomTag()]],
+        );
+        if ($validator->fails()) {
+            $this->onboardingCustomMessage = $validator->errors()->first('interest');
+            return;
+        }
+
+        $slug     = Str::slug($name);
+        $existing = Tag::where('slug', $slug)->first();
+
+        if ($existing) {
+            if (! in_array($existing->id, $this->selectedInterestIds, true)) {
+                $this->selectedInterestIds[] = $existing->id;
+                $this->onboardingCustomMessage = '"' . $existing->name . '" added!';
+            }
+            $this->onboardingSearch = '';
+            unset($this->onboardingSearchResults);
+            return;
+        }
+
+        $tag = Tag::create([
+            'name'               => $name,
+            'slug'               => $slug,
+            'type'               => 'interest',
+            'source'             => 'custom',
+            'category'           => 'User Submitted',
+            'created_by_user_id' => Auth::id(),
+            'is_curated'         => false,
+            'is_approved'        => false,
+            'usage_count'        => 0,
+        ]);
+
+        $this->selectedInterestIds[] = $tag->id;
+        $this->onboardingSearch       = '';
+        unset($this->onboardingSearchResults);
+
+        $this->onboardingCustomMessage = '"' . $name . '" added as your own interest.';
     }
 
     public function toggleExperience(string $tagId): void

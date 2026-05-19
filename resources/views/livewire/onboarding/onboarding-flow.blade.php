@@ -126,8 +126,30 @@
                             />
                         @endforeach
                     </div>
-                @else
-                    <p class="text-sm" style="color:#3d4451;">Nothing found yet.</p>
+                @endif
+
+                {{-- Add as personal interest (curated results shown first, custom add last) --}}
+                @if (mb_strlen(trim($onboardingSearch)) >= 2 && mb_strlen(trim($onboardingSearch)) <= 40)
+                    <div class="{{ $this->onboardingSearchResults->isEmpty() ? '' : 'pt-1' }}">
+                        <button
+                            type="button"
+                            wire:click="addCustomInterest"
+                            wire:loading.attr="disabled"
+                            class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition disabled:opacity-50"
+                            style="background:#0D1117;border:1px dashed #30363D;color:#6B737C;"
+                            onmouseover="this.style.color='#8B949E';this.style.borderColor='#8B949E'"
+                            onmouseout="this.style.color='#6B737C';this.style.borderColor='#30363D'"
+                        >
+                            <span>+</span>
+                            <span>Add <span style="color:#C9D1D9;">"{{ trim($onboardingSearch) }}"</span> as my own interest</span>
+                        </button>
+
+                        @if ($onboardingCustomMessage)
+                            <p class="mt-1.5 text-xs" style="color:{{ str_starts_with($onboardingCustomMessage, '"') ? '#1D9E75' : '#D29922' }};">
+                                {{ $onboardingCustomMessage }}
+                            </p>
+                        @endif
+                    </div>
                 @endif
             @else
                 {{-- Category chips --}}

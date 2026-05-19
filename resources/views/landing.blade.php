@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full overflow-hidden">
+<html lang="en" class="md:h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,26 +7,38 @@
     <title>CommonGround — Find your people</title>
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /*
+         * The side-panel lift shadow only makes visual sense on desktop where the
+         * auth panel sits to the right of the hero. On mobile (stacked) it would
+         * appear as an odd dark band on the left edge of the auth block.
+         */
+        @media (min-width: 768px) {
+            #auth-panel { box-shadow: -8px 0 40px rgba(0,0,0,0.30); }
+        }
+    </style>
 </head>
 <body
-    class="h-full overflow-hidden antialiased"
+    class="antialiased md:h-full md:overflow-hidden"
     style="background:#0D1117;color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;"
 >
 
     {{--
-        Mobile:  right panel (logo → phrases → buttons) stacks above left panel (context).
-        Desktop: side by side, left 60% / right 40%, full viewport height.
+        Mobile:  panels stack vertically — hero first, auth card second.
+        Desktop: side by side, hero 60% / auth 40%, full viewport height.
+
+        DOM order matches the desired mobile order so no order utilities are needed.
     --}}
     <div class="flex flex-col md:flex-row md:h-full">
 
-        {{-- ── LEFT PANEL ─────────────────────────────────────────────────────── --}}
+        {{-- ── HERO PANEL ──────────────────────────────────────────────────────── --}}
         {{--
             Soft radial atmosphere — a faint forest-green glow anchored bottom-left
             and a muted deep-ocean tint top-right. Neither colour is bright or neon;
             they simply break the flatness of the dark field.
         --}}
         <div
-            class="flex flex-col justify-center px-10 py-16 order-2 md:order-1 md:w-3/5"
+            class="flex flex-col justify-center px-6 sm:px-10 py-14 md:py-16 md:w-3/5"
             style="
                 background:
                     radial-gradient(ellipse 65% 55% at 10% 90%, rgba(29,158,117,0.07) 0%, transparent 68%),
@@ -38,14 +50,18 @@
             <div class="max-w-md mx-auto md:mx-0 md:ml-14">
 
                 <h1
-                    class="text-3xl sm:text-4xl md:text-5xl font-bold mb-6"
-                    style="color:#E6EDF3;letter-spacing:-0.025em;line-height:1.15;"
+                    class="text-3xl sm:text-4xl md:text-5xl font-bold mb-5 md:mb-6"
+                    style="color:#E6EDF3;letter-spacing:-0.025em;line-height:1.2;"
                 >
-                    A quieter corner<br class="hidden sm:block">of the internet.
+                    {{--
+                        Always break here. Without the break, the inline text reads
+                        "cornerof" when the browser collapses the adjacent inline nodes.
+                    --}}
+                    A quieter corner<br>of the internet.
                 </h1>
 
                 <p
-                    class="text-base sm:text-lg font-normal mb-14"
+                    class="text-base sm:text-lg font-normal mb-10 md:mb-14"
                     style="color:#8B949E;line-height:1.75;"
                 >
                     Find your people. No pressure.
@@ -69,24 +85,25 @@
             </div>
         </div>
 
-        {{-- ── RIGHT PANEL ──────────────────────────────────────────────────────
-             Slightly darker base than the left so the two planes read as distinct.
+        {{-- ── AUTH PANEL ───────────────────────────────────────────────────────
+             Slightly darker base than the hero so the two planes read as distinct.
              A faint green warmth rises from below — barely there, just enough.
-             Inset shadow on the left edge lifts the panel off the background.
+             On mobile: top border separates it from the hero above.
+             On desktop: left border + inset shadow lifts it off the hero panel.
         --}}
         <div
-            class="flex flex-col justify-between px-10 py-12 order-1 md:order-2 md:w-2/5"
+            id="auth-panel"
+            class="flex flex-col justify-between px-6 sm:px-10 py-10 md:py-12 md:w-2/5 border-t md:border-t-0 md:border-l"
             style="
                 background:
                     radial-gradient(ellipse 100% 55% at 50% 115%, rgba(29,158,117,0.055) 0%, transparent 65%),
                     #131920;
-                border-left: 1px solid #1E2730;
-                box-shadow: -8px 0 40px rgba(0,0,0,0.30);
+                border-color: #1E2730;
             "
         >
 
-            {{-- Main content block, centred vertically on desktop --}}
-            <div class="flex-1 flex flex-col justify-center">
+            {{-- Main content block — centred vertically on desktop, naturally spaced on mobile --}}
+            <div class="flex-1 flex flex-col justify-center py-4 md:py-0">
                 <div class="max-w-xs mx-auto w-full" style="display:flex;flex-direction:column;gap:2.25rem;">
 
                     {{-- Logo + rotating phrase --}}
@@ -181,13 +198,13 @@
                 </div>
             </div>
 
-            {{-- Footer --}}
+            {{-- Footer — stacks vertically on very small screens, row on sm+ --}}
             <div
-                class="flex items-center justify-between pt-5"
+                class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pt-5"
                 style="color:#2A3038;border-top:1px solid #1A2028;"
             >
                 <p class="text-xs">&copy; {{ date('Y') }} CommonGround</p>
-                <nav class="flex gap-4">
+                <nav class="flex flex-wrap gap-x-4 gap-y-1">
                     <a
                         href="{{ route('privacy') }}"
                         class="text-xs transition"

@@ -45,6 +45,9 @@
                         title="Remove"
                     >
                         {{ $tag->name }}
+                        @if ($tag->source === 'custom')
+                            <span style="opacity:0.6;font-size:0.65rem;line-height:1;" title="Personal interest">★</span>
+                        @endif
                         <span style="opacity:0.7;font-size:0.7rem;line-height:1;">✕</span>
                     </button>
                 @endforeach
@@ -100,7 +103,7 @@
         </section>
     @endif
 
-    {{-- ── Subcategories + tags ─────────────────────────────────────────── --}}
+    {{-- ── Curated subcategories + tags ────────────────────────────────── --}}
     @if ($this->subcategoriesWithTags->isNotEmpty())
         <div class="space-y-7">
             @if (trim($search) !== '')
@@ -111,10 +114,6 @@
 
             @foreach ($this->subcategoriesWithTags as $subcat)
                 @if ($subcat->tags->isNotEmpty())
-                    {{--
-                        Alpine x-data per subcategory handles "See more" client-side.
-                        wire:key ensures Alpine state survives Livewire re-renders.
-                    --}}
                     <section
                         wire:key="subcat-{{ $subcat->id }}"
                         x-data="{ showAll: false }"
@@ -123,7 +122,6 @@
                             {{ $subcat->name }}
                         </h3>
                         <div class="flex flex-wrap gap-2">
-                            {{-- First 8 always visible --}}
                             @foreach ($subcat->tags->take(8) as $tag)
                                 @php $selected = in_array($tag->id, $selectedTagIds); @endphp
                                 <button
@@ -139,7 +137,6 @@
                                 >{{ $tag->name }}</button>
                             @endforeach
 
-                            {{-- Remaining, toggled by Alpine --}}
                             @foreach ($subcat->tags->skip(8) as $tag)
                                 @php $selected = in_array($tag->id, $selectedTagIds); @endphp
                                 <button
@@ -171,11 +168,61 @@
                 @endif
             @endforeach
         </div>
-    @elseif ($activeCategoryId !== null || trim($search) !== '')
-        <p class="text-sm" style="color:#8B949E;">No interests found{{ trim($search) !== '' ? ' for that search' : '' }}.</p>
+    @elseif ($activeCategoryId !== null && trim($search) === '')
+        {{-- Category selected but empty (shouldn't occur in normal taxonomy) --}}
+        <p class="text-sm" style="color:#8B949E;">No interests found in this category.</p>
     @endif
 
-    {{-- ── Save (bottom, for when user scrolls down) ───────────────────── --}}
+    {{-- ── User's own custom interests matching search ─────────────────── --}}
+    @if (trim($search) !== '' && $this->myCustomTagResults->isNotEmpty())
+        <section class="space-y-2.5">
+            <p class="text-xs font-semibold uppercase tracking-wider" style="color:#6B737C;">
+                My personal interests
+            </p>
+            <div class="flex flex-wrap gap-2">
+                @foreach ($this->myCustomTagResults as $tag)
+                    @php $selected = in_array($tag->id, $selectedTagIds); @endphp
+                    <button
+                        type="button"
+                        wire:click="toggleTag('{{ $tag->id }}')"
+                        wire:key="custom-srch-{{ $tag->id }}"
+                        class="px-3 py-1.5 rounded-full text-sm font-medium transition"
+                        style="{{ $selected
+                            ? 'background:#1D9E75;color:#fff;outline:2px solid rgba(29,158,117,0.4);'
+                            : 'background:#1C2333;color:#8B949E;border:1px dashed #30363D;' }}"
+                        onmouseover="{{ $selected ? '' : "this.style.color='#E6EDF3'" }}"
+                        onmouseout="{{ $selected ? '' : "this.style.color='#8B949E'" }}"
+                    >{{ $tag->name }}</button>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    {{-- ── Add as personal interest (inline with search) ──────────────── --}}
+    @if (trim($search) !== '' && mb_strlen(trim($search)) >= 2 && mb_strlen(trim($search)) <= 40)
+        <div>
+            <button
+                type="button"
+                wire:click="addCustomTag"
+                wire:loading.attr="disabled"
+                class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition disabled:opacity-50"
+                style="background:#1C2333;border:1px dashed #30363D;color:#6B737C;"
+                onmouseover="this.style.color='#8B949E';this.style.borderColor='#8B949E'"
+                onmouseout="this.style.color='#6B737C';this.style.borderColor='#30363D'"
+            >
+                <span style="font-size:1.1em;line-height:1;">+</span>
+                <span>Add <span style="color:#C9D1D9;">"{{ trim($search) }}"</span> as a personal interest</span>
+            </button>
+
+            @if ($customTagMessage)
+                <p class="mt-2 text-sm" style="color:{{ str_starts_with($customTagMessage, '"') ? '#1D9E75' : '#D29922' }};">
+                    {{ $customTagMessage }}
+                </p>
+            @endif
+        </div>
+    @endif
+
+    {{-- ── Save (bottom) ───────────────────────────────────────────────── --}}
     @if (count($selectedTagIds) >= 3)
         <div class="pt-2">
             <button
@@ -191,44 +238,5 @@
             </button>
         </div>
     @endif
-
-    <hr style="border-color:#30363D;">
-
-    {{-- ── Submit custom tag ────────────────────────────────────────────── --}}
-    <section>
-        <h2 class="text-sm font-semibold mb-1" style="color:#E6EDF3;">Don't see your interest?</h2>
-        <p class="text-xs mb-3" style="color:#8B949E;">Submit a tag for review. It will appear once approved.</p>
-
-        <div class="flex gap-3">
-            <input
-                type="text"
-                wire:model="customTagName"
-                wire:keydown.enter="submitCustomTag"
-                placeholder="e.g. Urban Sketching"
-                maxlength="50"
-                class="flex-1 rounded-lg px-4 py-2 text-sm focus:outline-none"
-                style="background:#1C2333;border:1px solid #30363D;color:#E6EDF3;"
-                onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-            >
-            <button
-                type="button"
-                wire:click="submitCustomTag"
-                wire:loading.attr="disabled"
-                class="px-4 py-2 text-sm font-medium rounded-lg transition disabled:opacity-50"
-                style="background:#21262D;color:#8B949E;"
-                onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
-            >Submit</button>
-        </div>
-
-        @error('customTagName')
-            <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p>
-        @enderror
-
-        @if ($customTagMessage)
-            <p class="mt-2 text-sm" style="color:{{ str_starts_with($customTagMessage, 'Your tag') ? '#1D9E75' : '#D29922' }};">
-                {{ $customTagMessage }}
-            </p>
-        @endif
-    </section>
 
 </div>
