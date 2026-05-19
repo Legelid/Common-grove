@@ -50,6 +50,26 @@ Route::get('/dev-login', function () {
     return redirect()->route('feed');
 })->name('dev.login');
 
+Route::get('/dev-session', function () {
+    if (!app()->isLocal()) abort(404);
+    $sid   = session()->getId();
+    $token = session()->token();
+    session()->put('dev_ping', time());
+    $rowBefore = \Illuminate\Support\Facades\DB::table('sessions')->where('id', $sid)->exists();
+    session()->save();
+    $rowAfter = \Illuminate\Support\Facades\DB::table('sessions')->where('id', $sid)->exists();
+    return response()->json([
+        'session_driver'   => config('session.driver'),
+        'session_id'       => $sid,
+        'csrf_token'       => $token,
+        'cookie_name'      => config('session.cookie'),
+        'row_before_save'  => $rowBefore,
+        'row_after_save'   => $rowAfter,
+        'total_db_rows'    => \Illuminate\Support\Facades\DB::table('sessions')->count(),
+        'session_encrypt'  => config('session.encrypt'),
+    ]);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Public routes — accessible without authentication

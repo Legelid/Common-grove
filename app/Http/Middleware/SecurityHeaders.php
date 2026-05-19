@@ -7,70 +7,60 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class SecurityHeaders
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
-     */
     public function handle(Request $request, Closure $next)
     {
-        // Fires BEFORE StartSession — captures raw browser-sent cookie state.
-        // Compare has_raw_session_cookie between GET and POST to detect missing cookies.
-        if ($request->is('login')) {
-            $cookieName = config('session.cookie');
-            Log::info('CSRF diag: login request', [
-                'method'                 => $request->method(),
-                'has_raw_session_cookie' => $request->cookies->has($cookieName),
-                'raw_post_token_prefix'  => $request->isMethod('POST')
-                    ? substr((string) ($request->request->get('_token') ?? ''), 0, 10)
-                    : null,
-            ]);
-        }
+        $cookieName = config('session.cookie');
+
+        // Fires BEFORE StartSession — raw encrypted cookie value, before EncryptCookies runs.
+        Log::info('SH.before', [
+            'method'          => $request->method(),
+            'path'            => $request->path(),
+            'has_session_cookie' => $request->cookies->has($cookieName),
+            'raw_cookie_len'  => strlen((string) $request->cookies->get($cookieName)),
+        ]);
 
         try {
             $response = $next($request);
         } catch (TokenMismatchException $e) {
-            $cookieName   = config('session.cookie');
+            $sid          = session()->getId();
             $sessionToken = session()->token() ?? '';
             $requestToken = $request->input('_token') ?? $request->header('X-CSRF-TOKEN') ?? '';
-            Log::warning('CSRF 419: token mismatch', [
-                'path'                 => $request->path(),
-                'session_driver'       => config('session.driver'),
-                'session_lifetime'     => config('session.lifetime'),
-                'app_url'              => config('app.url'),
-                'request_host'         => $request->getHost(),
-                'request_scheme'       => $request->getScheme(),
-                // has_raw_session_cookie: browser sent cookie BEFORE StartSession ran.
-                // session_id_prefix: compare this with the Login render log's session_id_prefix.
-                // If they differ, different sessions used for GET and POST → session not persisting.
-                'has_raw_session_cookie' => $request->cookies->has($cookieName),
-                'session_id_prefix'      => substr(session()->getId(), 0, 10),
-                'session_token_prefix'   => substr($sessionToken, 0, 10),
-                'request_token_prefix'   => substr($requestToken, 0, 10),
-                'has_session_token'      => $sessionToken !== '',
-                'has_request_token'      => $requestToken !== '',
-                'tokens_match'           => $sessionToken !== '' && $requestToken !== '' && hash_equals($sessionToken, $requestToken),
-                'session_files_on_disk'  => count(glob(storage_path('framework/sessions/*')) ?: []),
+
+            // Livewire sends the token inside the JSON body, not as a form field.
+            $body         = json_decode((string) $request->getContent(), true) ?? [];
+            $lwToken      = (string) ($body['_token'] ?? '');
+
+            Log::warning('SH.419', [
+                'path'               => $request->path(),
+                'session_driver'     => config('session.driver'),
+                'request_host'       => $request->getHost(),
+                'has_session_cookie' => $request->cookies->has($cookieName),
+                'session_id'         => $sid,
+                'session_token'      => substr($sessionToken, 0, 10),
+                'request_token'      => substr($requestToken, 0, 10),
+                'livewire_token'     => substr($lwToken, 0, 10),
+                'has_session_token'  => $sessionToken !== '',
+                'db_row_exists'      => DB::table('sessions')->where('id', $sid)->exists(),
             ]);
             throw $e;
         }
 
-        // After a successful GET /login: log the session state that was saved and the
-        // cookie that will be sent to the browser.  Compare session_id_prefix here
-        // with the session_id_prefix in the subsequent CSRF 419 log.
-        if ($request->is('login') && $request->isMethod('GET')) {
-            Log::info('CSRF diag: GET /login complete', [
-                'session_id_prefix'     => substr(session()->getId(), 0, 10),
-                'csrf_token_prefix'     => substr(csrf_token(), 0, 10),
-                'session_files_on_disk' => count(glob(storage_path('framework/sessions/*')) ?: []),
-            ]);
-        }
+        // Fires AFTER StartSession has saved the session and added the Set-Cookie header.
+        $sid = session()->getId();
+        Log::info('SH.after', [
+            'method'           => $request->method(),
+            'path'             => $request->path(),
+            'status'           => $response->getStatusCode(),
+            'session_id'       => $sid,
+            'csrf_token'       => substr(session()->token() ?? '', 0, 10),
+            'db_row_exists'    => DB::table('sessions')->where('id', $sid)->exists(),
+            'sets_cookie'      => $response->headers->has('Set-Cookie'),
+        ]);
 
         $viteDevSources = app()->isLocal()
             ? " http://localhost:5173 http://localhost:5194 ws://localhost:5173 ws://localhost:5194"
@@ -90,10 +80,6 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         $response->headers->set('Referrer-Policy', 'no-referrer');
-
-        // Prevent any reverse proxy or CDN from caching dynamic pages.
-        // A cached authenticated page would carry a stale CSRF token that no
-        // longer matches the live session, causing 419 on the first form submit.
         $response->headers->set('Cache-Control', 'no-store, no-cache, private, must-revalidate');
         $response->headers->set('Pragma', 'no-cache');
 
