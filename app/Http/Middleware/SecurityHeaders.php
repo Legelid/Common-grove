@@ -20,6 +20,19 @@ class SecurityHeaders
      */
     public function handle(Request $request, Closure $next)
     {
+        // Fires BEFORE StartSession — captures raw browser-sent cookie state.
+        // Compare has_raw_session_cookie between GET and POST to detect missing cookies.
+        if ($request->is('login')) {
+            $cookieName = config('session.cookie');
+            Log::info('CSRF diag: login request', [
+                'method'                 => $request->method(),
+                'has_raw_session_cookie' => $request->cookies->has($cookieName),
+                'raw_post_token_prefix'  => $request->isMethod('POST')
+                    ? substr((string) ($request->request->get('_token') ?? ''), 0, 10)
+                    : null,
+            ]);
+        }
+
         try {
             $response = $next($request);
         } catch (TokenMismatchException $e) {
@@ -27,22 +40,36 @@ class SecurityHeaders
             $sessionToken = session()->token() ?? '';
             $requestToken = $request->input('_token') ?? $request->header('X-CSRF-TOKEN') ?? '';
             Log::warning('CSRF 419: token mismatch', [
-                'path'                   => $request->path(),
-                'session_driver'         => config('session.driver'),
-                'app_url'                => config('app.url'),
-                'request_host'           => $request->getHost(),
-                'request_scheme'         => $request->getScheme(),
-                'has_session_cookie'     => $request->hasCookie($cookieName),
-                'cookie_val_prefix'      => substr($request->cookie($cookieName) ?? '', 0, 10),
+                'path'                 => $request->path(),
+                'session_driver'       => config('session.driver'),
+                'session_lifetime'     => config('session.lifetime'),
+                'app_url'              => config('app.url'),
+                'request_host'         => $request->getHost(),
+                'request_scheme'       => $request->getScheme(),
+                // has_raw_session_cookie: browser sent cookie BEFORE StartSession ran.
+                // session_id_prefix: compare this with the Login render log's session_id_prefix.
+                // If they differ, different sessions used for GET and POST → session not persisting.
+                'has_raw_session_cookie' => $request->cookies->has($cookieName),
                 'session_id_prefix'      => substr(session()->getId(), 0, 10),
-                'cookie_matches_session' => substr($request->cookie($cookieName) ?? '', 0, 10) === substr(session()->getId(), 0, 10),
                 'session_token_prefix'   => substr($sessionToken, 0, 10),
                 'request_token_prefix'   => substr($requestToken, 0, 10),
                 'has_session_token'      => $sessionToken !== '',
                 'has_request_token'      => $requestToken !== '',
                 'tokens_match'           => $sessionToken !== '' && $requestToken !== '' && hash_equals($sessionToken, $requestToken),
+                'session_files_on_disk'  => count(glob(storage_path('framework/sessions/*')) ?: []),
             ]);
             throw $e;
+        }
+
+        // After a successful GET /login: log the session state that was saved and the
+        // cookie that will be sent to the browser.  Compare session_id_prefix here
+        // with the session_id_prefix in the subsequent CSRF 419 log.
+        if ($request->is('login') && $request->isMethod('GET')) {
+            Log::info('CSRF diag: GET /login complete', [
+                'session_id_prefix'     => substr(session()->getId(), 0, 10),
+                'csrf_token_prefix'     => substr(csrf_token(), 0, 10),
+                'session_files_on_disk' => count(glob(storage_path('framework/sessions/*')) ?: []),
+            ]);
         }
 
         $viteDevSources = app()->isLocal()
