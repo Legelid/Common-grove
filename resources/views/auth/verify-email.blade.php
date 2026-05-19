@@ -13,14 +13,14 @@
             </p>
         @endif
 
-        <form method="POST" action="{{ route('verification.send') }}">
+        <form method="POST" action="/email/verification-notification">
             @csrf
             <button type="submit" class="px-6 py-2.5 text-sm font-semibold rounded-lg transition" style="background:#1D9E75;color:#fff;" onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'">
                 Resend verification email
             </button>
         </form>
 
-        <form method="POST" action="{{ route('logout') }}" class="mt-4">
+        <form method="POST" action="/logout" class="mt-4">
             @csrf
             <button type="submit" class="text-sm transition underline" style="color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'">
                 Sign out

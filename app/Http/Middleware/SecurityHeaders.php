@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Log;
 
 class SecurityHeaders
@@ -19,7 +20,30 @@ class SecurityHeaders
      */
     public function handle(Request $request, Closure $next)
     {
-        $response = $next($request);
+        try {
+            $response = $next($request);
+        } catch (TokenMismatchException $e) {
+            $cookieName   = config('session.cookie');
+            $sessionToken = session()->token() ?? '';
+            $requestToken = $request->input('_token') ?? $request->header('X-CSRF-TOKEN') ?? '';
+            Log::warning('CSRF 419: token mismatch', [
+                'path'                   => $request->path(),
+                'session_driver'         => config('session.driver'),
+                'app_url'                => config('app.url'),
+                'request_host'           => $request->getHost(),
+                'request_scheme'         => $request->getScheme(),
+                'has_session_cookie'     => $request->hasCookie($cookieName),
+                'cookie_val_prefix'      => substr($request->cookie($cookieName) ?? '', 0, 10),
+                'session_id_prefix'      => substr(session()->getId(), 0, 10),
+                'cookie_matches_session' => substr($request->cookie($cookieName) ?? '', 0, 10) === substr(session()->getId(), 0, 10),
+                'session_token_prefix'   => substr($sessionToken, 0, 10),
+                'request_token_prefix'   => substr($requestToken, 0, 10),
+                'has_session_token'      => $sessionToken !== '',
+                'has_request_token'      => $requestToken !== '',
+                'tokens_match'           => $sessionToken !== '' && $requestToken !== '' && hash_equals($sessionToken, $requestToken),
+            ]);
+            throw $e;
+        }
 
         $viteDevSources = app()->isLocal()
             ? " http://localhost:5173 http://localhost:5194 ws://localhost:5173 ws://localhost:5194"
@@ -45,25 +69,6 @@ class SecurityHeaders
         // longer matches the live session, causing 419 on the first form submit.
         $response->headers->set('Cache-Control', 'no-store, no-cache, private, must-revalidate');
         $response->headers->set('Pragma', 'no-cache');
-
-        // Temporary 419 diagnostic — remove once the production CSRF issue is resolved.
-        if ($response->getStatusCode() === 419) {
-            $sessionToken = session()->token() ?? '';
-            $requestToken = $request->header('X-CSRF-TOKEN') ?? $request->input('_token') ?? '';
-            Log::warning('CSRF 419', [
-                'path'                 => $request->path(),
-                'session_driver'       => config('session.driver'),
-                'app_url'              => config('app.url'),
-                'request_host'         => $request->getHost(),
-                'request_scheme'       => $request->getScheme(),
-                'session_id_prefix'    => substr(session()->getId(), 0, 10),
-                'session_token_prefix' => substr($sessionToken, 0, 10),
-                'request_token_prefix' => substr($requestToken, 0, 10),
-                'tokens_match'         => $sessionToken !== '' && hash_equals($sessionToken, $requestToken),
-                'has_session_token'    => $sessionToken !== '',
-                'has_request_token'    => $requestToken !== '',
-            ]);
-        }
 
         return $response;
     }

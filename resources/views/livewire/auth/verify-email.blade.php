@@ -28,7 +28,7 @@
         <span wire:loading>Sending…</span>
     </button>
 
-    <form method="POST" action="{{ route('logout') }}" class="mt-5 text-center">
+    <form method="POST" action="/logout" class="mt-5 text-center">
         @csrf
         <button
             type="submit"

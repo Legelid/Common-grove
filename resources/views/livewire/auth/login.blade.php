@@ -1,7 +1,7 @@
 <div>
     <h1 class="text-2xl font-bold text-center mb-8" style="color:#E6EDF3;">Sign in</h1>
 
-    <form method="POST" action="{{ route('login.attempt') }}" class="space-y-5">
+    <form method="POST" action="/login" class="space-y-5">
         @csrf
 
         <div>

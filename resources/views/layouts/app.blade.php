@@ -201,7 +201,7 @@
                             onmouseout="this.style.color='#8B949E';this.style.background=''"
                         >Supporter</a>
                         <div class="my-1 border-t" style="border-color:#21262D;"></div>
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST" action="/logout">
                             @csrf
                             <button
                                 type="submit"

@@ -77,7 +77,7 @@
         <span wire:loading>Saving…</span>
     </button>
 
-    <form method="POST" action="{{ route('logout') }}" class="text-center">
+    <form method="POST" action="/logout" class="text-center">
         @csrf
         <button type="submit" class="text-xs transition underline" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">
             Sign out

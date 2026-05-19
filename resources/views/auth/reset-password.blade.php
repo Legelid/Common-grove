@@ -1,7 +1,7 @@
 <x-layouts.app title="Set new password — CommonGround">
     <h1 class="text-2xl font-bold text-center mb-8" style="color:#E6EDF3;">Set new password</h1>
 
-    <form method="POST" action="{{ route('password.store') }}" class="space-y-5">
+    <form method="POST" action="/reset-password" class="space-y-5">
         @csrf
         <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
