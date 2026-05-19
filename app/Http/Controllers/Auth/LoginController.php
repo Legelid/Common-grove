@@ -77,9 +77,11 @@ class LoginController extends Controller
 
         RateLimiter::clear($throttleKey);
 
-        Log::info('Login: calling Auth::login()', ['gamertag' => $user->gamertag]);
+        $remember = $request->boolean('remember');
 
-        Auth::login($user, $request->boolean('remember'));
+        Log::info('Login: calling Auth::login()', ['gamertag' => $user->gamertag, 'remember' => $remember]);
+
+        Auth::login($user, $remember);
 
         Log::info('Login: after Auth::login()', [
             'auth_id'  => Auth::id(),
@@ -89,8 +91,9 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         Log::info('Login: session regenerated', [
-            'auth_id'    => Auth::id(),
-            'session_id' => $request->session()->getId(),
+            'auth_id'          => Auth::id(),
+            'session_id_prefix'=> substr($request->session()->getId(), 0, 10),
+            'csrf_token_prefix'=> substr($request->session()->token(), 0, 10),
         ]);
 
         if (! $user->hasVerifiedEmail()) {

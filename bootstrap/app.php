@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust all upstream proxy headers so Laravel sees the real client
+        // IP, protocol (HTTPS), and host when behind Nginx or any load balancer.
+        $middleware->trustProxies(at: '*', headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_ALL);
+
         $middleware->append(SecurityHeaders::class);
         $middleware->web(append: [UpdateLastSeen::class, CheckSuspended::class, EnsureDateOfBirth::class]);
         $middleware->alias([

@@ -10,6 +10,7 @@ use App\Models\Tag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -233,6 +234,13 @@ class OnboardingFlow extends Component
 
     public function render(): View
     {
+        // Temporary diagnostic — remove once the production CSRF issue is resolved.
+        Log::info('Onboarding render', [
+            'session_id_prefix'    => substr(session()->getId(), 0, 10),
+            'csrf_token_prefix'    => substr(csrf_token(), 0, 10),
+            'auth_id'              => Auth::id(),
+        ]);
+
         return view('livewire.onboarding.onboarding-flow')
             ->layout('layouts.onboarding', ['title' => 'Welcome — CommonGround']);
     }

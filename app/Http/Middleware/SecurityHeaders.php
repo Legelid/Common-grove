@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SecurityHeaders
 {
@@ -38,6 +39,31 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         $response->headers->set('Referrer-Policy', 'no-referrer');
+
+        // Prevent any reverse proxy or CDN from caching dynamic pages.
+        // A cached authenticated page would carry a stale CSRF token that no
+        // longer matches the live session, causing 419 on the first form submit.
+        $response->headers->set('Cache-Control', 'no-store, no-cache, private, must-revalidate');
+        $response->headers->set('Pragma', 'no-cache');
+
+        // Temporary 419 diagnostic — remove once the production CSRF issue is resolved.
+        if ($response->getStatusCode() === 419) {
+            $sessionToken = session()->token() ?? '';
+            $requestToken = $request->header('X-CSRF-TOKEN') ?? $request->input('_token') ?? '';
+            Log::warning('CSRF 419', [
+                'path'                 => $request->path(),
+                'session_driver'       => config('session.driver'),
+                'app_url'              => config('app.url'),
+                'request_host'         => $request->getHost(),
+                'request_scheme'       => $request->getScheme(),
+                'session_id_prefix'    => substr(session()->getId(), 0, 10),
+                'session_token_prefix' => substr($sessionToken, 0, 10),
+                'request_token_prefix' => substr($requestToken, 0, 10),
+                'tokens_match'         => $sessionToken !== '' && hash_equals($sessionToken, $requestToken),
+                'has_session_token'    => $sessionToken !== '',
+                'has_request_token'    => $requestToken !== '',
+            ]);
+        }
 
         return $response;
     }
