@@ -7,6 +7,7 @@ namespace App\Livewire\Auth;
 use App\Models\User;
 use App\Services\PasswordService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -15,8 +16,7 @@ use Livewire\Component;
  * Login form component.
  *
  * Accepts a gamertag OR email address in the login field.
- * Rate limited to 5 attempts per minute per IP (enforced in-component
- * in addition to the route-level throttle middleware).
+ * Rate limited to 5 attempts per minute per IP.
  * Silently re-hashes the stored password if needsRehash() returns true.
  */
 class Login extends Component
@@ -38,56 +38,88 @@ class Login extends Component
 
         $throttleKey = 'login.' . Str::lower($this->login) . '.' . request()->ip();
 
-        // Rate limit: 5 attempts per 60 seconds
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             $this->addError('login', "Too many login attempts. Please try again in {$seconds} seconds.");
             return;
         }
 
-        // Resolve user by gamertag (case-insensitive) or email
+        Log::info('Login attempt', ['input' => $this->login, 'ip' => request()->ip()]);
+
         $user = $this->resolveUser($this->login);
 
         if ($user === null) {
+            Log::info('Login failed: user not found', ['input' => $this->login]);
             RateLimiter::hit($throttleKey, 60);
             $this->addError('login', 'These credentials do not match our records.');
             return;
         }
+
+        Log::info('Login: user found', ['gamertag' => $user->gamertag, 'id' => $user->id]);
 
         /** @var PasswordService $passwordService */
         $passwordService = app(PasswordService::class);
 
-        if (! $passwordService->verify($this->password, $user->password)) {
+        if (! $passwordService->verify($this->password, $user->getRawOriginal('password'))) {
+            Log::info('Login failed: password mismatch', ['gamertag' => $user->gamertag]);
             RateLimiter::hit($throttleKey, 60);
             $this->addError('login', 'These credentials do not match our records.');
             return;
         }
 
+        Log::info('Login: password verified', ['gamertag' => $user->gamertag]);
+
         // Silently re-hash if the work factor has changed
-        if ($passwordService->needsRehash($user->password)) {
+        if ($passwordService->needsRehash($user->getRawOriginal('password'))) {
             $user->password = $passwordService->hash($this->password);
             $user->save();
+            Log::info('Login: password rehashed', ['gamertag' => $user->gamertag]);
         }
 
         RateLimiter::clear($throttleKey);
 
-        // Auth::login() handles session regeneration automatically
+        Log::info('Login: calling Auth::login()', ['gamertag' => $user->gamertag]);
+
         Auth::login($user, $this->remember);
 
-        session()->regenerate();
+        // Regenerate the session once, after login, using the request's session
+        // to ensure the database session driver writes the correct user_id.
+        request()->session()->regenerate();
 
-        $this->redirect(route('feed'));
+        Log::info('Login: session regenerated', [
+            'auth_id'    => Auth::id(),
+            'session_id' => session()->getId(),
+        ]);
+
+        if (Auth::id() === null) {
+            Log::error('Login: Auth::id() is null after Auth::login() — session not persisted', [
+                'gamertag' => $user->gamertag,
+            ]);
+            $this->addError('login', 'Something went wrong. Please try again.');
+            return;
+        }
+
+        // Redirect based on state
+        if (! $user->hasVerifiedEmail()) {
+            Log::info('Login: redirecting to verification notice', ['gamertag' => $user->gamertag]);
+            $this->redirect(route('verification.notice'));
+            return;
+        }
+
+        $destination = $user->onboarding_completed
+            ? route('feed')
+            : route('onboarding');
+
+        Log::info('Login: redirecting', ['gamertag' => $user->gamertag, 'to' => $destination]);
+
+        $this->redirect($destination);
     }
 
     /**
      * Resolve a User by gamertag (case-insensitive) or email address.
-     *
-     * @param  string  $login
-     * @return User|null
      */
     private function resolveUser(string $login): ?User
     {
-        // Determine if the input looks like an email
         if (str_contains($login, '@')) {
             return User::where('email', $login)->first();
         }
