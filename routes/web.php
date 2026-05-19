@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\PayPal\SubscriptionController;
@@ -72,6 +73,7 @@ Route::get('/register', Register::class)->name('register');
 
 // Login
 Route::get('/login', Login::class)->name('login');
+Route::post('/login', LoginController::class)->name('login.attempt');
 
 // Password reset — request link
 Route::get('/forgot-password', function () {

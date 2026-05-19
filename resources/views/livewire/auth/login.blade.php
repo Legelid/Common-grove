@@ -1,7 +1,8 @@
 <div>
     <h1 class="text-2xl font-bold text-center mb-8" style="color:#E6EDF3;">Sign in</h1>
 
-    <form wire:submit="authenticate" class="space-y-5">
+    <form method="POST" action="{{ route('login.attempt') }}" class="space-y-5">
+        @csrf
 
         <div>
             <label for="login" class="block text-sm font-medium mb-1" style="color:#8B949E;">
@@ -10,7 +11,8 @@
             <input
                 id="login"
                 type="text"
-                wire:model="login"
+                name="login"
+                value="{{ old('login') }}"
                 autocomplete="username"
                 autofocus
                 class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
@@ -25,12 +27,12 @@
         <div>
             <div class="flex items-center justify-between mb-1">
                 <label for="password" class="block text-sm font-medium" style="color:#8B949E;">Password</label>
-                <a href="{{ route('password.request') }}" class="text-sm underline transition" style="color:#1D9E75;" wire:navigate>Forgot password?</a>
+                <a href="{{ route('password.request') }}" class="text-sm underline transition" style="color:#1D9E75;">Forgot password?</a>
             </div>
             <input
                 id="password"
                 type="password"
-                wire:model="password"
+                name="password"
                 autocomplete="current-password"
                 class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
                 style="background:#1C2333;border:1px solid {{ $errors->has('password') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
@@ -45,7 +47,8 @@
             <input
                 id="remember"
                 type="checkbox"
-                wire:model="remember"
+                name="remember"
+                value="1"
                 class="w-4 h-4 rounded"
                 style="background:#1C2333;border-color:#30363D;accent-color:#1D9E75;"
             >
@@ -54,19 +57,17 @@
 
         <button
             type="submit"
-            wire:loading.attr="disabled"
-            class="w-full py-2.5 px-4 text-sm font-semibold rounded-lg transition disabled:opacity-50"
+            class="w-full py-2.5 px-4 text-sm font-semibold rounded-lg transition"
             style="background:#1D9E75;color:#fff;"
             onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'"
         >
-            <span wire:loading.remove>Sign in</span>
-            <span wire:loading>Signing in…</span>
+            Sign in
         </button>
 
     </form>
 
     <p class="mt-6 text-center text-sm" style="color:#8B949E;">
         Don't have an account?
-        <a href="{{ route('register') }}" class="underline transition" style="color:#1D9E75;" wire:navigate>Create one</a>
+        <a href="{{ route('register') }}" class="underline transition" style="color:#1D9E75;">Create one</a>
     </p>
 </div>
