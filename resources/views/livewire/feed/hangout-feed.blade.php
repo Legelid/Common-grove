@@ -640,7 +640,6 @@
                                         @endswitch
                                     </span>
                                     <p class="text-xs font-semibold leading-tight line-clamp-2" style="color:#E6EDF3;">{{ $official->title }}</p>
-                                    <p class="text-xs leading-snug line-clamp-1" style="color:#6B737C;">{{ $vibe }}</p>
                                 </button>
                             @endforeach
                         </div>
