@@ -10,7 +10,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Getting started — CommonGround' }}</title>
+    <title>{{ $title ?? 'Getting started — CommonGrove' }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -19,7 +19,7 @@
     <div class="flex-1 flex flex-col items-center justify-start px-4 py-10 sm:py-16">
 
         <div class="mb-8 text-center">
-            <span class="text-lg font-bold" style="color:#E6EDF3;">CommonGround</span>
+            <span class="text-lg font-bold" style="color:#E6EDF3;">CommonGrove</span>
             <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-semibold align-middle" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
         </div>
 

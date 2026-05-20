@@ -18,7 +18,7 @@ class DemoSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            CommonGroundDemoSeeder::class,
+            CommonGroveDemoSeeder::class,
             CommonGroveDemoSeeder::class,
         ]);
     }

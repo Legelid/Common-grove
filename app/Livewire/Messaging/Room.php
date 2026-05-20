@@ -44,6 +44,10 @@ class Room extends Component
     public bool   $showCwInput = false;
     public string $cwLabel     = '';
 
+    // Replies
+    public ?string $replyingToMessageId = null;
+    public ?string $replyingToPrompt    = null;
+
     // Room gradient
     public string $roomGradientTheme  = '';
     public bool   $showGradientPicker = false;
@@ -85,7 +89,7 @@ class Room extends Component
     public function chatMessages(): Collection
     {
         return Message::where('conversation_id', $this->conversationId)
-            ->with(['user', 'reactions'])
+            ->with(['user', 'reactions', 'replyToMessage.user'])
             ->orderBy('created_at')
             ->get();
     }
@@ -143,13 +147,28 @@ class Room extends Component
             return;
         }
 
+        // Validate reply target belongs to this conversation before saving.
+        $replyMsgId = null;
+        if ($this->replyingToMessageId !== null) {
+            $replyExists = Message::where('id', $this->replyingToMessageId)
+                ->where('conversation_id', $this->conversationId)
+                ->exists();
+            if ($replyExists) {
+                $replyMsgId = $this->replyingToMessageId;
+            }
+        }
+
         $message = Message::create([
-            'conversation_id' => $this->conversationId,
-            'user_id'         => Auth::id(),
-            'content'         => $trimmed,
-            'is_request'      => false,
-            'has_cw'          => $this->showCwInput && trim($this->cwLabel) !== '',
-            'cw_label'        => $this->showCwInput ? (trim($this->cwLabel) ?: null) : null,
+            'conversation_id'     => $this->conversationId,
+            'user_id'             => Auth::id(),
+            'content'             => $trimmed,
+            'is_request'          => false,
+            'has_cw'              => $this->showCwInput && trim($this->cwLabel) !== '',
+            'cw_label'            => $this->showCwInput ? (trim($this->cwLabel) ?: null) : null,
+            'reply_to_message_id' => $replyMsgId,
+            'reply_to_prompt'     => $replyMsgId === null ? (
+                $this->replyingToPrompt !== null ? mb_substr($this->replyingToPrompt, 0, 500) : null
+            ) : null,
         ]);
 
         $this->conversation->touch();
@@ -160,9 +179,11 @@ class Room extends Component
         $crisis = app(CrisisDetectionService::class);
         $this->showCrisisBanner = $crisis->check($trimmed, Auth::user(), $this->conversationId) !== null;
 
-        $this->messageContent = '';
-        $this->showCwInput    = false;
-        $this->cwLabel        = '';
+        $this->messageContent      = '';
+        $this->showCwInput         = false;
+        $this->cwLabel             = '';
+        $this->replyingToMessageId = null;
+        $this->replyingToPrompt    = null;
         $this->dispatch('message-sent');
     }
 
@@ -177,6 +198,28 @@ class Room extends Component
     public function broadcastTyping(): void
     {
         broadcast(new UserTyping($this->conversation, Auth::user()))->toOthers();
+    }
+
+    // -------------------------------------------------------------------------
+    // Replies
+    // -------------------------------------------------------------------------
+
+    public function setReply(string $messageId): void
+    {
+        $this->replyingToMessageId = $messageId;
+        $this->replyingToPrompt    = null;
+    }
+
+    public function setPromptReply(string $promptText): void
+    {
+        $this->replyingToPrompt    = mb_substr($promptText, 0, 500);
+        $this->replyingToMessageId = null;
+    }
+
+    public function cancelReply(): void
+    {
+        $this->replyingToMessageId = null;
+        $this->replyingToPrompt    = null;
     }
 
     // -------------------------------------------------------------------------
@@ -444,6 +487,6 @@ class Room extends Component
     public function render(): View
     {
         return view('livewire.messaging.room')
-            ->layout('layouts.app', ['title' => ($this->conversation->name ?? 'Room') . ' — CommonGround']);
+            ->layout('layouts.app', ['title' => ($this->conversation->name ?? 'Room') . ' — CommonGrove']);
     }
 }

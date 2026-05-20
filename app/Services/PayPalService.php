@@ -16,11 +16,11 @@ class PayPalService
 
     public function __construct()
     {
-        $env                = config('services.paypal.env', 'sandbox');
+        $mode               = config('services.paypal.mode', 'sandbox');
         $this->clientId     = (string) config('services.paypal.client_id');
         $this->clientSecret = (string) config('services.paypal.client_secret');
         $this->planId       = (string) config('services.paypal.supporter_plan_id');
-        $this->baseUrl      = $env === 'production'
+        $this->baseUrl      = $mode === 'live'
             ? 'https://api-m.paypal.com'
             : 'https://api-m.sandbox.paypal.com';
     }

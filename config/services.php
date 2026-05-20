@@ -36,12 +36,12 @@ return [
     ],
 
     'paypal' => [
-        'client_id'           => env('PAYPAL_CLIENT_ID'),
-        'client_secret'       => env('PAYPAL_CLIENT_SECRET'),
-        'webhook_id'          => env('PAYPAL_WEBHOOK_ID'),
-        'env'                 => env('PAYPAL_ENV', 'sandbox'),
-        'supporter_plan_id'   => env('PAYPAL_SUPPORTER_PLAN_ID'),
-        'donate_button_id'    => env('PAYPAL_DONATE_BUTTON_ID'),
+        'client_id'         => env('PAYPAL_CLIENT_ID'),
+        'client_secret'     => env('PAYPAL_CLIENT_SECRET'),
+        'webhook_id'        => env('PAYPAL_WEBHOOK_ID'),
+        'mode'              => env('PAYPAL_MODE', 'sandbox'),
+        'supporter_plan_id' => env('PAYPAL_SUPPORTER_PLAN_ID'),
+        'donation_url'      => env('PAYPAL_DONATION_URL'),
     ],
 
 ];

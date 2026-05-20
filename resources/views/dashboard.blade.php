@@ -1,4 +1,4 @@
-<x-layouts.app title="Dashboard — CommonGround">
+<x-layouts.app title="Dashboard — CommonGrove">
     <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
         <h1 class="text-3xl font-bold mb-2" style="color:#E6EDF3;">
             Welcome, {{ Auth::user()->gamertag }}

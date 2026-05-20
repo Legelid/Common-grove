@@ -65,7 +65,7 @@ class HolidayThemeService
                 'id'       => 'spring',
                 'label'    => 'Spring',
                 'gradient' => 'radial-gradient(ellipse 70% 50% at 50% 100%, rgba(20,100,40,0.05) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 75% 0%, rgba(60,120,60,0.06) 0%, transparent 55%), #0D1117',
-                'banner'   => ['phrase' => 'Happy spring', 'bg' => 'rgba(40,100,50,0.06)', 'color' => '#5A9E6A'],
+                'banner'   => ['phrase' => 'Happy spring', 'bg' => 'rgba(40,100,50,0.06)', 'color' => '#5A9E6A', 'show' => false],
             ];
         }
 

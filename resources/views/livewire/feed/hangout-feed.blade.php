@@ -605,10 +605,9 @@
                         <p class="text-xs mt-0.5" style="color:#3d4451;">Always-open spaces you can step into anytime.</p>
                     </div>
 
-                    {{-- ── Mobile: horizontal scroll row ─────────────────────────── --}}
+                    {{-- ── Mobile: 4-column grid ───────────────────────────────────── --}}
                     <div class="md:hidden">
-                        {{-- Bleeds past the parent's px-6 so cards reach the viewport edge --}}
-                        <div class="flex gap-3 overflow-x-auto -mx-6 px-6 pb-1" style="scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+                        <div class="grid grid-cols-4 gap-2">
                             @foreach ($this->officialRooms as $official)
                                 @php
                                     $accent = $accentMap[$official->title] ?? $accentMap['Casual Chat'];
@@ -627,22 +626,21 @@
                                     type="button"
                                     wire:key="mob-official-{{ $official->id }}"
                                     @click="room = {{ $roomJs }}; sheetOpen = true"
-                                    class="flex-none rounded-xl border flex flex-col items-start gap-2.5 p-3.5 text-left active:opacity-70 transition-opacity"
-                                    style="width:68vw;scroll-snap-align:start;background:#121820;border-color:#253040;box-shadow:inset 0 0 0 1px {{ $accent['glow_base'] }};"
+                                    class="rounded-xl border flex flex-col items-center text-center gap-1.5 p-2.5 active:opacity-70 transition-opacity"
+                                    style="background:#121820;border-color:#253040;box-shadow:inset 0 0 0 1px {{ $accent['glow_base'] }};"
                                     aria-label="Open {{ $official->title }} room"
                                 >
                                     <span style="color:{{ $accent['color'] }};" aria-hidden="true">
                                         @switch($icon)
-                                            @case('moon') <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> @break
-                                            @case('brain') <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.16Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.16Z"/></svg> @break
-                                            @case('leaf') <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8C8 10 5.9 16.17 3.82 20.6c-.26.57.56 1.04.97.55C7 18 10 16 15 16c4.58 0 7-3.5 7-3.5C24 9.5 17 8 17 8z"/></svg> @break
-                                            @case('chat') <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> @break
-                                            @default <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                                            @case('moon') <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> @break
+                                            @case('brain') <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.16Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.16Z"/></svg> @break
+                                            @case('leaf') <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8C8 10 5.9 16.17 3.82 20.6c-.26.57.56 1.04.97.55C7 18 10 16 15 16c4.58 0 7-3.5 7-3.5C24 9.5 17 8 17 8z"/></svg> @break
+                                            @case('chat') <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> @break
+                                            @default <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                                         @endswitch
                                     </span>
-                                    <p class="text-sm font-semibold leading-snug" style="color:#E6EDF3;">{{ $official->title }}</p>
-                                    <p class="text-xs leading-snug" style="color:#6B737C;">{{ $vibe }}</p>
-                                    <span class="w-1 h-1 rounded-full flex-none mt-auto" style="background:{{ $accent['color'] }};opacity:0.45;" aria-hidden="true"></span>
+                                    <p class="text-xs font-semibold leading-tight line-clamp-2" style="color:#E6EDF3;">{{ $official->title }}</p>
+                                    <p class="text-xs leading-snug line-clamp-1" style="color:#6B737C;">{{ $vibe }}</p>
                                 </button>
                             @endforeach
                         </div>

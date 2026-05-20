@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-CommonGround — a closed, judgment-free, strictly platonic friendship platform for introverts and gamers. Nothing inside is visible to unauthenticated visitors. No ads, no bots, no fake activity.
+CommonGrove — a closed, judgment-free, strictly platonic friendship platform for introverts and gamers. Nothing inside is visible to unauthenticated visitors. No ads, no bots, no fake activity.
 
 **Stack:** Laravel 11 · Livewire 3 · Alpine.js · Tailwind CSS v3 (TALL) · MySQL 8 · Redis · Laravel Reverb (WebSockets)
 

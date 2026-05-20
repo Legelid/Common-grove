@@ -36,7 +36,7 @@
                 [
                     'num'   => '4',
                     'title' => 'This is not a dating app.',
-                    'body'  => 'CommonGround is a platonic friendship platform. Pursuing romantic or sexual connections with other users — especially after they\'ve made it clear they\'re not interested — is not acceptable here.',
+                    'body'  => 'CommonGrove is a platonic friendship platform. Pursuing romantic or sexual connections with other users — especially after they\'ve made it clear they\'re not interested — is not acceptable here.',
                 ],
                 [
                     'num'   => '5',
@@ -46,7 +46,7 @@
                 [
                     'num'   => '6',
                     'title' => 'Do not spam, scam, bot, or advertise.',
-                    'body'  => 'No mass messages, no referral links, no automated accounts, no pyramid schemes, no "DM me for this amazing opportunity." CommonGround is not a marketing channel.',
+                    'body'  => 'No mass messages, no referral links, no automated accounts, no pyramid schemes, no "DM me for this amazing opportunity." CommonGrove is not a marketing channel.',
                 ],
                 [
                     'num'   => '7',
@@ -120,12 +120,12 @@
     {{-- Beta note --}}
     <div class="mt-10 py-6 border-t" style="border-color:#21262D;">
         <p class="text-sm leading-relaxed" style="color:#8B949E;">
-            CommonGround is in beta — things won't be perfect yet. But reports help. If something feels off, say so.
+            CommonGrove is in beta — things won't be perfect yet. But reports help. If something feels off, say so.
         </p>
     </div>
 
     <div class="mt-4 pt-4 border-t" style="border-color:#21262D;">
-        <p class="text-xs" style="color:#3d4451;">CommonGround · Coldev Enterprises · <a href="{{ route('report') }}" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">Contact</a></p>
+        <p class="text-xs" style="color:#3d4451;">CommonGrove · Coldev Enterprises · <a href="{{ route('report') }}" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">Contact</a></p>
     </div>
 
 @endsection

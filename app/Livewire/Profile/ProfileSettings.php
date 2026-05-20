@@ -753,6 +753,6 @@ class ProfileSettings extends Component
     public function render(): \Illuminate\View\View
     {
         return view('livewire.profile.profile-settings')
-            ->layout('layouts.app', ['title' => 'Profile Settings — CommonGround']);
+            ->layout('layouts.app', ['title' => 'Profile Settings — CommonGrove']);
     }
 }

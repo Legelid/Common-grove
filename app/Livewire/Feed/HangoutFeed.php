@@ -359,6 +359,6 @@ class HangoutFeed extends Component
     public function render(): View
     {
         return view('livewire.feed.hangout-feed')
-            ->layout('layouts.app', ['title' => 'Hangout Feed — CommonGround']);
+            ->layout('layouts.app', ['title' => 'Hangout Feed — CommonGrove']);
     }
 }

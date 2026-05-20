@@ -164,6 +164,6 @@ class FriendsList extends Component
     public function render(): View
     {
         return view('livewire.friends.friends-list')
-            ->layout('layouts.app', ['title' => 'Friends — CommonGround']);
+            ->layout('layouts.app', ['title' => 'Friends — CommonGrove']);
     }
 }

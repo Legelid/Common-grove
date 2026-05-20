@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
 /**
- * Validates a gamertag against the CommonGround ruleset.
+ * Validates a gamertag against the CommonGrove ruleset.
  *
  * Rules:
  *  1. 3–20 characters

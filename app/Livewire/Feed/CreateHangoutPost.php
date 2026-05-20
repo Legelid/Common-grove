@@ -320,6 +320,6 @@ class CreateHangoutPost extends Component
     public function render(): View
     {
         return view('livewire.feed.create-hangout-post')
-            ->layout('layouts.app', ['title' => 'Open a Hangout or Room — CommonGround']);
+            ->layout('layouts.app', ['title' => 'Open a Hangout or Room — CommonGrove']);
     }
 }

@@ -268,7 +268,7 @@ class PublicProfile extends Component
         return view('livewire.profile.public-profile', [
             'visibleName' => $this->visibleName(),
         ])->layout('layouts.app', [
-            'title' => $this->profileUser->gamertag . ' — CommonGround',
+            'title' => $this->profileUser->gamertag . ' — CommonGrove',
         ]);
     }
 }

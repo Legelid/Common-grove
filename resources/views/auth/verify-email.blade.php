@@ -1,4 +1,4 @@
-<x-layouts.app title="Verify your email — CommonGround">
+<x-layouts.app title="Verify your email — CommonGrove">
     <div class="text-center">
         <div class="text-4xl mb-4">✉️</div>
         <h1 class="text-2xl font-bold mb-3" style="color:#E6EDF3;">Check your email</h1>

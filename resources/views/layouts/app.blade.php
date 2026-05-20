@@ -128,7 +128,7 @@
     {{-- ── Auth shell ─────────────────────────────────────────────────────── --}}
     <div class="min-h-full flex flex-col items-center justify-center px-4 py-12">
         <div class="mb-8 text-center">
-            <a href="{{ route('home') }}" class="text-xl font-bold" style="color:#E6EDF3;">CommonGround</a>
+            <a href="{{ route('home') }}" class="text-xl font-bold" style="color:#E6EDF3;">CommonGrove</a>
             <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-semibold align-middle" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
         </div>
         <div class="w-full max-w-md rounded-xl border p-8 shadow-2xl" style="background:#161B22;border-color:#30363D;">
@@ -160,7 +160,7 @@
                     </button>
                 @endauth
                 <a href="{{ route('feed') }}" wire:navigate class="flex items-center gap-2">
-                    <span class="font-bold tracking-tight" style="color:#E6EDF3;">CommonGround</span>
+                    <span class="font-bold tracking-tight" style="color:#E6EDF3;">CommonGrove</span>
                 </a>
                 <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
                 @if ($isBirthday && !$isAuthPage)
@@ -250,7 +250,7 @@
         @endauth
 
         {{-- ── Holiday atmosphere banner ───────────────────────────────────── --}}
-        @if ($showHolidayDecorations && !$isAuthPage)
+        @if ($showHolidayDecorations && !$isAuthPage && ($holiday['banner']['show'] ?? true))
             @include('partials.holidays.' . $holiday['id'], ['holiday' => $holiday])
         @endif
 
@@ -423,7 +423,7 @@
                 {{-- Drawer header --}}
                 <div class="flex items-center justify-between px-5 py-4 flex-none border-b" style="border-color:#21262D;">
                     <div class="flex items-center gap-2">
-                        <span class="font-bold tracking-tight" style="color:#E6EDF3;">CommonGround</span>
+                        <span class="font-bold tracking-tight" style="color:#E6EDF3;">CommonGrove</span>
                         <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
                     </div>
                     <button

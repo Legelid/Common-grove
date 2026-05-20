@@ -197,6 +197,6 @@ class Register extends Component
     public function render(): \Illuminate\View\View
     {
         return view('livewire.auth.register')
-            ->layout('layouts.app', ['title' => 'Create your account — CommonGround']);
+            ->layout('layouts.app', ['title' => 'Create your account — CommonGrove']);
     }
 }

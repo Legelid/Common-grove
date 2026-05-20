@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>CommonGround — Find your people</title>
+    <title>CommonGrove — Find your people</title>
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -112,7 +112,7 @@
                             <span
                                 class="font-semibold"
                                 style="color:#C9D1D9;font-size:1.1rem;letter-spacing:-0.015em;"
-                            >CommonGround</span>
+                            >CommonGrove</span>
                             <span
                                 class="text-xs px-1.5 py-0.5 rounded font-semibold"
                                 style="background:rgba(29,158,117,0.12);color:#1D9E75;letter-spacing:0.04em;"
@@ -203,7 +203,7 @@
                 class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pt-5"
                 style="color:#2A3038;border-top:1px solid #1A2028;"
             >
-                <p class="text-xs">&copy; {{ date('Y') }} CommonGround</p>
+                <p class="text-xs">&copy; {{ date('Y') }} CommonGrove</p>
                 <nav class="flex flex-wrap gap-x-4 gap-y-1">
                     <a
                         href="{{ route('privacy') }}"

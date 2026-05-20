@@ -39,7 +39,7 @@ class SubscriptionController extends Controller
                 'user_id'                  => Auth::id(),
                 'provider'                 => 'paypal',
                 'provider_subscription_id' => $subscriptionId,
-                'status'                   => 'active', // Webhook will confirm; placeholder for now
+                'status'                   => 'pending',
                 'plan_name'                => 'CommonGrove Supporter',
             ]);
         }

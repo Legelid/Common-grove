@@ -322,6 +322,6 @@ class OnboardingFlow extends Component
         ]);
 
         return view('livewire.onboarding.onboarding-flow')
-            ->layout('layouts.onboarding', ['title' => 'Welcome — CommonGround']);
+            ->layout('layouts.onboarding', ['title' => 'Welcome — CommonGrove']);
     }
 }

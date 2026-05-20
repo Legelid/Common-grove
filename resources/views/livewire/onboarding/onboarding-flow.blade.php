@@ -14,7 +14,7 @@
     @if ($step === 1)
         <div class="rounded-2xl border p-8 space-y-6 text-center" style="background:#161B22;border-color:#30363D;">
             <div class="space-y-3">
-                <h1 class="text-2xl font-bold" style="color:#E6EDF3;">Welcome to CommonGround</h1>
+                <h1 class="text-2xl font-bold" style="color:#E6EDF3;">Welcome to CommonGrove</h1>
                 <p class="text-base leading-relaxed" style="color:#8B949E;">
                     This is a place to find real connection — at your own pace.
                 </p>
@@ -292,7 +292,7 @@
             </div>
 
             <div class="space-y-3 text-sm leading-relaxed" style="color:#8B949E;">
-                <p>CommonGround is a place for real connection — not followers or attention.</p>
+                <p>CommonGrove is a place for real connection — not followers or attention.</p>
                 <p>It's not a dating app, and it's not built for self-promotion.</p>
                 <p style="color:#C9D1D9;">
                     Do not attack people over identity, beliefs, background, politics, religion, gender, sexuality, disability, neurodivergence, or personal circumstances.

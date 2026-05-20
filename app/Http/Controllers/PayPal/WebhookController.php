@@ -25,8 +25,22 @@ class WebhookController extends Controller
             return response('Signature verification failed.', 400);
         }
 
-        $eventType      = $request->json('event_type');
-        $resource       = $request->json('resource') ?? [];
+        $eventType = $request->json('event_type');
+        $resource  = $request->json('resource') ?? [];
+
+        Log::info('PayPal webhook received', ['event_type' => $eventType]);
+
+        // PAYMENT.SALE.* events use billing_agreement_id (not resource.id) to reference
+        // the subscription — handle them before the generic subscription ID extraction.
+        if (in_array($eventType, ['PAYMENT.SALE.COMPLETED', 'PAYMENT.SALE.DENIED', 'PAYMENT.SALE.REFUNDED'], true)) {
+            match ($eventType) {
+                'PAYMENT.SALE.COMPLETED' => $this->handlePaymentCompleted($resource),
+                'PAYMENT.SALE.DENIED'    => $this->handlePaymentDenied($resource),
+                'PAYMENT.SALE.REFUNDED'  => $this->handlePaymentRefunded($resource),
+            };
+            return response('OK', 200);
+        }
+
         $subscriptionId = $resource['id'] ?? null;
 
         if (! $subscriptionId) {
@@ -34,10 +48,10 @@ class WebhookController extends Controller
         }
 
         match ($eventType) {
-            'BILLING.SUBSCRIPTION.ACTIVATED'    => $this->handleActivated($subscriptionId, $resource),
-            'BILLING.SUBSCRIPTION.CANCELLED'    => $this->handleCancelled($subscriptionId),
-            'BILLING.SUBSCRIPTION.EXPIRED'      => $this->handleExpired($subscriptionId),
-            'BILLING.SUBSCRIPTION.SUSPENDED'    => $this->handleSuspended($subscriptionId),
+            'BILLING.SUBSCRIPTION.ACTIVATED'      => $this->handleActivated($subscriptionId, $resource),
+            'BILLING.SUBSCRIPTION.CANCELLED'      => $this->handleCancelled($subscriptionId),
+            'BILLING.SUBSCRIPTION.EXPIRED'        => $this->handleExpired($subscriptionId),
+            'BILLING.SUBSCRIPTION.SUSPENDED'      => $this->handleSuspended($subscriptionId),
             'BILLING.SUBSCRIPTION.PAYMENT.FAILED' => $this->handlePaymentFailed($subscriptionId),
             default => null,
         };
@@ -55,8 +69,9 @@ class WebhookController extends Controller
         }
 
         $subscription->update([
-            'status'     => 'active',
-            'started_at' => now(),
+            'status'          => 'active',
+            'started_at'      => now(),
+            'last_payment_at' => now(),
         ]);
 
         $subscription->user->update(['is_supporter' => true]);
@@ -80,6 +95,59 @@ class WebhookController extends Controller
     private function handlePaymentFailed(string $subscriptionId): void
     {
         $this->revokeSupporter($subscriptionId, 'payment_failed');
+    }
+
+    private function handlePaymentCompleted(array $resource): void
+    {
+        // Subscription payments carry the subscription ID in billing_agreement_id.
+        $subscriptionId = $resource['billing_agreement_id'] ?? null;
+
+        if (! $subscriptionId) {
+            return; // One-time payment unrelated to a subscription — nothing to do.
+        }
+
+        $subscription = UserSubscription::where('provider_subscription_id', $subscriptionId)->first();
+
+        if (! $subscription) {
+            Log::warning('PayPal PAYMENT.SALE.COMPLETED for unknown subscription', [
+                'billing_agreement_id' => $subscriptionId,
+            ]);
+            return;
+        }
+
+        $subscription->update(['last_payment_at' => now()]);
+    }
+
+    private function handlePaymentDenied(array $resource): void
+    {
+        $subscriptionId = $resource['billing_agreement_id'] ?? null;
+        $saleId         = $resource['id'] ?? 'unknown';
+
+        Log::warning('PayPal PAYMENT.SALE.DENIED', [
+            'sale_id'              => $saleId,
+            'billing_agreement_id' => $subscriptionId,
+            'amount'               => $resource['amount'] ?? null,
+        ]);
+
+        if (! $subscriptionId) {
+            return;
+        }
+
+        // A denied payment means PayPal couldn't collect — treat like payment failed.
+        $this->revokeSupporter($subscriptionId, 'payment_failed');
+    }
+
+    private function handlePaymentRefunded(array $resource): void
+    {
+        $subscriptionId = $resource['billing_agreement_id'] ?? null;
+        $saleId         = $resource['id'] ?? 'unknown';
+
+        // Log only — a refund doesn't necessarily mean the subscription is gone.
+        Log::info('PayPal PAYMENT.SALE.REFUNDED', [
+            'sale_id'              => $saleId,
+            'billing_agreement_id' => $subscriptionId,
+            'amount'               => $resource['amount'] ?? null,
+        ]);
     }
 
     private function revokeSupporter(string $subscriptionId, string $newStatus): void

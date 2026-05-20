@@ -18,7 +18,7 @@
     <nav class="rounded-xl border p-5 mb-10 space-y-1.5" style="background:#161B22;border-color:#30363D;">
         <p class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#3d4451;">On this page</p>
         @foreach ([
-            'what-is-commonground' => 'What is CommonGround?',
+            'what-is-commonground' => 'What is CommonGrove?',
             'what-we-collect'      => 'What we collect',
             'how-we-use-it'        => 'How we use it',
             'what-we-dont-do'      => 'What we don\'t do',
@@ -42,10 +42,10 @@
     <div class="space-y-12">
 
         <section id="what-is-commonground">
-            <h2 class="text-lg font-semibold mb-4 pb-3 border-b" style="color:#E6EDF3;border-color:#21262D;">What is CommonGround?</h2>
+            <h2 class="text-lg font-semibold mb-4 pb-3 border-b" style="color:#E6EDF3;border-color:#21262D;">What is CommonGrove?</h2>
             <div class="space-y-3 text-sm leading-relaxed" style="color:#C9D1D9;">
-                <p>CommonGround is a closed, private platform for introverts and gamers to find genuine friendships — no ads, no bots, no public profiles. It is operated by Coldev Enterprises.</p>
-                <p>Nothing on CommonGround is visible to people who are not logged in. This policy explains what data we collect when you use it and how that data is handled.</p>
+                <p>CommonGrove is a closed, private platform for introverts and gamers to find genuine friendships — no ads, no bots, no public profiles. It is operated by Coldev Enterprises.</p>
+                <p>Nothing on CommonGrove is visible to people who are not logged in. This policy explains what data we collect when you use it and how that data is handled.</p>
             </div>
         </section>
 
@@ -112,7 +112,7 @@
                     </li>
                     <li class="flex gap-3">
                         <span class="w-1 h-1 rounded-full flex-none mt-2" style="background:#1D9E75;"></span>
-                        <span><span style="color:#E6EDF3;">There is no advertising on CommonGround.</span> No ad targeting, no tracking pixels, no behavioural profiling for commercial purposes.</span>
+                        <span><span style="color:#E6EDF3;">There is no advertising on CommonGrove.</span> No ad targeting, no tracking pixels, no behavioural profiling for commercial purposes.</span>
                     </li>
                     <li class="flex gap-3">
                         <span class="w-1 h-1 rounded-full flex-none mt-2" style="background:#1D9E75;"></span>
@@ -129,7 +129,7 @@
         <section id="retention">
             <h2 class="text-lg font-semibold mb-4 pb-3 border-b" style="color:#E6EDF3;border-color:#21262D;">Message retention</h2>
             <div class="space-y-3 text-sm leading-relaxed" style="color:#C9D1D9;">
-                <p>Messages in persistent rooms are stored for approximately 14 days, after which older messages may be removed automatically. You should not rely on CommonGround as long-term message storage.</p>
+                <p>Messages in persistent rooms are stored for approximately 14 days, after which older messages may be removed automatically. You should not rely on CommonGrove as long-term message storage.</p>
                 <p>Hangout posts expire after 6 hours by design — that is intentional and part of how the feature works.</p>
                 <p>Direct messages are stored as long as the conversation exists. If you delete your account, your messages will be removed or anonymised.</p>
                 <p>Moderation logs may retain message content for longer periods where there is a legitimate safety or review reason to do so.</p>
@@ -149,7 +149,7 @@
             <div class="space-y-5 text-sm leading-relaxed" style="color:#C9D1D9;">
                 <div>
                     <p class="font-medium mb-1" style="color:#E6EDF3;">Cloudflare</p>
-                    <p>CommonGround uses Cloudflare for DDoS protection, DNS, and network routing. Cloudflare may process your IP address and request data. Cloudflare has its own privacy policy.</p>
+                    <p>CommonGrove uses Cloudflare for DDoS protection, DNS, and network routing. Cloudflare may process your IP address and request data. Cloudflare has its own privacy policy.</p>
                 </div>
                 <div>
                     <p class="font-medium mb-1" style="color:#E6EDF3;">Server infrastructure</p>
@@ -161,7 +161,7 @@
                 </div>
                 <div>
                     <p class="font-medium mb-1" style="color:#E6EDF3;">Payment provider (future)</p>
-                    <p>If supporter subscriptions are introduced, payment processing will be handled by a third-party provider. CommonGround will not store your card details. We'll update this policy before that feature launches.</p>
+                    <p>If supporter subscriptions are introduced, payment processing will be handled by a third-party provider. CommonGrove will not store your card details. We'll update this policy before that feature launches.</p>
                 </div>
             </div>
         </section>
@@ -177,8 +177,8 @@
         <section id="beta">
             <h2 class="text-lg font-semibold mb-4 pb-3 border-b" style="color:#E6EDF3;border-color:#21262D;">Beta notice</h2>
             <div class="space-y-3 text-sm leading-relaxed" style="color:#C9D1D9;">
-                <p>CommonGround is in beta. Features, data practices, and this policy may evolve as the platform develops. If something significant changes, you'll be notified within the app.</p>
-                <p>Using CommonGround during beta means you accept that some things are still being built and refined.</p>
+                <p>CommonGrove is in beta. Features, data practices, and this policy may evolve as the platform develops. If something significant changes, you'll be notified within the app.</p>
+                <p>Using CommonGrove during beta means you accept that some things are still being built and refined.</p>
             </div>
         </section>
 
@@ -193,7 +193,7 @@
     </div>
 
     <div class="mt-12 pt-6 border-t" style="border-color:#21262D;">
-        <p class="text-xs" style="color:#3d4451;">CommonGround · Coldev Enterprises · <a href="{{ route('report') }}" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">Contact</a></p>
+        <p class="text-xs" style="color:#3d4451;">CommonGrove · Coldev Enterprises · <a href="{{ route('report') }}" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">Contact</a></p>
     </div>
 
 @endsection

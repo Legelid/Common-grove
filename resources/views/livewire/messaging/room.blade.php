@@ -76,7 +76,7 @@
             <a href="{{ route('messages.index') }}" wire:navigate class="transition flex-none" style="color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'">←</a>
             <div class="flex-1 min-w-0">
                 <p class="font-semibold text-sm truncate" style="color:#E6EDF3;">{{ $this->conversation->name ?? 'Hangout Room' }}</p>
-                <p class="text-xs" style="color:#8B949E;">{{ $activeParticipants->count() }} participants</p>
+                <p class="hidden md:block text-xs" style="color:#8B949E;">{{ $activeParticipants->count() }} participants</p>
             </div>
 
             {{-- Mobile: People button --}}
@@ -227,34 +227,87 @@
 
         {{-- Hangout type notice --}}
         @if ($this->conversation->hangoutPost)
-            @php $hangoutPost = $this->conversation->hangoutPost; @endphp
-            @if ($hangoutPost->is_official)
-                <div class="flex items-center gap-2 px-4 py-2 border-b flex-none" style="border-color:#21262D;background:rgba(29,158,117,0.04);">
-                    <span class="text-xs px-2 py-0.5 rounded font-medium flex-none"
-                        style="background:rgba(29,158,117,0.08);color:#1D9E75;border:1px solid rgba(29,158,117,0.15);">CommonGrove room</span>
-                    <span class="text-xs" style="color:#8B949E;">An always-open starter space made by CommonGrove.</span>
-                    <span class="ml-auto text-xs" style="color:#3d4451;">Messages here don't stick around forever — just long enough to keep things flowing.</span>
+            @php
+                $hangoutPost = $this->conversation->hangoutPost;
+                if ($hangoutPost->is_official) {
+                    $noticeBadge  = 'CommonGrove room';
+                    $noticeBadgeSt = 'background:rgba(29,158,117,0.08);color:#1D9E75;border:1px solid rgba(29,158,117,0.15);';
+                    $noticeBg     = 'border-color:#21262D;background:rgba(29,158,117,0.04);';
+                    $noticeDetail = 'An always-open starter space made by CommonGrove.';
+                    $noticeExtra  = 'Messages here don\'t stick around forever — just long enough to keep things flowing.';
+                } elseif ($hangoutPost->is_persistent) {
+                    $noticeBadge  = 'Always-open room';
+                    $noticeBadgeSt = 'background:rgba(29,158,117,0.1);color:#1D9E75;border:1px solid rgba(29,158,117,0.2);';
+                    $noticeBg     = 'border-color:#21262D;background:rgba(29,158,117,0.04);';
+                    $noticeDetail = 'This room stays open.';
+                    $noticeExtra  = 'Messages here don\'t stick around forever — just long enough to keep things flowing.';
+                } elseif ($hangoutPost->isExpired()) {
+                    $noticeBadge  = 'Temporary hangout';
+                    $noticeBadgeSt = 'background:rgba(210,153,34,0.1);color:#D29922;border:1px solid rgba(210,153,34,0.2);';
+                    $noticeBg     = 'border-color:#21262D;background:rgba(210,153,34,0.04);';
+                    $noticeDetail = 'This hangout has ended.';
+                    $noticeExtra  = null;
+                } else {
+                    $noticeBadge  = 'Temporary hangout';
+                    $noticeBadgeSt = 'background:rgba(210,153,34,0.1);color:#D29922;border:1px solid rgba(210,153,34,0.2);';
+                    $noticeBg     = 'border-color:#21262D;background:rgba(210,153,34,0.04);';
+                    $noticeDetail = 'This hangout closes in ' . $hangoutPost->expiresInFormatted() . '.';
+                    $noticeExtra  = null;
+                }
+            @endphp
+            <div x-data="{ showRoomInfo: false }">
+
+                {{-- Mobile: badge only + info icon --}}
+                <div class="md:hidden flex items-center gap-2 px-4 py-1.5 border-b flex-none" style="{{ $noticeBg }}">
+                    <span class="text-xs px-2 py-0.5 rounded-full font-medium flex-none" style="{{ $noticeBadgeSt }}">{{ $noticeBadge }}</span>
+                    <button
+                        type="button"
+                        @click="showRoomInfo = true"
+                        class="ml-auto w-6 h-6 flex items-center justify-center rounded-full transition flex-none"
+                        style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'"
+                        aria-label="Room info"
+                    >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </button>
                 </div>
-            @elseif ($hangoutPost->is_persistent)
-                <div class="flex items-center gap-2 px-4 py-2 border-b flex-none" style="border-color:#21262D;background:rgba(29,158,117,0.04);">
-                    <span class="text-xs px-2 py-0.5 rounded-full font-medium flex-none"
-                        style="background:rgba(29,158,117,0.1);color:#1D9E75;border:1px solid rgba(29,158,117,0.2);">Always-open room</span>
-                    <span class="text-xs" style="color:#8B949E;">This room stays open.</span>
-                    <span class="ml-auto text-xs" style="color:#3d4451;">Messages here don't stick around forever — just long enough to keep things flowing.</span>
+
+                {{-- Desktop: full banner unchanged --}}
+                <div class="hidden md:flex items-center gap-2 px-4 py-2 border-b flex-none" style="{{ $noticeBg }}">
+                    <span class="text-xs px-2 py-0.5 rounded-full font-medium flex-none" style="{{ $noticeBadgeSt }}">{{ $noticeBadge }}</span>
+                    <span class="text-xs" style="color:#8B949E;">{{ $noticeDetail }}</span>
+                    @if ($noticeExtra)
+                        <span class="ml-auto text-xs" style="color:#3d4451;">{{ $noticeExtra }}</span>
+                    @endif
                 </div>
-            @elseif ($hangoutPost->isExpired())
-                <div class="flex items-center gap-2 px-4 py-2 border-b flex-none" style="border-color:#21262D;background:rgba(210,153,34,0.04);">
-                    <span class="text-xs px-2 py-0.5 rounded-full font-medium flex-none"
-                        style="background:rgba(210,153,34,0.1);color:#D29922;border:1px solid rgba(210,153,34,0.2);">Temporary hangout</span>
-                    <span class="text-xs" style="color:#8B949E;">This hangout has ended.</span>
+
+                {{-- Mobile info bottom sheet --}}
+                <div
+                    x-show="showRoomInfo"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                    class="fixed inset-0 z-50 flex flex-col justify-end md:hidden"
+                    style="display:none;"
+                >
+                    <div class="absolute inset-0" @click="showRoomInfo = false" style="background:rgba(0,0,0,0.6);"></div>
+                    <div class="relative rounded-t-2xl px-5 py-5 space-y-3" style="background:#161B22;border-top:1px solid #30363D;">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-xs px-2 py-0.5 rounded-full font-medium" style="{{ $noticeBadgeSt }}">{{ $noticeBadge }}</span>
+                            <button type="button" @click="showRoomInfo = false"
+                                class="w-7 h-7 flex items-center justify-center rounded-lg transition text-lg leading-none flex-none"
+                                style="color:#8B949E;" aria-label="Close">×</button>
+                        </div>
+                        <p class="text-sm" style="color:#C9D1D9;">{{ $noticeDetail }}</p>
+                        @if ($noticeExtra)
+                            <p class="text-sm" style="color:#8B949E;">{{ $noticeExtra }}</p>
+                        @endif
+                    </div>
                 </div>
-            @else
-                <div class="flex items-center gap-2 px-4 py-2 border-b flex-none" style="border-color:#21262D;background:rgba(210,153,34,0.04);">
-                    <span class="text-xs px-2 py-0.5 rounded-full font-medium flex-none"
-                        style="background:rgba(210,153,34,0.1);color:#D29922;border:1px solid rgba(210,153,34,0.2);">Temporary hangout</span>
-                    <span class="text-xs" style="color:#8B949E;">This hangout closes in <strong style="color:#D29922;">{{ $hangoutPost->expiresInFormatted() }}</strong>.</span>
-                </div>
-            @endif
+
+            </div>
         @endif
 
         {{-- Conversation prompt card --}}
@@ -286,14 +339,19 @@
                     }
                 }"
                 x-show="!dismissed"
-                class="flex items-start gap-3 px-4 py-2.5 border-b flex-none"
+                class="flex items-start gap-2 px-4 py-1.5 md:py-2.5 border-b flex-none"
                 style="border-color:#21262D;background:rgba(22,27,34,0.6);"
             >
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs mb-0.5" style="color:#21262D;">Conversation starter</p>
-                    <p class="text-sm leading-snug" style="color:#C9D1D9;" x-text="current"></p>
+                    <p class="text-xs md:text-sm leading-snug line-clamp-2 md:line-clamp-none" style="color:#C9D1D9;" x-text="current"></p>
                 </div>
-                <div class="flex items-center gap-0.5 flex-none mt-0.5">
+                <div class="flex items-center gap-0 flex-none mt-0.5">
+                    <button type="button" @click="$wire.setPromptReply(current)"
+                        class="w-7 h-6 flex items-center justify-center rounded transition text-xs"
+                        style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'"
+                        title="Reply to this prompt"
+                        aria-label="Reply to this prompt"
+                    >↩</button>
                     <button type="button" @click="next()"
                         class="w-6 h-6 flex items-center justify-center rounded transition text-sm"
                         style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'"
@@ -409,6 +467,38 @@
                                 @endif
                             @endif
 
+                            {{-- Reply quote --}}
+                            @if ($message->reply_to_message_id || $message->reply_to_prompt)
+                                @php
+                                    if ($message->reply_to_message_id) {
+                                        $replyParent  = $message->replyToMessage;
+                                        $quoteText    = $replyParent
+                                            ? Str::limit($replyParent->content, 70)
+                                            : null;
+                                        $quoteSender  = $replyParent?->user?->display_name ?? null;
+                                    } else {
+                                        $quoteText   = Str::limit($message->reply_to_prompt, 70);
+                                        $quoteSender = null;
+                                    }
+                                @endphp
+                                <div class="mb-1 rounded-md px-2.5 py-1.5 -mx-1"
+                                    style="{{ $isMine
+                                        ? 'background:rgba(0,0,0,0.18);border-left:2px solid rgba(255,255,255,0.25);'
+                                        : 'background:rgba(0,0,0,0.18);border-left:2px solid #30363D;' }}"
+                                >
+                                    @if ($quoteText !== null)
+                                        @if ($quoteSender)
+                                            <p class="text-xs mb-0.5 font-medium" style="{{ $isMine ? 'color:rgba(255,255,255,0.55);' : 'color:#6B737C;' }}">↪ {{ $quoteSender }}</p>
+                                        @else
+                                            <p class="text-xs mb-0.5" style="{{ $isMine ? 'color:rgba(255,255,255,0.4);' : 'color:#3d4451;' }}">↪ prompt</p>
+                                        @endif
+                                        <p class="text-xs leading-snug truncate" style="{{ $isMine ? 'color:rgba(255,255,255,0.6);' : 'color:#8B949E;' }}">{{ $quoteText }}</p>
+                                    @else
+                                        <p class="text-xs italic" style="{{ $isMine ? 'color:rgba(255,255,255,0.35);' : 'color:#3d4451;' }}">↪ original message unavailable</p>
+                                    @endif
+                                </div>
+                            @endif
+
                             {{-- Content warning --}}
                             @if ($message->has_cw)
                                 <div x-data="{ revealed: false }">
@@ -464,6 +554,16 @@
                                     aria-label="More reactions"
                                     :aria-expanded="pickerOpen.toString()"
                                 >+</button>
+                                <span class="text-xs select-none" style="color:#2d3340;margin:0 2px;">│</span>
+                                <button
+                                    type="button"
+                                    wire:click="setReply('{{ $message->id }}')"
+                                    @click="reactOpen = false; pickerOpen = false"
+                                    class="text-xs px-1.5 py-0.5 rounded-full transition"
+                                    style="color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
+                                    aria-label="Reply to message"
+                                    title="Reply"
+                                >↩</button>
                             </div>
 
                             {{-- Full curated picker: floats above the tray --}}
@@ -576,6 +676,34 @@
                 </div>
             @endif
 
+            {{-- Reply preview --}}
+            @if ($replyingToMessageId || $replyingToPrompt)
+                @php
+                    if ($replyingToMessageId) {
+                        $previewMsg    = $this->chatMessages->firstWhere('id', $replyingToMessageId);
+                        $previewText   = $previewMsg ? Str::limit($previewMsg->content, 80) : '…';
+                        $previewSender = $previewMsg?->user?->display_name ?? null;
+                    } else {
+                        $previewText   = Str::limit($replyingToPrompt, 80);
+                        $previewSender = null;
+                    }
+                @endphp
+                <div class="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg" style="background:#1C2333;border-left:2px solid #30363D;">
+                    <div class="flex-1 min-w-0">
+                        @if ($previewSender)
+                            <p class="text-xs mb-0.5" style="color:#8B949E;">↩ {{ $previewSender }}</p>
+                        @else
+                            <p class="text-xs mb-0.5" style="color:#3d4451;">↩ prompt</p>
+                        @endif
+                        <p class="text-xs truncate" style="color:#6B737C;">{{ $previewText }}</p>
+                    </div>
+                    <button type="button" wire:click="cancelReply"
+                        class="w-5 h-5 flex items-center justify-center rounded transition text-base leading-none flex-none mt-0.5"
+                        style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'"
+                        aria-label="Cancel reply">×</button>
+                </div>
+            @endif
+
             @if ($isExpiredHangout)
                 <p class="text-xs text-center py-2" style="color:#8B949E;">This hangout has ended — no new messages can be sent.</p>
             @else
@@ -584,7 +712,7 @@
                     type="button"
                     wire:click="$toggle('showCwInput')"
                     title="Add content warning"
-                    class="px-2.5 py-2.5 rounded-xl text-xs font-medium transition"
+                    class="px-2 py-2 md:px-2.5 md:py-2.5 rounded-xl text-xs font-medium transition flex-none"
                     style="{{ $showCwInput ? 'background:rgba(210,153,34,0.25);color:#D29922;' : 'background:#21262D;color:#8B949E;' }}"
                 >CW</button>
                 <input
@@ -593,7 +721,7 @@
                     wire:keydown.debounce.500ms="broadcastTyping"
                     maxlength="2000"
                     placeholder="Message the room…"
-                    class="flex-1 rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+                    class="flex-1 rounded-xl px-4 py-3 md:py-2.5 text-sm focus:outline-none"
                     style="background:#1C2333;border:1px solid #30363D;color:#E6EDF3;"
                     onfocus="this.style.borderColor='#1D9E75'" onblur="this.style.borderColor='#30363D'"
                     autocomplete="off"
@@ -601,7 +729,7 @@
                 <button
                     type="submit"
                     wire:loading.attr="disabled"
-                    class="px-4 py-2.5 text-sm font-semibold rounded-xl transition disabled:opacity-50"
+                    class="px-4 py-3 md:py-2.5 text-sm font-semibold rounded-xl transition disabled:opacity-50 flex-none"
                     style="background:#1D9E75;color:#fff;" onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'"
                 >Send</button>
             </form>

@@ -119,7 +119,7 @@
         </div>
 
         <a
-            href="https://www.paypal.com/donate?hosted_button_id={{ config('services.paypal.donate_button_id', '') }}"
+            href="{{ config('services.paypal.donation_url', '#') }}"
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition"

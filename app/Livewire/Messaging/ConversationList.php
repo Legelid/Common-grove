@@ -78,6 +78,6 @@ class ConversationList extends Component
     public function render(): View
     {
         return view('livewire.messaging.conversation-list')
-            ->layout('layouts.app', ['title' => 'Messages — CommonGround']);
+            ->layout('layouts.app', ['title' => 'Messages — CommonGrove']);
     }
 }

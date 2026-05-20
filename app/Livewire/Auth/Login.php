@@ -106,6 +106,6 @@ class Login extends Component
         ]);
 
         return view('livewire.auth.login')
-            ->layout('layouts.app', ['title' => 'Sign in — CommonGround']);
+            ->layout('layouts.app', ['title' => 'Sign in — CommonGrove']);
     }
 }

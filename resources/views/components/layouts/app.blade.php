@@ -18,7 +18,7 @@
 <body class="h-full overflow-hidden antialiased flex flex-col items-center justify-center px-4 py-12" style="{{ $bodyBg }}color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
 
     <div class="mb-8 text-center">
-        <a href="{{ route('home') }}" class="text-xl font-bold" style="color:#E6EDF3;">CommonGround</a>
+        <a href="{{ route('home') }}" class="text-xl font-bold" style="color:#E6EDF3;">CommonGrove</a>
         <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-semibold align-middle" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
     </div>
 

@@ -1,4 +1,4 @@
-<x-layouts.app title="Reset your password — CommonGround">
+<x-layouts.app title="Reset your password — CommonGrove">
     <h1 class="text-2xl font-bold text-center mb-2" style="color:#E6EDF3;">Forgot your password?</h1>
     <p class="text-sm text-center mb-6" style="color:#8B949E;">
         Enter your email and we'll send a reset link.

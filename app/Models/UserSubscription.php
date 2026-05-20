@@ -20,14 +20,16 @@ class UserSubscription extends Model
         'plan_name',
         'started_at',
         'ends_at',
+        'last_payment_at',
     ];
 
     /** @return array<string, string> */
     protected function casts(): array
     {
         return [
-            'started_at' => 'datetime',
-            'ends_at'    => 'datetime',
+            'started_at'      => 'datetime',
+            'ends_at'         => 'datetime',
+            'last_payment_at' => 'datetime',
         ];
     }
 

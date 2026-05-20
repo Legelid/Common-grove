@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CommonGround — A quiet place for introverts and gamers</title>
+    <title>CommonGrove — A quiet place for introverts and gamers</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="antialiased min-h-screen flex flex-col" style="background:#0D1117;color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
@@ -11,7 +11,7 @@
     {{-- Nav --}}
     <header class="border-b px-6 py-4 flex items-center justify-between" style="border-color:#30363D;background:#161B22;">
         <div class="flex items-center gap-2.5">
-            <span class="font-bold text-lg" style="color:#E6EDF3;">CommonGround</span>
+            <span class="font-bold text-lg" style="color:#E6EDF3;">CommonGrove</span>
             <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
         </div>
         <div class="flex items-center gap-4">
@@ -36,7 +36,7 @@
                 <span style="color:#1D9E75;">just for gamers and introverts.</span>
             </h1>
             <p class="text-lg mb-10 max-w-xl mx-auto" style="color:#8B949E;">
-                No ads. No bots. No fake engagement. CommonGround is a closed, judgment-free space to find your people.
+                No ads. No bots. No fake engagement. CommonGrove is a closed, judgment-free space to find your people.
             </p>
             @guest
                 <a href="{{ route('register') }}" class="inline-block text-base font-semibold px-8 py-3.5 rounded-xl transition" style="background:#1D9E75;color:#fff;" onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'">
@@ -72,7 +72,7 @@
 
     {{-- Footer --}}
     <footer class="border-t px-6 py-6 text-center text-xs" style="border-color:#30363D;color:#8B949E;">
-        <p>© {{ date('Y') }} CommonGround · Coldev Enterprises · Platonic friendships only · <a href="#" class="underline">Privacy</a> · <a href="#" class="underline">Terms</a></p>
+        <p>© {{ date('Y') }} CommonGrove · Coldev Enterprises · Platonic friendships only · <a href="#" class="underline">Privacy</a> · <a href="#" class="underline">Terms</a></p>
     </footer>
 
 </body>

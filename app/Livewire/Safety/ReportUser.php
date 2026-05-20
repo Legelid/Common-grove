@@ -95,7 +95,7 @@ class ReportUser extends Component
             return;
         }
 
-        $this->successMessage = 'Your report has been received. Thank you for helping keep CommonGround safe.';
+        $this->successMessage = 'Your report has been received. Thank you for helping keep CommonGrove safe.';
         $this->reason  = '';
         $this->detail  = '';
     }

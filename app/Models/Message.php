@@ -30,6 +30,9 @@ class Message extends Model
         // Group 8 — content warnings
         'has_cw',
         'cw_label',
+        // Replies
+        'reply_to_message_id',
+        'reply_to_prompt',
     ];
 
     /** @return array<string, string> */
@@ -62,6 +65,12 @@ class Message extends Model
     public function reactions(): HasMany
     {
         return $this->hasMany(MessageReaction::class);
+    }
+
+    /** The message this is a reply to, if any. */
+    public function replyToMessage(): BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'reply_to_message_id');
     }
 
     // -------------------------------------------------------------------------
