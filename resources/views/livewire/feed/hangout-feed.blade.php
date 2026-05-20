@@ -248,7 +248,7 @@
     </aside>
 
     {{-- ── Main feed ────────────────────────────────────────────────────────── --}}
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 min-w-0 overflow-y-auto">
         <div class="px-6 py-8 max-w-5xl mx-auto space-y-8">
 
             {{-- Header row --}}
@@ -292,7 +292,7 @@
             </div>
 
             {{-- Filter trigger: mobile (always visible on mobile, toggles inline panel) --}}
-            <div class="md:!hidden">
+            <div class="md:hidden">
                 <button
                     type="button"
                     @click="toggle()"
@@ -317,10 +317,11 @@
                 </button>
             </div>
 
-            {{-- Mobile inline filter panel --}}
+            {{-- Mobile inline filter panel (hidden on desktop via wrapper; Alpine toggles visibility on mobile) --}}
+            <div class="md:hidden">
             <div
                 id="mobile-filter-panel"
-                class="md:!hidden rounded-xl border overflow-hidden"
+                class="rounded-xl border overflow-hidden"
                 style="display:none;border-color:#30363D;background:#161B22;"
                 x-show="filterOpen"
                 x-transition:enter="transition ease-out duration-200"
@@ -535,6 +536,7 @@
 
                 </div>
             </div>
+            </div>{{-- end md:hidden mobile filter panel wrapper --}}
 
             {{-- ── Starter rooms ─────────────────────────────────────────────── --}}
             @if ($this->officialRooms->isNotEmpty())
@@ -647,7 +649,8 @@
                     </div>
 
                     {{-- ── Desktop: 4-card grid ────────────────────────────────────── --}}
-                    <div class="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="hidden md:block">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         @foreach ($this->officialRooms as $official)
                             @php
                                 $officialConvId   = $official->conversation?->id;
@@ -749,6 +752,7 @@
                             </div>
                         @endforeach
                     </div>
+                    </div>{{-- end hidden md:block desktop grid wrapper --}}
 
                     {{-- ── Mobile bottom sheet ───────────────────────────────────── --}}
                     {{--
