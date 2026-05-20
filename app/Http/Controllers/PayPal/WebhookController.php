@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\PayPal;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SupporterConfirmation;
 use App\Models\User;
 use App\Models\UserSubscription;
 use App\Services\PayPalService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class WebhookController extends Controller
 {
@@ -74,7 +76,19 @@ class WebhookController extends Controller
             'last_payment_at' => now(),
         ]);
 
-        $subscription->user->update(['is_supporter' => true]);
+        $user = $subscription->user;
+        $user->update(['is_supporter' => true]);
+
+        if ($user->email) {
+            try {
+                Mail::to($user->email)->queue(new SupporterConfirmation($user));
+            } catch (\Throwable $e) {
+                Log::error('Failed to queue supporter confirmation email', [
+                    'user_id' => $user->id,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     private function handleCancelled(string $subscriptionId): void

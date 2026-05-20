@@ -25,7 +25,7 @@
         <div>
             <div class="flex items-center justify-between mb-1">
                 <label for="password" class="block text-sm font-medium" style="color:#8B949E;">Password</label>
-                <a href="{{ route('password.request') }}" class="text-sm underline transition" style="color:#1D9E75;">Forgot password?</a>
+                <a href="{{ route('password.request') }}" class="text-sm underline transition" style="color:#1D9E75;">Need help getting back in?</a>
             </div>
             <input
                 id="password"

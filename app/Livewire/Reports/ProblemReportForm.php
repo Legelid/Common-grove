@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Livewire\Reports;
 
+use App\Mail\AdminProblemReportNotification;
+use App\Mail\SupportRequestConfirmation;
 use App\Models\ProblemReport;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 use Livewire\Attributes\Validate;
@@ -79,23 +83,65 @@ class ProblemReportForm extends Component
             $screenshotPath = $this->screenshot->store('problem_reports', 'local');
         }
 
-        ProblemReport::create([
-            'user_id'        => Auth::id(),
-            'report_type'    => $this->reportType,
-            'subject'        => $this->subject,
-            'description'    => $this->description,
-            'page_url'       => $this->pageUrl ?: null,
+        $problemReport = ProblemReport::create([
+            'user_id'         => Auth::id(),
+            'report_type'     => $this->reportType,
+            'subject'         => $this->subject,
+            'description'     => $this->description,
+            'page_url'        => $this->pageUrl ?: null,
             'screenshot_path' => $screenshotPath,
-            'related_user'   => $this->relatedUser ?: null,
-            'related_room'   => $this->relatedRoom ?: null,
-            'contact_email'  => $this->contactEmail ?: null,
-            'status'         => 'open',
-            'priority'       => $this->reportType === 'safety' ? 'high' : 'normal',
+            'related_user'    => $this->relatedUser ?: null,
+            'related_room'    => $this->relatedRoom ?: null,
+            'contact_email'   => $this->contactEmail ?: null,
+            'status'          => 'open',
+            'priority'        => $this->reportType === 'safety' ? 'high' : 'normal',
         ]);
+
+        $this->notifyAdmin($problemReport);
+        $this->notifySubmitter($problemReport);
 
         RateLimiter::hit($key, 3600);
 
         $this->submitted = true;
+    }
+
+    private function notifySubmitter(ProblemReport $problemReport): void
+    {
+        // Prefer the logged-in user's email, fall back to provided contact email.
+        $email    = $problemReport->user?->email ?? $problemReport->contact_email;
+        $gamertag = $problemReport->user?->gamertag;
+        $typeLabel = ProblemReport::TYPES[$problemReport->report_type] ?? $problemReport->report_type;
+
+        if (! $email) {
+            return;
+        }
+
+        try {
+            Mail::to($email)->queue(new SupportRequestConfirmation($typeLabel, $gamertag));
+        } catch (\Throwable $e) {
+            Log::error('Failed to queue support request confirmation email', [
+                'problem_report_id' => $problemReport->id,
+                'error'             => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function notifyAdmin(ProblemReport $problemReport): void
+    {
+        $to = config('admin.support_email');
+
+        if (! $to) {
+            return;
+        }
+
+        try {
+            Mail::to($to)->queue(new AdminProblemReportNotification($problemReport));
+        } catch (\Throwable $e) {
+            Log::error('Failed to queue admin problem report notification', [
+                'problem_report_id' => $problemReport->id,
+                'error'             => $e->getMessage(),
+            ]);
+        }
     }
 
     public function render(): View

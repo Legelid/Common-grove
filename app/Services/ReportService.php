@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Mail\AdminReportNotification;
+use App\Mail\ReportConfirmation;
 use App\Models\Report;
 use App\Models\Strike;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 
 class ReportService
@@ -47,7 +51,7 @@ class ReportService
 
         RateLimiter::hit($key, 3600);
 
-        return Report::create([
+        $report = Report::create([
             'reporter_id'      => $reporter->id,
             'reported_user_id' => $reported->id,
             'reportable_type'  => $reportable->getMorphClass(),
@@ -56,6 +60,45 @@ class ReportService
             'detail'           => $detail,
             'status'           => 'pending',
         ]);
+
+        $this->notifyAdmin($report);
+        $this->notifyReporter($report, $reporter);
+
+        return $report;
+    }
+
+    private function notifyReporter(Report $report, User $reporter): void
+    {
+        if (! $reporter->email) {
+            return;
+        }
+
+        try {
+            Mail::to($reporter->email)->queue(new ReportConfirmation($reporter->gamertag));
+        } catch (\Throwable $e) {
+            Log::error('Failed to queue report confirmation email', [
+                'report_id' => $report->id,
+                'error'     => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function notifyAdmin(Report $report): void
+    {
+        $to = config('admin.support_email');
+
+        if (! $to) {
+            return;
+        }
+
+        try {
+            Mail::to($to)->queue(new AdminReportNotification($report));
+        } catch (\Throwable $e) {
+            Log::error('Failed to queue admin report notification', [
+                'report_id' => $report->id,
+                'error'     => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
