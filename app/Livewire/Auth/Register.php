@@ -11,6 +11,7 @@ use App\Services\PasswordService;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Locked;
@@ -184,7 +185,14 @@ class Register extends Component
             'date_of_birth' => $dob !== false ? $dob->toDateString() : null,
         ]);
 
-        event(new Registered($user));
+        try {
+            event(new Registered($user));
+        } catch (\Throwable $e) {
+            Log::warning('Registration verification email failed — account created successfully', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
 
         Auth::login($user);
 
