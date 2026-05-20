@@ -26,6 +26,9 @@ class UserManagement extends Component
     /** User currently receiving an inline action. */
     public ?string $actionUserId = null;
 
+    /** ID of the last user a verification email was sent to (drives inline "Sent!" feedback). */
+    public ?string $lastSentVerificationId = null;
+
     /** Current inline action: warn | restrict | suspend | unsuspend */
     public ?string $pendingAction = null;
 
@@ -121,6 +124,22 @@ class UserManagement extends Component
 
         $this->cancelAction();
         unset($this->users);
+    }
+
+    /**
+     * Resend the email verification notification for an unverified user.
+     * No-op if the user is already verified.
+     */
+    public function resendVerification(string $userId): void
+    {
+        $target = User::findOrFail($userId);
+
+        if ($target->hasVerifiedEmail()) {
+            return;
+        }
+
+        $target->sendEmailVerificationNotification();
+        $this->lastSentVerificationId = $userId;
     }
 
     public function toggleAdmin(string $userId): void

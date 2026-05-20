@@ -34,7 +34,12 @@
                                 <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full" style="background:rgba(210,153,34,0.15);color:#D29922;">Serial reporter</span>
                             @endif
                         </td>
-                        <td class="py-3 pr-4 text-xs" style="color:#8B949E;">{{ $user->email }}</td>
+                        <td class="py-3 pr-4 text-xs" style="color:#8B949E;">
+                            {{ $user->email }}
+                            @if (! $user->hasVerifiedEmail())
+                                <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full" style="background:rgba(249,115,22,0.15);color:#f97316;">Unverified</span>
+                            @endif
+                        </td>
                         <td class="py-3 pr-4 text-xs" style="color:#8B949E;">{{ $user->created_at->format('Y-m-d') }}</td>
                         <td class="py-3 pr-4 text-xs" style="color:#8B949E;">{{ $user->last_seen_at?->diffForHumans() ?? 'Never' }}</td>
                         <td class="py-3 pr-4">
@@ -89,11 +94,20 @@
                                     </div>
                                 </div>
                             @else
-                                <div class="flex flex-wrap gap-1.5">
+                                <div class="flex flex-wrap gap-1.5 items-center">
                                     <button wire:click="toggleStrikes('{{ $user->id }}')"
                                         class="px-2.5 py-1 text-xs font-semibold rounded-lg transition"
                                         style="background:#21262D;color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
                                     >Strikes</button>
+                                    @if (! $user->hasVerifiedEmail())
+                                        <button wire:click="resendVerification('{{ $user->id }}')"
+                                            class="px-2.5 py-1 text-xs font-semibold rounded-lg transition"
+                                            style="background:rgba(29,158,117,0.15);color:#1D9E75;" onmouseover="this.style.background='rgba(29,158,117,0.25)'" onmouseout="this.style.background='rgba(29,158,117,0.15)'"
+                                        >Resend verify</button>
+                                        @if ($lastSentVerificationId === $user->id)
+                                            <span class="text-xs font-medium" style="color:#1D9E75;">Sent!</span>
+                                        @endif
+                                    @endif
                                     <button wire:click="startAction('{{ $user->id }}', 'warn')"
                                         class="px-2.5 py-1 text-xs font-semibold rounded-lg transition"
                                         style="background:rgba(210,153,34,0.15);color:#D29922;"
