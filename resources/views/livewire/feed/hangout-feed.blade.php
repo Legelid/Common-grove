@@ -627,8 +627,8 @@
                                     type="button"
                                     wire:key="mob-official-{{ $official->id }}"
                                     @click="room = {{ $roomJs }}; sheetOpen = true"
-                                    class="flex-none w-36 rounded-xl border flex flex-col items-start gap-2.5 p-3.5 text-left active:opacity-70 transition-opacity"
-                                    style="scroll-snap-align:start;background:#121820;border-color:#253040;box-shadow:inset 0 0 0 1px {{ $accent['glow_base'] }};"
+                                    class="flex-none rounded-xl border flex flex-col items-start gap-2.5 p-3.5 text-left active:opacity-70 transition-opacity"
+                                    style="width:68vw;scroll-snap-align:start;background:#121820;border-color:#253040;box-shadow:inset 0 0 0 1px {{ $accent['glow_base'] }};"
                                     aria-label="Open {{ $official->title }} room"
                                 >
                                     <span style="color:{{ $accent['color'] }};" aria-hidden="true">
@@ -913,7 +913,7 @@
                             x-data="{ isTouch: ('ontouchstart' in window || window.matchMedia('(pointer:coarse)').matches) }"
                             @click="if (isTouch && !$event.target.closest('[data-no-card-tap]')) $wire.joinHangout('{{ $post->id }}')"
                             :class="isTouch ? 'cursor-pointer' : ''"
-                            class="cg-room-card rounded-2xl border p-7 space-y-5"
+                            class="cg-room-card rounded-2xl border p-5 md:p-7 space-y-4 md:space-y-5"
                             style="background:#161B22;border-color:#30363D;box-shadow:0 1px 3px rgba(0,0,0,0.25),0 0 0 1px rgba(255,255,255,0.03) inset;"
                         >
                             {{-- Card header: badge + author (hangouts/untitled) or badge alone (titled rooms) --}}
@@ -922,21 +922,21 @@
                                     <div></div>
                                 @else
                                     <div class="min-w-0">
-                                        <div class="flex items-center gap-2">
+                                        <div class="flex flex-col md:flex-row md:items-center md:gap-0">
                                             <x-user-name :user="$post->user" class="font-medium text-sm" style="color:#E6EDF3;" />
-                                            <span class="text-xs" style="color:#3d4451;">·</span>
-                                            <span class="text-xs" style="color:#8B949E;">{{ $post->created_at->diffForHumans() }}</span>
+                                            <span class="hidden md:inline text-xs mx-1.5" style="color:#3d4451;">·</span>
+                                            <span class="text-xs whitespace-nowrap mt-0.5 md:mt-0" style="color:#8B949E;">{{ $post->created_at->diffForHumans() }}</span>
                                         </div>
                                     </div>
                                 @endif
 
                                 @if ($isPersistent)
-                                    <span class="cg-room-badge flex-none text-xs px-2.5 py-1 rounded-full font-medium"
+                                    <span class="cg-room-badge flex-none text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap"
                                         style="background:rgba(29,158,117,0.1);color:#1D9E75;border:1px solid rgba(29,158,117,0.25);">
                                         Always-open room
                                     </span>
                                 @else
-                                    <span class="cg-room-badge flex-none text-xs px-2.5 py-1 rounded-full font-medium"
+                                    <span class="cg-room-badge flex-none text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap"
                                         style="background:rgba(210,153,34,0.1);color:#D29922;border:1px solid rgba(210,153,34,0.25);">
                                         Temporary hangout
                                     </span>
@@ -947,12 +947,10 @@
                             @if ($isPersistent && $post->title)
                                 <div class="space-y-0.5">
                                     <h2 class="text-base font-semibold leading-snug" style="color:#E6EDF3;">{{ $post->title }}</h2>
-                                    <p class="text-xs" style="color:#8B949E;">
-                                        by
-                                        <x-user-name :user="$post->user" style="color:#C9D1D9;" />
-                                        <span class="mx-1" style="color:#30363D;">·</span>
-                                        {{ $post->created_at->diffForHumans() }}
-                                    </p>
+                                    <div class="flex flex-wrap items-baseline gap-x-1 text-xs" style="color:#8B949E;">
+                                        <span>by <x-user-name :user="$post->user" style="color:#C9D1D9;" /></span>
+                                        <span class="whitespace-nowrap">{{ $post->created_at->diffForHumans() }}</span>
+                                    </div>
                                 </div>
                             @endif
 
@@ -974,18 +972,21 @@
                             @endif
 
                             {{-- Footer: meta + pin + CTA --}}
-                            <div class="flex items-center justify-between pt-1 border-t" style="border-color:#21262D;">
-                                <span class="text-xs" style="color:#8B949E;">
-                                    @if ($isPersistent)
-                                        by <x-user-name :user="$post->user" style="color:#C9D1D9;" />
-                                        <span class="mx-1.5" style="color:#30363D;">·</span>
-                                    @else
-                                        Closes in {{ $post->expiresInFormatted() }}
-                                        <span class="mx-1.5" style="color:#30363D;">·</span>
-                                    @endif
-                                    {{ $post->joined_count }} {{ Str::plural('person', $post->joined_count) }} joined
-                                </span>
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-2 md:pt-1 border-t" style="border-color:#21262D;">
 
+                                {{-- Metadata: stacked on mobile, inline on desktop --}}
+                                <div class="flex flex-col md:flex-row md:items-center text-xs gap-y-0.5" style="color:#8B949E;">
+                                    @if ($isPersistent)
+                                        <span>by <x-user-name :user="$post->user" style="color:#C9D1D9;" /></span>
+                                        <span class="hidden md:inline mx-1.5" style="color:#30363D;">·</span>
+                                    @else
+                                        <span class="whitespace-nowrap">Closes in {{ $post->expiresInFormatted() }}</span>
+                                        <span class="hidden md:inline mx-1.5" style="color:#30363D;">·</span>
+                                    @endif
+                                    <span>{{ $post->joined_count }} {{ Str::plural('person', $post->joined_count) }} joined</span>
+                                </div>
+
+                                {{-- Actions --}}
                                 <div class="flex items-center gap-2">
                                     {{-- Pin button --}}
                                     <button
@@ -996,7 +997,7 @@
                                         wire:target="toggleCardPin('{{ $post->id }}')"
                                         title="{{ $isCardPinned ? 'Remove from Your Rooms' : 'Save to Your Rooms' }}"
                                         aria-label="{{ $isCardPinned ? 'Unpin room' : 'Pin room' }}"
-                                        class="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs transition disabled:opacity-40"
+                                        class="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs transition disabled:opacity-40 flex-none"
                                         style="{{ $isCardPinned
                                             ? 'color:#1D9E75;background:rgba(29,158,117,0.08);border:1px solid rgba(29,158,117,0.2);'
                                             : 'color:#8B949E;border:1px solid transparent;' }}"
@@ -1020,14 +1021,14 @@
                                         @endif
                                     </button>
 
-                                    {{-- Join / enter button --}}
+                                    {{-- Join / enter button: fills remaining width on mobile --}}
                                     <button
                                         data-no-card-tap
                                         type="button"
                                         wire:click="joinHangout('{{ $post->id }}')"
                                         wire:loading.attr="disabled"
                                         wire:target="joinHangout('{{ $post->id }}')"
-                                        class="px-5 py-1.5 text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                        class="flex-1 md:flex-none px-5 py-1.5 text-sm font-medium rounded-lg transition disabled:opacity-50 whitespace-nowrap text-center"
                                         style="background:rgba(29,158,117,0.15);color:#1D9E75;border:1px solid rgba(29,158,117,0.3);"
                                         onmouseover="this.style.background='rgba(29,158,117,0.28)'" onmouseout="this.style.background='rgba(29,158,117,0.15)'"
                                     >
