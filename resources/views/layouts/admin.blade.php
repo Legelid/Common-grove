@@ -10,7 +10,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Admin' }} — CommonGrove</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/logo-icon.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-icon2.png') }}">
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -19,7 +19,7 @@
     {{-- Admin sidebar --}}
     <nav class="w-56 flex-none flex flex-col border-r" style="background:#161B22;border-color:#30363D;">
         <div class="px-4 py-5 border-b" style="border-color:#30363D;">
-            <img src="{{ asset('images/logo-full.png') }}" alt="CommonGrove" class="h-7 w-auto mb-2">
+            <img src="{{ asset('images/logo-full2.png') }}" alt="CommonGrove" class="h-10 w-auto rounded-xl mb-2">
             <div class="flex items-center gap-2">
                 <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(210,153,34,0.2);color:#D29922;">ADMIN</span>
                 <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>

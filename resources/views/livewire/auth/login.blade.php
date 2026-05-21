@@ -1,5 +1,9 @@
 <div>
-    <h1 class="text-2xl font-bold text-center mb-8" style="color:#E6EDF3;">Sign in</h1>
+    <div class="flex justify-center mb-6">
+        <div style="border-radius:18px;overflow:hidden;box-shadow:inset 0 0 55px 22px #161B22;">
+            <img src="{{ asset('images/logo-full2.png') }}" alt="CommonGrove" style="height:140px;width:auto;display:block;filter:drop-shadow(0 0 18px rgba(29,158,117,0.45)) drop-shadow(0 0 40px rgba(29,158,117,0.18));">
+        </div>
+    </div>
 
     <form wire:submit="submit" class="space-y-5">
 

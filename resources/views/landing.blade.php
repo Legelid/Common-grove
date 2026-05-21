@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>CommonGrove — Find your people</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-icon2.png') }}">
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -108,14 +109,11 @@
 
                     {{-- Logo + rotating phrase --}}
                     <div>
-                        <div class="flex items-baseline gap-2 mb-3">
+                        <div class="relative mb-3" style="width:640px;max-width:none;margin-left:calc((100% - 640px) / 2);border-radius:18px;overflow:hidden;box-shadow:inset 0 0 55px 22px #131920;">
+                            <img src="{{ asset('images/logo-full2.png') }}" alt="CommonGrove" style="width:100%;height:auto;display:block;filter:drop-shadow(0 0 18px rgba(29,158,117,0.45)) drop-shadow(0 0 40px rgba(29,158,117,0.18));">
                             <span
-                                class="font-semibold"
-                                style="color:#C9D1D9;font-size:1.1rem;letter-spacing:-0.015em;"
-                            >CommonGrove</span>
-                            <span
-                                class="text-xs px-1.5 py-0.5 rounded font-semibold"
-                                style="background:rgba(29,158,117,0.12);color:#1D9E75;letter-spacing:0.04em;"
+                                class="absolute text-xs px-1.5 py-0.5 rounded font-semibold"
+                                style="top:6px;left:50%;transform:translateX(-50%);background:rgba(29,158,117,0.12);color:#1D9E75;letter-spacing:0.04em;"
                             >BETA</span>
                         </div>
 
@@ -157,7 +155,7 @@
                                 x-text="phrases[idx]"
                                 :style="{ opacity: visible ? '1' : '0', transition: 'opacity 0.7s ease' }"
                                 class="text-sm"
-                                style="color:#6B737C;min-height:1.5rem;line-height:1.65;"
+                                style="color:#6B737C;min-height:1.5rem;line-height:1.65;text-align:center;"
                                 aria-live="polite"
                                 aria-atomic="true"
                             ></p>

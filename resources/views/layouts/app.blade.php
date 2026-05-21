@@ -94,7 +94,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? config('app.name') }}</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/logo-icon.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-icon2.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     <style>
@@ -128,14 +131,13 @@
 
     {{-- ── Auth shell ─────────────────────────────────────────────────────── --}}
     <div class="min-h-full flex flex-col items-center justify-center px-4 py-12">
-        <div class="mb-8 text-center">
-            <a href="{{ route('home') }}">
-                <img src="{{ asset('images/logo-full.png') }}" alt="CommonGrove" class="h-8 w-auto">
-            </a>
-            <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-semibold align-middle" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
-        </div>
-        <div class="w-full max-w-md rounded-xl border p-8 shadow-2xl" style="background:#161B22;border-color:#30363D;">
-            {{ $slot }}
+        <div class="relative w-full max-w-md">
+            <div class="absolute -top-6 left-1/2 -translate-x-1/2 z-10">
+                <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
+            </div>
+            <div class="w-full rounded-xl border p-8 shadow-2xl" style="background:#161B22;border-color:#30363D;">
+                {{ $slot }}
+            </div>
         </div>
     </div>
 
@@ -163,9 +165,10 @@
                     </button>
                 @endauth
                 <a href="{{ route('feed') }}" wire:navigate class="flex items-center gap-2">
-                    <img src="{{ asset('images/logo-full.png') }}" alt="CommonGrove" class="h-7 w-auto">
+                    <span class="font-bold tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:1.5rem;">CommonGrove</span>
+                    <img src="{{ asset('images/logo-icon.png') }}" alt="" class="h-9 w-auto -ml-6">
                 </a>
-                <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
+                <span class="text-xs px-1.5 py-0.5 rounded font-semibold -ml-4" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
                 @if ($isBirthday && !$isAuthPage)
                     <span class="text-xs hidden sm:inline" style="color:#C4A0D4;">· Happy birthday!</span>
                 @endif
@@ -426,7 +429,8 @@
                 {{-- Drawer header --}}
                 <div class="flex items-center justify-between px-5 py-4 flex-none border-b" style="border-color:#21262D;">
                     <div class="flex items-center gap-2">
-                        <img src="{{ asset('images/logo-full.png') }}" alt="CommonGrove" class="h-7 w-auto">
+                        <span class="font-bold tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:1.5rem;">CommonGrove</span>
+                        <img src="{{ asset('images/logo-icon.png') }}" alt="" class="h-9 w-auto -ml-6">
                         <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
                     </div>
                     <button
