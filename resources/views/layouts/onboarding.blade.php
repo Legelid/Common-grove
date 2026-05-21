@@ -5,7 +5,7 @@
         : 'background:radial-gradient(ellipse 70% 55% at 50% 110%, rgba(29,158,117,0.055) 0%, transparent 65%), radial-gradient(ellipse 55% 40% at 80% 5%, rgba(8,32,58,0.20) 0%, transparent 55%), #0D1117;';
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,9 +14,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="min-h-full antialiased flex flex-col" style="{{ $bodyBg }}color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
+<body class="min-h-screen antialiased" style="{{ $bodyBg }}color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
 
-    <div class="flex-1 flex flex-col items-center justify-start px-4 py-10 sm:py-16">
+    <div class="flex flex-col items-center justify-start px-4 py-10 sm:py-16">
 
         <div class="mb-8 text-center">
             <span class="text-lg font-bold" style="color:#E6EDF3;">CommonGrove</span>
