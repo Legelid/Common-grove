@@ -32,7 +32,7 @@
 
     <footer class="border-t py-8 px-6" style="border-color:#21262D;">
         <div class="max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-4">
-            <p class="text-xs" style="color:#3d4451;">&copy; {{ date('Y') }} CommonGrove · Coldev Enterprises</p>
+            <p class="text-xs" style="color:#3d4451;">&copy; {{ date('Y') }} CommonGrove · Coldev Enterprises · Logo by <a href="https://atccreative.com/" target="_blank" rel="noopener" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">AC Creative</a></p>
             <nav class="flex gap-5">
                 <a href="{{ route('privacy') }}" class="text-xs transition" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">Privacy</a>
                 <a href="{{ route('terms') }}" class="text-xs transition" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">Terms</a>

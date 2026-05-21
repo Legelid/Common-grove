@@ -72,7 +72,7 @@
 
     {{-- Footer --}}
     <footer class="border-t px-6 py-6 text-center text-xs" style="border-color:#30363D;color:#8B949E;">
-        <p>© {{ date('Y') }} CommonGrove · Coldev Enterprises · Platonic friendships only · <a href="#" class="underline">Privacy</a> · <a href="#" class="underline">Terms</a></p>
+        <p>© {{ date('Y') }} CommonGrove · Coldev Enterprises · Logo by <a href="https://atccreative.com/" target="_blank" rel="noopener" class="underline">AC Creative</a> · Platonic friendships only · <a href="#" class="underline">Privacy</a> · <a href="#" class="underline">Terms</a></p>
     </footer>
 
 </body>

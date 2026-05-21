@@ -125,7 +125,7 @@
     </div>
 
     <div class="mt-4 pt-4 border-t" style="border-color:#21262D;">
-        <p class="text-xs" style="color:#3d4451;">CommonGrove · Coldev Enterprises · <a href="{{ route('report') }}" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">Contact</a></p>
+        <p class="text-xs" style="color:#3d4451;">CommonGrove · Coldev Enterprises · Logo by <a href="https://atccreative.com/" target="_blank" rel="noopener" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">AC Creative</a> · <a href="{{ route('report') }}" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">Contact</a></p>
     </div>
 
 @endsection
