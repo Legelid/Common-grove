@@ -11,6 +11,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Getting started — CommonGrove' }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -18,9 +21,10 @@
 
     <div class="flex flex-col items-center justify-start px-4 py-10 sm:py-16">
 
-        <div class="mb-8 text-center">
-            <span class="text-lg font-bold" style="color:#E6EDF3;">CommonGrove</span>
-            <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-semibold align-middle" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
+        <div class="mb-8 flex items-center justify-center gap-2">
+            <span class="tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;">Common<span style="font-weight:700;-webkit-text-stroke:0.6px #E6EDF3;">Grove</span></span>
+            <img src="{{ asset('images/logo-icon.png') }}" alt="" class="h-9 w-auto -ml-6">
+            <span class="text-xs px-1.5 py-0.5 rounded font-semibold -ml-4" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
         </div>
 
         <div class="w-full max-w-xl">

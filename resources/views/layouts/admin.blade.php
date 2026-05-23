@@ -11,6 +11,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Admin' }} — CommonGrove</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-icon2.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -19,10 +22,13 @@
     {{-- Admin sidebar --}}
     <nav class="w-56 flex-none flex flex-col border-r" style="background:#161B22;border-color:#30363D;">
         <div class="px-4 py-5 border-b" style="border-color:#30363D;">
-            <img src="{{ asset('images/logo-full2.png') }}" alt="CommonGrove" class="h-10 w-auto rounded-xl mb-2">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;">Common<span style="font-weight:700;-webkit-text-stroke:0.6px #E6EDF3;">Grove</span></span>
+                <img src="{{ asset('images/logo-icon.png') }}" alt="" class="h-9 w-auto -ml-6">
+            </div>
             <div class="flex items-center gap-2">
-                <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(210,153,34,0.2);color:#D29922;">ADMIN</span>
                 <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
+                <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(210,153,34,0.2);color:#D29922;">ADMIN</span>
             </div>
         </div>
 

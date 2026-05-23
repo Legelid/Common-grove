@@ -57,8 +57,7 @@
     }
 
     // Build body classes
-    $cgBodyClasses = ['h-full', 'antialiased'];
-    if ($isAuthPage) $cgBodyClasses[] = 'overflow-hidden';
+    $cgBodyClasses = $isAuthPage ? ['min-h-screen', 'antialiased'] : ['h-full', 'antialiased'];
     if ($isLowStim)  $cgBodyClasses[] = 'low-stimulation';
     $cgClassMap = [
         'ultra_minimal'    => 'cg-ultra-minimal',
@@ -88,7 +87,7 @@
     }
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full {{ $isAuthPage ? 'overflow-hidden' : '' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $isAuthPage ? '' : 'h-full' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -130,7 +129,7 @@
 @if ($isAuthPage)
 
     {{-- ── Auth shell ─────────────────────────────────────────────────────── --}}
-    <div class="min-h-full flex flex-col items-center justify-center px-4 py-12">
+    <div class="min-h-screen flex flex-col items-center justify-center px-4 py-12">
         <div class="relative w-full max-w-md">
             <div class="absolute -top-6 left-1/2 -translate-x-1/2 z-10">
                 <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
@@ -165,7 +164,7 @@
                     </button>
                 @endauth
                 <a href="{{ route('feed') }}" wire:navigate class="flex items-center gap-2">
-                    <span class="font-bold tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:1.5rem;">CommonGrove</span>
+                    <span class="tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;">Common<span style="font-weight:700;-webkit-text-stroke:0.6px #E6EDF3;">Grove</span></span>
                     <img src="{{ asset('images/logo-icon.png') }}" alt="" class="h-9 w-auto -ml-6">
                 </a>
                 <span class="text-xs px-1.5 py-0.5 rounded font-semibold -ml-4" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
@@ -429,7 +428,7 @@
                 {{-- Drawer header --}}
                 <div class="flex items-center justify-between px-5 py-4 flex-none border-b" style="border-color:#21262D;">
                     <div class="flex items-center gap-2">
-                        <span class="font-bold tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:1.5rem;">CommonGrove</span>
+                        <span class="tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;">Common<span style="font-weight:700;-webkit-text-stroke:0.6px #E6EDF3;">Grove</span></span>
                         <img src="{{ asset('images/logo-icon.png') }}" alt="" class="h-9 w-auto -ml-6">
                         <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
                     </div>
