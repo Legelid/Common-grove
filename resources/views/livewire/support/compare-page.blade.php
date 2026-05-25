@@ -18,7 +18,7 @@
                 'Connection'  => [
                     'Chat in rooms and hangouts',
                     'Create temporary hangouts',
-                    'Create up to {{ config(\'supporter.limits.persistent_rooms.free\') }} active persistent rooms',
+                    'Create up to ' . config('supporter.limits.persistent_rooms.free', 3) . ' active persistent rooms',
                     'Direct messages',
                     'Friend requests',
                 ],
@@ -40,7 +40,7 @@
                         @foreach ($items as $item)
                             <li class="flex items-start gap-2 text-sm" style="color:#C9D1D9;">
                                 <span class="mt-0.5 flex-none" style="color:#8B949E;">–</span>
-                                {!! $item !!}
+                                {{ $item }}
                             </li>
                         @endforeach
                     </ul>
@@ -60,7 +60,7 @@
                     'Helps keep CommonGrove ad-free and independent',
                 ],
                 'Rooms'       => [
-                    'Up to {{ config(\'supporter.limits.persistent_rooms.supporter\') }} active persistent rooms',
+                    'Up to ' . config('supporter.limits.persistent_rooms.supporter', 10) . ' active persistent rooms',
                 ],
                 'Atmosphere'  => [
                     'Extra gradient themes (5 additional)',
@@ -82,7 +82,7 @@
                         @foreach ($items as $item)
                             <li class="flex items-start gap-2 text-sm" style="color:#C9D1D9;">
                                 <span class="mt-0.5 flex-none" style="color:#1D9E75;">✓</span>
-                                {!! $item !!}
+                                {{ $item }}
                             </li>
                         @endforeach
                     </ul>

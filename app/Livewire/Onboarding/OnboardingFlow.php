@@ -159,7 +159,7 @@ class OnboardingFlow extends Component
     public function skipToStep(int $target): void
     {
         Log::info('Onboarding.action', ['action' => 'skipToStep', 'target' => $target, 'auth' => Auth::id()]);
-        $this->step = $target;
+        $this->step = max(1, min(6, $target));
     }
 
     // ── Toggle helpers ────────────────────────────────────────────────────────
@@ -259,6 +259,9 @@ class OnboardingFlow extends Component
 
     public function toggleComfort(string $key): void
     {
+        if (! array_key_exists($key, self::COMFORT_OPTIONS)) {
+            return;
+        }
         Log::info('Onboarding.action', ['action' => 'toggleComfort', 'step' => $this->step, 'auth' => Auth::id()]);
         if (in_array($key, $this->selectedComfortOptions, true)) {
             $this->selectedComfortOptions = array_values(

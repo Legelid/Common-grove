@@ -20,9 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Trust all upstream proxy headers so Laravel sees the real client
-        // IP, protocol (HTTPS), and host when behind Nginx or any load balancer.
-        $middleware->trustProxies(at: '*', headers:
+        // Trust only the configured upstream proxy (Nginx on the same machine = 127.0.0.1).
+        // Set TRUSTED_PROXIES in .env to a CIDR range if behind a cloud load balancer.
+        // Never use '*' — it allows any client to spoof X-Forwarded-For and bypass rate limits.
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES', '127.0.0.1'), headers:
             \Symfony\Component\HttpFoundation\Request::HEADER_X_FORWARDED_FOR
             | \Symfony\Component\HttpFoundation\Request::HEADER_X_FORWARDED_HOST
             | \Symfony\Component\HttpFoundation\Request::HEADER_X_FORWARDED_PORT

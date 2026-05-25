@@ -165,8 +165,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/onboarding', OnboardingFlow::class)->name('onboarding');
 });
 
-// Browseable without email verification — read-only views
-Route::middleware(['auth', 'onboarded'])->group(function () {
+// Core platform routes — auth + verified + onboarded
+Route::middleware(['auth', 'verified', 'onboarded'])->group(function () {
 
     // Interest tag selection
     Route::get('/tags', TagSelector::class)->name('tags.select');
@@ -240,10 +240,13 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
         $report = \App\Models\ProblemReport::findOrFail($id);
         abort_if(! $report->screenshot_path, 404);
 
-        $path = storage_path('app/' . $report->screenshot_path);
-        abort_if(! file_exists($path), 404);
+        $path     = storage_path('app/' . $report->screenshot_path);
+        $expected = storage_path('app/problem_reports');
+        $resolved = realpath($path);
+        abort_if(! $resolved || ! str_starts_with($resolved, $expected), 404);
+        abort_if(! file_exists($resolved), 404);
 
-        return response()->file($path);
+        return response()->file($resolved);
     })->name('admin.problem-reports.screenshot');
 
 });

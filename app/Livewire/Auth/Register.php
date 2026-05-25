@@ -195,6 +195,7 @@ class Register extends Component
         }
 
         Auth::login($user);
+        session()->regenerate();
 
         $this->redirect(route('verification.notice'));
     }

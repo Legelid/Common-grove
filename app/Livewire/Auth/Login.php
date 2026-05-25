@@ -63,6 +63,12 @@ class Login extends Component
             Log::info('Login: password rehashed', ['gamertag' => $user->gamertag]);
         }
 
+        if ($user->password_reset_required) {
+            Log::info('Login: password reset required', ['gamertag' => $user->gamertag]);
+            $this->addError('password', 'Your account requires a password reset. Please use the "Need help getting back in?" link below.');
+            return;
+        }
+
         RateLimiter::clear($throttleKey);
 
         Auth::login($user, $this->remember);

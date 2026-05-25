@@ -44,7 +44,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_gamertag_changed_at',
         'suspended_at',
         'dismiss_count',
-        'is_admin',
         // Group 2 — status
         'status_text',
         'status_mood',
