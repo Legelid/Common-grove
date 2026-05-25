@@ -75,6 +75,14 @@ class Login extends Component
         ]);
 
         if (! $user->hasVerifiedEmail()) {
+            // If the user clicked the verification link while logged out, Laravel stored
+            // the signed URL in session. Follow it instead of dropping them on the notice page.
+            $intended = session()->get('url.intended', '');
+            if (str_contains($intended, '/email/verify/')) {
+                session()->forget('url.intended');
+                $this->redirect($intended, navigate: false);
+                return;
+            }
             $this->redirect(route('verification.notice'), navigate: false);
             return;
         }

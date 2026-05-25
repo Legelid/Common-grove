@@ -10,6 +10,11 @@
         Once verified, you'll have full access to messaging, rooms, and hangouts.
     </div>
 
+    <div class="flex items-center gap-2 mb-6">
+        <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(139,148,158,0.1);color:#3d4451;">Bot Deterrent</span>
+        <p class="text-xs" style="color:#3d4451;">Email verification keeps bots and fake accounts off the platform.</p>
+    </div>
+
     @if ($message)
         <div class="mb-5 rounded-lg px-4 py-2.5 text-sm text-center" style="background:{{ $rateLimited ? 'rgba(226,75,74,0.08)' : 'rgba(29,158,117,0.12)' }};color:{{ $rateLimited ? '#E24B4A' : '#1D9E75' }};">
             {{ $message }}

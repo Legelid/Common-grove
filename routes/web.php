@@ -142,7 +142,10 @@ Route::middleware('auth')->group(function () {
     // Handle the verification link click (signed URL, expires after 60 minutes)
     Route::get('/email/verify/{id}/{hash}', function (\Illuminate\Foundation\Auth\EmailVerificationRequest $request) {
         $request->fulfill();
-        return redirect()->route('onboarding');
+        $destination = $request->user()->onboarding_completed
+            ? route('feed')
+            : route('onboarding');
+        return redirect($destination);
     })->middleware(['signed', 'throttle:10,1'])->name('verification.verify');
 
     // Logout
