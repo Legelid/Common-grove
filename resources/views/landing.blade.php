@@ -6,6 +6,9 @@
     <meta name="robots" content="noindex, nofollow">
     <title>CommonGrove — Find your people</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-icon2.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -109,12 +112,10 @@
 
                     {{-- Logo + rotating phrase --}}
                     <div>
-                        <div class="relative mb-3" style="width:640px;max-width:none;margin-left:calc((100% - 640px) / 2);border-radius:18px;overflow:hidden;box-shadow:inset 0 0 55px 22px #131920;">
-                            <img src="{{ asset('images/logo-full2.png') }}" alt="CommonGrove" style="width:100%;height:auto;display:block;filter:drop-shadow(0 0 18px rgba(29,158,117,0.45)) drop-shadow(0 0 40px rgba(29,158,117,0.18));">
-                            <span
-                                class="absolute text-xs px-1.5 py-0.5 rounded font-semibold"
-                                style="top:6px;left:50%;transform:translateX(-50%);background:rgba(29,158,117,0.12);color:#1D9E75;letter-spacing:0.04em;"
-                            >BETA</span>
+                        <div class="flex items-center justify-center gap-2 mb-3" style="padding-left:32px;">
+                            <span class="tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:2.25rem;font-weight:400;">Common<span style="font-weight:700;-webkit-text-stroke:0.6px #E6EDF3;">Grove</span></span>
+                            <img src="{{ asset('images/logo-icon.png') }}" alt="" style="height:54px;width:auto;" class="-ml-9">
+                            <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.12);color:#1D9E75;letter-spacing:0.04em;">BETA</span>
                         </div>
 
                         <div
