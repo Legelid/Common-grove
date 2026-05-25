@@ -112,7 +112,7 @@
 
                     {{-- Logo + rotating phrase --}}
                     <div>
-                        <div class="flex items-center justify-center gap-2 mb-3" style="padding-left:32px;">
+                        <div class="flex items-center justify-center gap-2 mb-3" style="padding-left:32px;filter:drop-shadow(0 0 10px rgba(255,255,255,0.18)) drop-shadow(0 0 28px rgba(255,255,255,0.08));">
                             <span class="tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:2.25rem;font-weight:400;">Common<span style="font-weight:700;-webkit-text-stroke:0.6px #E6EDF3;">Grove</span></span>
                             <img src="{{ asset('images/logo-icon.png') }}" alt="" style="height:54px;width:auto;" class="-ml-9">
                             <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.12);color:#1D9E75;letter-spacing:0.04em;">BETA</span>

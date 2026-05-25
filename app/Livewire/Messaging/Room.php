@@ -17,6 +17,7 @@ use App\Services\CrisisDetectionService;
 use App\Services\MessageLimitService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -173,11 +174,24 @@ class Room extends Component
 
         $this->conversation->touch();
 
-        broadcast(new MessageSent($message->load('user')))->toOthers();
+        try {
+            broadcast(new MessageSent($message->load('user')))->toOthers();
+        } catch (\Throwable $e) {
+            Log::warning('Room.sendMessage: broadcast failed', [
+                'conversation_id' => $this->conversationId,
+                'message_id'      => $message->id,
+                'error'           => $e->getMessage(),
+            ]);
+        }
 
-        /** @var CrisisDetectionService $crisis */
-        $crisis = app(CrisisDetectionService::class);
-        $this->showCrisisBanner = $crisis->check($trimmed, Auth::user(), $this->conversationId) !== null;
+        try {
+            /** @var CrisisDetectionService $crisis */
+            $crisis = app(CrisisDetectionService::class);
+            $this->showCrisisBanner = $crisis->check($trimmed, Auth::user(), $this->conversationId) !== null;
+        } catch (\Throwable $e) {
+            Log::warning('Room.sendMessage: crisis detection failed', ['error' => $e->getMessage()]);
+            $this->showCrisisBanner = false;
+        }
 
         $this->messageContent      = '';
         $this->showCwInput         = false;
