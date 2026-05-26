@@ -25,4 +25,32 @@
             </div>
         @endforeach
     </div>
+
+    {{-- Quick links --}}
+    <div class="mt-8 flex flex-wrap gap-3">
+        <a href="{{ route('admin.rooms') }}" wire:navigate
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition"
+            style="background:#161B22;border:1px solid #30363D;color:#8B949E;"
+            onmouseover="this.style.color='#E6EDF3';this.style.borderColor='#3d4451'"
+            onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
+        >🏠 All Rooms</a>
+        <a href="{{ route('admin.users') }}" wire:navigate
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition"
+            style="background:#161B22;border:1px solid #30363D;color:#8B949E;"
+            onmouseover="this.style.color='#E6EDF3';this.style.borderColor='#3d4451'"
+            onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
+        >👥 Users</a>
+        <a href="{{ route('admin.reports') }}" wire:navigate
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition"
+            style="background:#161B22;border:1px solid #30363D;color:#8B949E;"
+            onmouseover="this.style.color='#E6EDF3';this.style.borderColor='#3d4451'"
+            onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
+        >🚩 Reports</a>
+        <a href="{{ route('admin.crisis') }}" wire:navigate
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition"
+            style="background:#161B22;border:1px solid #30363D;color:#8B949E;"
+            onmouseover="this.style.color='#E6EDF3';this.style.borderColor='#3d4451'"
+            onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
+        >🆘 Crisis Log</a>
+    </div>
 </div>
