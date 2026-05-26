@@ -13,6 +13,7 @@ use App\Livewire\Admin\PlatformStats;
 use App\Livewire\Admin\ProblemReports as AdminProblemReports;
 use App\Livewire\Admin\ReportsQueue;
 use App\Livewire\Admin\TagModeration;
+use App\Livewire\Admin\AllRooms;
 use App\Livewire\Admin\UserManagement;
 use App\Livewire\Account\CollectDateOfBirth;
 use App\Livewire\Auth\Login;
@@ -233,6 +234,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
     Route::get('/problem-reports', AdminProblemReports::class)->name('admin.problem-reports');
     Route::get('/users', UserManagement::class)->name('admin.users');
     Route::get('/tags', TagModeration::class)->name('admin.tags');
+    Route::get('/rooms', AllRooms::class)->name('admin.rooms');
     Route::get('/stats', PlatformStats::class)->name('admin.stats');
     Route::get('/crisis', CrisisLog::class)->name('admin.crisis');
 

@@ -109,6 +109,26 @@ class DirectMessage extends Component
 
     public function sendMessage(): void
     {
+        try {
+            $this->doSendMessage();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('DirectMessage.sendMessage: uncaught exception', [
+                'conversation_id' => $this->conversationId,
+                'user_id'         => Auth::id(),
+                'error'           => $e->getMessage(),
+                'class'           => get_class($e),
+                'file'            => $e->getFile(),
+                'line'            => $e->getLine(),
+                'trace'           => $e->getTraceAsString(),
+            ]);
+            $this->addError('messageContent', 'Something went wrong sending your message. Please try again.');
+        }
+    }
+
+    private function doSendMessage(): void
+    {
         if (! Auth::user()->hasVerifiedEmail()) {
             $this->verificationBlock = 'Please verify your email before chatting.';
             return;

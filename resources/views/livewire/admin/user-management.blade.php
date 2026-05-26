@@ -27,12 +27,19 @@
                 @foreach ($this->users as $user)
                     <tr wire:key="user-{{ $user->id }}" class="align-top" style="border-color:#30363D;">
                         <td class="py-3 pr-4">
-                            <a href="{{ route('profile.show', $user->gamertag) }}" target="_blank"
-                                class="font-medium transition" style="color:#1D9E75;" onmouseover="this.style.color='#22B88A'" onmouseout="this.style.color='#1D9E75'"
-                            >{{ $user->gamertag }}</a>
-                            @if ($user->dismiss_count >= 5)
-                                <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full" style="background:rgba(210,153,34,0.15);color:#D29922;">Serial reporter</span>
-                            @endif
+                            <div class="flex items-center gap-1.5">
+                                @if ($user->isOnline())
+                                    <span class="w-1.5 h-1.5 rounded-full flex-none" style="background:#1D9E75;" title="Online now"></span>
+                                @else
+                                    <span class="w-1.5 h-1.5 rounded-full flex-none" style="background:#30363D;"></span>
+                                @endif
+                                <a href="{{ route('profile.show', $user->gamertag) }}" target="_blank"
+                                    class="font-medium transition" style="color:#1D9E75;" onmouseover="this.style.color='#22B88A'" onmouseout="this.style.color='#1D9E75'"
+                                >{{ $user->gamertag }}</a>
+                                @if ($user->dismiss_count >= 5)
+                                    <span class="ml-0.5 px-1.5 py-0.5 text-xs rounded-full" style="background:rgba(210,153,34,0.15);color:#D29922;">Serial reporter</span>
+                                @endif
+                            </div>
                         </td>
                         <td class="py-3 pr-4 text-xs" style="color:#8B949E;">
                             {{ $user->email }}

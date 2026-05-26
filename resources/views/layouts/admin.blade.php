@@ -39,6 +39,7 @@
                     ['route' => 'admin.reports',          'icon' => '🚩', 'label' => 'Reports Queue'],
                     ['route' => 'admin.problem-reports', 'icon' => '📋', 'label' => 'Problem Reports'],
                     ['route' => 'admin.users',     'icon' => '👥', 'label' => 'User Management'],
+                    ['route' => 'admin.rooms',     'icon' => '🏠', 'label' => 'All Rooms'],
                     ['route' => 'admin.tags',      'icon' => '🏷️', 'label' => 'Tag Moderation'],
                     ['route' => 'admin.stats',     'icon' => '📈', 'label' => 'Platform Stats'],
                     ['route' => 'admin.crisis',    'icon' => '🆘', 'label' => 'Crisis Log'],
