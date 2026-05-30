@@ -8,7 +8,8 @@
     }"
 >
 
-    {{-- ── Filter panel (desktop, collapsible) ────────────────────────────── --}}
+    {{-- ── Filter panel (desktop, collapsible) — authenticated only ─────── --}}
+    @auth
     <aside
         id="filter-panel"
         x-show="filterOpen"
@@ -246,6 +247,7 @@
         @endif
 
     </aside>
+    @endauth
 
     {{-- ── Main feed ────────────────────────────────────────────────────────── --}}
     <div class="flex-1 min-w-0 overflow-y-auto">
@@ -257,16 +259,19 @@
                     <h1 class="text-xl font-semibold" style="color:#E6EDF3;">Open rooms</h1>
                     <p class="text-xs mt-1" style="color:#8B949E;">Places you might like right now</p>
                 </div>
-                <a
-                    href="{{ route('feed.post') }}"
-                    wire:navigate
-                    class="px-4 py-2 text-sm font-medium rounded-lg transition"
-                    style="background:rgba(29,158,117,0.15);color:#1D9E75;border:1px solid rgba(29,158,117,0.3);"
-                    onmouseover="this.style.background='rgba(29,158,117,0.25)'" onmouseout="this.style.background='rgba(29,158,117,0.15)'"
-                >+ Open a room</a>
+                @if (auth()->check())
+                    <a
+                        href="{{ route('feed.post') }}"
+                        wire:navigate
+                        class="px-4 py-2 text-sm font-medium rounded-lg transition"
+                        style="background:rgba(29,158,117,0.15);color:#1D9E75;border:1px solid rgba(29,158,117,0.3);"
+                        onmouseover="this.style.background='rgba(29,158,117,0.25)'" onmouseout="this.style.background='rgba(29,158,117,0.15)'"
+                    >+ Open a room</a>
+                @endif
             </div>
 
-            {{-- Filter trigger: desktop (hidden on mobile, only shown when panel is closed) --}}
+            {{-- Filter trigger: desktop (authenticated only, hidden on mobile) --}}
+            @auth
             <div class="hidden md:block" x-show="!filterOpen" style="display:none;">
                 <p class="text-xs mb-2" style="color:#3d4451;">Not seeing something that fits?</p>
                 <button
@@ -291,7 +296,10 @@
                 </button>
             </div>
 
-            {{-- Filter trigger: mobile (always visible on mobile, toggles inline panel) --}}
+            @endauth
+
+            {{-- Filter trigger + inline panel: mobile (authenticated only) --}}
+            @auth
             <div class="md:hidden">
                 <button
                     type="button"
@@ -537,6 +545,7 @@
                 </div>
             </div>
             </div>{{-- end md:hidden mobile filter panel wrapper --}}
+            @endauth
 
             {{-- ── Starter rooms ─────────────────────────────────────────────── --}}
             @if ($this->officialRooms->isNotEmpty())
@@ -702,23 +711,25 @@
                                             style="background:{{ $accent['badge_bg'] }};color:{{ $accent['color'] }};border:1px solid {{ $accent['badge_border'] }};">Open Grove</span>
                                         <span class="text-xs leading-none" style="color:#3d4451;">Always open</span>
                                     </div>
-                                    <button
-                                        data-no-card-tap
-                                        type="button"
-                                        wire:click="toggleCardPin('{{ $official->id }}')"
-                                        title="{{ $officialIsPinned ? 'Remove from Your Rooms' : 'Save to Your Rooms' }}"
-                                        aria-label="{{ $officialIsPinned ? 'Unpin room' : 'Pin room' }}"
-                                        class="flex-none p-1 rounded"
-                                        style="{{ $officialIsPinned ? 'color:#1D9E75;' : 'color:#3d4451;' }}"
-                                        onmouseover="this.style.color='{{ $officialIsPinned ? '#E24B4A' : '#8B949E' }}'"
-                                        onmouseout="this.style.color='{{ $officialIsPinned ? '#1D9E75' : '#3d4451' }}'"
-                                    >
-                                        @if ($officialIsPinned)
-                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                                        @else
-                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                                        @endif
-                                    </button>
+                                    @if (auth()->check())
+                                        <button
+                                            data-no-card-tap
+                                            type="button"
+                                            wire:click="toggleCardPin('{{ $official->id }}')"
+                                            title="{{ $officialIsPinned ? 'Remove from Your Rooms' : 'Save to Your Rooms' }}"
+                                            aria-label="{{ $officialIsPinned ? 'Unpin room' : 'Pin room' }}"
+                                            class="flex-none p-1 rounded"
+                                            style="{{ $officialIsPinned ? 'color:#1D9E75;' : 'color:#3d4451;' }}"
+                                            onmouseover="this.style.color='{{ $officialIsPinned ? '#E24B4A' : '#8B949E' }}'"
+                                            onmouseout="this.style.color='{{ $officialIsPinned ? '#1D9E75' : '#3d4451' }}'"
+                                        >
+                                            @if ($officialIsPinned)
+                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                                            @else
+                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                                            @endif
+                                        </button>
+                                    @endif
                                 </div>
 
                                 {{-- Middle: title + description (grows to fill available space) --}}
@@ -731,20 +742,33 @@
 
                                 {{-- Bottom: Step in button, always flush to the card bottom --}}
                                 <div class="px-3 pb-3">
-                                    <button
-                                        data-no-card-tap
-                                        type="button"
-                                        wire:click="joinHangout('{{ $official->id }}')"
-                                        wire:loading.attr="disabled"
-                                        wire:target="joinHangout('{{ $official->id }}')"
-                                        class="w-full py-1.5 text-xs font-medium rounded-lg disabled:opacity-50"
-                                        style="background:{{ $accent['btn_bg'] }};color:{{ $accent['color'] }};border:1px solid {{ $accent['btn_border'] }};"
-                                        onmouseover="this.style.background='{{ $accent['btn_hover_bg'] }}';this.style.borderColor='{{ $accent['btn_hover_brd'] }}';"
-                                        onmouseout="this.style.background='{{ $accent['btn_bg'] }}';this.style.borderColor='{{ $accent['btn_border'] }}';"
-                                    >
-                                        <span wire:loading.remove wire:target="joinHangout('{{ $official->id }}')">Step in</span>
-                                        <span wire:loading wire:target="joinHangout('{{ $official->id }}')">Entering…</span>
-                                    </button>
+                                    @if (auth()->check())
+                                        <button
+                                            data-no-card-tap
+                                            type="button"
+                                            wire:click="joinHangout('{{ $official->id }}')"
+                                            wire:loading.attr="disabled"
+                                            wire:target="joinHangout('{{ $official->id }}')"
+                                            class="w-full py-1.5 text-xs font-medium rounded-lg disabled:opacity-50"
+                                            style="background:{{ $accent['btn_bg'] }};color:{{ $accent['color'] }};border:1px solid {{ $accent['btn_border'] }};"
+                                            onmouseover="this.style.background='{{ $accent['btn_hover_bg'] }}';this.style.borderColor='{{ $accent['btn_hover_brd'] }}';"
+                                            onmouseout="this.style.background='{{ $accent['btn_bg'] }}';this.style.borderColor='{{ $accent['btn_border'] }}';"
+                                        >
+                                            <span wire:loading.remove wire:target="joinHangout('{{ $official->id }}')">Step in</span>
+                                            <span wire:loading wire:target="joinHangout('{{ $official->id }}')">Entering…</span>
+                                        </button>
+                                    @else
+                                        @php $previewConvId = $official->conversation?->id; @endphp
+                                        <a
+                                            href="{{ $previewConvId ? route('room.show', $previewConvId) : route('register') }}"
+                                            wire:navigate
+                                            data-no-card-tap
+                                            class="block w-full py-1.5 text-xs font-medium rounded-lg text-center transition"
+                                            style="background:{{ $accent['btn_bg'] }};color:{{ $accent['color'] }};border:1px solid {{ $accent['btn_border'] }};"
+                                            onmouseover="this.style.background='{{ $accent['btn_hover_bg'] }}'"
+                                            onmouseout="this.style.background='{{ $accent['btn_bg'] }}'"
+                                        >Take a peek</a>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -882,16 +906,21 @@
                 </div>
             @endif
 
-            {{-- Feed content --}}
+            {{-- Feed content (user-created rooms — authenticated only) --}}
+            @auth
             @if ($this->showingFallback)
                 <div class="rounded-2xl border px-6 py-8 text-sm space-y-3 text-center" style="background:#161B22;border-color:#30363D;color:#8B949E;box-shadow:0 1px 4px rgba(0,0,0,0.25);">
                     <p>@tone('empty_feed', "It's quiet right now — no rooms match those filters.")</p>
-                    <a href="{{ route('feed.post') }}" wire:navigate class="inline-block text-sm underline transition" style="color:#1D9E75;">Open one →</a>
+                    @if (auth()->check())
+                        <a href="{{ route('feed.post') }}" wire:navigate class="inline-block text-sm underline transition" style="color:#1D9E75;">Open one →</a>
+                    @endif
                 </div>
             @elseif ($this->posts->isEmpty())
                 <div class="text-center py-24 space-y-3">
                     <p class="text-sm" style="color:#8B949E;">@tone('empty_feed', 'No active rooms right now.')</p>
-                    <a href="{{ route('feed.post') }}" wire:navigate class="inline-block text-sm underline transition" style="color:#1D9E75;">Open a room →</a>
+                    @if (auth()->check())
+                        <a href="{{ route('feed.post') }}" wire:navigate class="inline-block text-sm underline transition" style="color:#1D9E75;">Open a room →</a>
+                    @endif
                 </div>
             @else
                 @if ($this->filtersActive)
@@ -985,63 +1014,75 @@
 
                                 {{-- Actions --}}
                                 <div class="flex items-center gap-2">
-                                    {{-- Pin button --}}
-                                    <button
-                                        data-no-card-tap
-                                        type="button"
-                                        wire:click="toggleCardPin('{{ $post->id }}')"
-                                        wire:loading.attr="disabled"
-                                        wire:target="toggleCardPin('{{ $post->id }}')"
-                                        title="{{ $isCardPinned ? 'Remove from Your Rooms' : 'Save to Your Rooms' }}"
-                                        aria-label="{{ $isCardPinned ? 'Unpin room' : 'Pin room' }}"
-                                        class="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs transition disabled:opacity-40 flex-none"
-                                        style="{{ $isCardPinned
-                                            ? 'color:#1D9E75;background:rgba(29,158,117,0.08);border:1px solid rgba(29,158,117,0.2);'
-                                            : 'color:#8B949E;border:1px solid transparent;' }}"
-                                        onmouseover="{{ $isCardPinned
-                                            ? "this.style.color='#E24B4A';this.style.background='rgba(226,75,74,0.06)';this.style.borderColor='rgba(226,75,74,0.2)';"
-                                            : "this.style.color='#C9D1D9';this.style.borderColor='#30363D';" }}"
-                                        onmouseout="{{ $isCardPinned
-                                            ? "this.style.color='#1D9E75';this.style.background='rgba(29,158,117,0.08)';this.style.borderColor='rgba(29,158,117,0.2)';"
-                                            : "this.style.color='#8B949E';this.style.borderColor='transparent';" }}"
-                                    >
-                                        @if ($isCardPinned)
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                                            </svg>
-                                            <span>Pinned</span>
-                                        @else
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                                            </svg>
-                                            <span>Pin</span>
-                                        @endif
-                                    </button>
+                                    {{-- Pin button (authenticated only) --}}
+                                    @if (auth()->check())
+                                        <button
+                                            data-no-card-tap
+                                            type="button"
+                                            wire:click="toggleCardPin('{{ $post->id }}')"
+                                            wire:loading.attr="disabled"
+                                            wire:target="toggleCardPin('{{ $post->id }}')"
+                                            title="{{ $isCardPinned ? 'Remove from Your Rooms' : 'Save to Your Rooms' }}"
+                                            aria-label="{{ $isCardPinned ? 'Unpin room' : 'Pin room' }}"
+                                            class="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs transition disabled:opacity-40 flex-none"
+                                            style="{{ $isCardPinned
+                                                ? 'color:#1D9E75;background:rgba(29,158,117,0.08);border:1px solid rgba(29,158,117,0.2);'
+                                                : 'color:#8B949E;border:1px solid transparent;' }}"
+                                            onmouseover="{{ $isCardPinned
+                                                ? "this.style.color='#E24B4A';this.style.background='rgba(226,75,74,0.06)';this.style.borderColor='rgba(226,75,74,0.2)';"
+                                                : "this.style.color='#C9D1D9';this.style.borderColor='#30363D';" }}"
+                                            onmouseout="{{ $isCardPinned
+                                                ? "this.style.color='#1D9E75';this.style.background='rgba(29,158,117,0.08)';this.style.borderColor='rgba(29,158,117,0.2)';"
+                                                : "this.style.color='#8B949E';this.style.borderColor='transparent';" }}"
+                                        >
+                                            @if ($isCardPinned)
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                                                </svg>
+                                                <span>Pinned</span>
+                                            @else
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                                                </svg>
+                                                <span>Pin</span>
+                                            @endif
+                                        </button>
+                                    @endif
 
-                                    {{-- Join / enter button: fills remaining width on mobile --}}
-                                    <button
-                                        data-no-card-tap
-                                        type="button"
-                                        wire:click="joinHangout('{{ $post->id }}')"
-                                        wire:loading.attr="disabled"
-                                        wire:target="joinHangout('{{ $post->id }}')"
-                                        class="flex-1 md:flex-none px-5 py-1.5 text-sm font-medium rounded-lg transition disabled:opacity-50 whitespace-nowrap text-center"
-                                        style="background:rgba(29,158,117,0.15);color:#1D9E75;border:1px solid rgba(29,158,117,0.3);"
-                                        onmouseover="this.style.background='rgba(29,158,117,0.28)'" onmouseout="this.style.background='rgba(29,158,117,0.15)'"
-                                    >
-                                        <span wire:loading.remove wire:target="joinHangout('{{ $post->id }}')">
-                                            @if ($isPersistent) Enter room @else Step in @endif
-                                        </span>
-                                        <span wire:loading wire:target="joinHangout('{{ $post->id }}')">
-                                            @if ($isPersistent) Entering… @else Stepping in… @endif
-                                        </span>
-                                    </button>
+                                    {{-- Join / enter button: authenticated users get the wire action, guests get a signup link --}}
+                                    @if (auth()->check())
+                                        <button
+                                            data-no-card-tap
+                                            type="button"
+                                            wire:click="joinHangout('{{ $post->id }}')"
+                                            wire:loading.attr="disabled"
+                                            wire:target="joinHangout('{{ $post->id }}')"
+                                            class="flex-1 md:flex-none px-5 py-1.5 text-sm font-medium rounded-lg transition disabled:opacity-50 whitespace-nowrap text-center"
+                                            style="background:rgba(29,158,117,0.15);color:#1D9E75;border:1px solid rgba(29,158,117,0.3);"
+                                            onmouseover="this.style.background='rgba(29,158,117,0.28)'" onmouseout="this.style.background='rgba(29,158,117,0.15)'"
+                                        >
+                                            <span wire:loading.remove wire:target="joinHangout('{{ $post->id }}')">
+                                                @if ($isPersistent) Enter room @else Step in @endif
+                                            </span>
+                                            <span wire:loading wire:target="joinHangout('{{ $post->id }}')">
+                                                @if ($isPersistent) Entering… @else Stepping in… @endif
+                                            </span>
+                                        </button>
+                                    @else
+                                        <a
+                                            href="{{ route('register') }}"
+                                            class="flex-1 md:flex-none px-5 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap text-center transition"
+                                            style="background:rgba(29,158,117,0.15);color:#1D9E75;border:1px solid rgba(29,158,117,0.3);"
+                                            onmouseover="this.style.background='rgba(29,158,117,0.28)'" onmouseout="this.style.background='rgba(29,158,117,0.15)'"
+                                        >Join the Conversation</a>
+                                    @endif
                                 </div>
                             </div>
                         </article>
                     @endforeach
                 </div>
             @endif
+            @endauth
 
         </div>
     </div>

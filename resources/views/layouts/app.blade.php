@@ -121,6 +121,11 @@
             .cg-room-card:active { background: #1C2333 !important; border-color: #3d4451 !important; transition: background 0.1s, border-color 0.1s; }
             body.low-stimulation .cg-room-card:active { background: #161B22 !important; border-color: #30363D !important; }
         }
+        @keyframes cg-banner-in {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .cg-guest-banner { animation: cg-banner-in 0.3s ease-out both; }
     </style>
 </head>
 <body class="{{ implode(' ', $cgBodyClasses) }}" style="{{ $bodyBg }}color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
@@ -246,6 +251,42 @@
                 </div>
             @endauth
         </header>
+
+        {{-- ── Guest join banner ──────────────────────────────────────────── --}}
+        {{-- @guest ensures this is never evaluated for authenticated users.   --}}
+        {{-- Placed inside the app-shell @else block so it never touches auth  --}}
+        {{-- pages (login / register / etc).                                   --}}
+        @guest
+            <div class="cg-guest-banner flex-none border-b" style="background:#131920;border-color:#1E2730;" role="banner" aria-label="Join CommonGrove">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-6 px-4 sm:px-6 py-2.5">
+                    <p class="text-xs sm:text-sm text-center sm:text-left flex-1" style="color:#8B949E;line-height:1.5;">
+                        @if (request()->routeIs('room.show'))
+                            Join the conversation in this room.
+                        @else
+                            Join the conversations &mdash; create your free account
+                        @endif
+                    </p>
+                    <div class="flex items-center gap-2 flex-none">
+                        <a
+                            href="{{ route('login') }}"
+                            wire:navigate
+                            class="text-xs px-3 py-1.5 rounded-lg border transition-colors duration-150"
+                            style="color:#8B949E;border-color:#252E3D;background:transparent;"
+                            onmouseover="this.style.color='#C9D1D9';this.style.borderColor='#30363D';"
+                            onmouseout="this.style.color='#8B949E';this.style.borderColor='#252E3D';"
+                        >Log In</a>
+                        <a
+                            href="{{ route('register') }}"
+                            wire:navigate
+                            class="text-xs px-3.5 py-1.5 rounded-lg font-medium transition-colors duration-150"
+                            style="background:#1D9E75;color:#fff;"
+                            onmouseover="this.style.background='#1a9068';"
+                            onmouseout="this.style.background='#1D9E75';"
+                        >Join the Conversation</a>
+                    </div>
+                </div>
+            </div>
+        @endguest
 
         {{-- ── Email verification banner ──────────────────────────────────── --}}
         @auth

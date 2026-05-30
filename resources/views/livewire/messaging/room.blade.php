@@ -1,27 +1,34 @@
 <div class="flex h-full" x-data="{ showParticipants: false }">
 
     {{-- Participant sidebar — desktop only --}}
+    @php $activeParticipants = $this->conversation->participants->filter(fn($p) => !$p->pivot->left_at); @endphp
     <aside class="hidden md:flex md:flex-col w-48 flex-none border-r" style="background:#161B22;border-color:#30363D;">
         <div class="px-3 py-3 border-b" style="border-color:#30363D;">
             <p class="text-xs font-semibold uppercase tracking-wider" style="color:#8B949E;">
-                @php $activeParticipants = $this->conversation->participants->filter(fn($p) => !$p->pivot->left_at); @endphp
                 In this room · {{ $activeParticipants->count() }}
             </p>
         </div>
         <div class="flex-1 overflow-y-auto py-2 space-y-0.5">
             @foreach ($activeParticipants as $participant)
-                <a
-                    href="{{ route('profile.show', $participant->gamertag) }}"
-                    wire:navigate
-                    class="flex items-center gap-2 px-3 py-1.5 rounded transition"
-                    style="color:#8B949E;" onmouseover="this.style.background='#21262D'" onmouseout="this.style.background=''"
-                >
-                    <img src="{{ $participant->avatar_url }}" alt="" class="w-6 h-6 rounded-full object-cover" style="background:#21262D;">
-                    <x-user-name :user="$participant" class="text-xs truncate" style="color:#E6EDF3;" />
-                    @if ($participant->isOnline())
-                        <span class="ml-auto w-1.5 h-1.5 rounded-full flex-none" style="background:#1D9E75;"></span>
-                    @endif
-                </a>
+                @if (auth()->check())
+                    <a
+                        href="{{ route('profile.show', $participant->gamertag) }}"
+                        wire:navigate
+                        class="flex items-center gap-2 px-3 py-1.5 rounded transition"
+                        style="color:#8B949E;" onmouseover="this.style.background='#21262D'" onmouseout="this.style.background=''"
+                    >
+                        <img src="{{ $participant->avatar_url }}" alt="" class="w-6 h-6 rounded-full object-cover" style="background:#21262D;">
+                        <x-user-name :user="$participant" class="text-xs truncate" style="color:#E6EDF3;" />
+                        @if ($participant->isOnline())
+                            <span class="ml-auto w-1.5 h-1.5 rounded-full flex-none" style="background:#1D9E75;"></span>
+                        @endif
+                    </a>
+                @else
+                    <div class="flex items-center gap-2 px-3 py-1.5">
+                        <span class="w-6 h-6 rounded-full flex-none" style="background:#21262D;"></span>
+                        <span class="text-xs truncate" style="color:#6B737C;">Someone</span>
+                    </div>
+                @endif
             @endforeach
         </div>
 
@@ -39,21 +46,23 @@
             @endif
         @endif
 
-        @if(auth()->user()->isSupporter())
+        @if(auth()->check() && auth()->user()->isSupporter())
             <div class="px-3 py-2 border-t" style="border-color:#30363D;">
                 <livewire:rooms.add-to-collection :conversationId="$conversationId" :key="'atc-'.$conversationId" />
             </div>
         @endif
 
-        <div class="px-3 py-2 border-t" style="border-color:#30363D;">
-            <button
-                type="button"
-                wire:click="leaveQuietly"
-                wire:confirm="Leave this room quietly? No one will be notified."
-                class="w-full text-xs py-1 transition"
-                style="color:#8B949E;" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='#8B949E'"
-            >Leave quietly</button>
-        </div>
+        @if (auth()->check())
+            <div class="px-3 py-2 border-t" style="border-color:#30363D;">
+                <button
+                    type="button"
+                    wire:click="leaveQuietly"
+                    wire:confirm="Leave this room quietly? No one will be notified."
+                    class="w-full text-xs py-1 transition"
+                    style="color:#8B949E;" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='#8B949E'"
+                >Leave quietly</button>
+            </div>
+        @endif
     </aside>
 
     {{-- Chat area --}}
@@ -61,7 +70,7 @@
         $isLowStim          = auth()->user()?->low_stimulation_mode;
         $cgAdvanced         = auth()->user()?->advanced_comfort_settings ?? [];
         $cgHideGradients    = in_array('hide_gradients', $cgAdvanced, true);
-        $hideReactions      = (bool) (auth()->user()?->hide_reactions ?? false);
+        $hideReactions      = auth()->check() && (bool) (auth()->user()?->hide_reactions ?? false);
         $roomGradientDef    = (!$isLowStim && !$cgHideGradients && $roomGradientTheme)
             ? config('gradients.' . $roomGradientTheme)
             : null;
@@ -73,7 +82,7 @@
 
         {{-- Header --}}
         <div class="flex items-center gap-2 px-4 py-3 border-b flex-none" style="background:#161B22;border-color:#30363D;">
-            <a href="{{ route('messages.index') }}" wire:navigate class="transition flex-none" style="color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'">←</a>
+            <a href="{{ auth()->check() ? route('messages.index') : route('feed') }}" wire:navigate class="transition flex-none" style="color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'">←</a>
             <div class="flex-1 min-w-0">
                 <p class="font-semibold text-sm truncate" style="color:#E6EDF3;">{{ $this->conversation->name ?? 'Hangout Room' }}</p>
                 <p class="hidden md:block text-xs" style="color:#8B949E;">{{ $activeParticipants->count() }} participants</p>
@@ -310,6 +319,35 @@
             </div>
         @endif
 
+        {{-- Guest preview notice — authenticated users in official rooms only, shown once --}}
+        @if (auth()->check() && ($this->conversation->hangoutPost?->is_official ?? false))
+            <div
+                x-data="{ show: !localStorage.getItem('cg_guest_preview_notice') }"
+                x-show="show"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 -translate-y-1"
+                class="flex items-center gap-3 px-4 py-2 border-b flex-none"
+                style="background:rgba(29,158,117,0.035);border-color:#1A2028;"
+            >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3d4451" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <p class="flex-1 text-xs leading-relaxed" style="color:#6B737C;">
+                    Visitors previewing CommonGrove can see the last 10 messages in this room before they sign up.
+                </p>
+                <button
+                    type="button"
+                    @click="show = false; localStorage.setItem('cg_guest_preview_notice', '1')"
+                    class="flex-none text-xs px-2.5 py-1 rounded-lg border transition-colors duration-150"
+                    style="color:#3d4451;border-color:#1E2730;"
+                    onmouseover="this.style.color='#8B949E';this.style.borderColor='#30363D';"
+                    onmouseout="this.style.color='#3d4451';this.style.borderColor='#1E2730';"
+                    aria-label="Dismiss notice"
+                >Got it</button>
+            </div>
+        @endif
+
         {{-- Conversation prompt card --}}
         @if ($this->enabledPrompts)
             <div
@@ -384,12 +422,12 @@
                     @foreach ($this->pinnedMessages as $pinned)
                         <div class="px-4 py-2 flex items-start justify-between gap-3">
                             <div class="flex-1 min-w-0">
-                                <p class="text-xs mb-0.5" style="color:#8B949E;">{{ $pinned->user?->gamertag }}</p>
+                                <p class="text-xs mb-0.5" style="color:#8B949E;">{{ auth()->check() ? $pinned->user?->gamertag : 'Someone' }}</p>
                                 <p class="text-xs truncate" style="color:#E6EDF3;">{{ Str::limit($pinned->content, 100) }}</p>
                             </div>
                             <div class="flex items-center gap-2 flex-none">
                                 <a href="#msg-{{ $pinned->id }}" class="text-xs underline transition" style="color:#1D9E75;">Jump</a>
-                                @if ($this->conversation->created_by === auth()->id() || auth()->user()->is_admin)
+                                @if (auth()->check() && ($this->conversation->created_by === auth()->id() || auth()->user()->is_admin))
                                     <button
                                         type="button"
                                         wire:click="unpinMessage('{{ $pinned->id }}')"
@@ -419,20 +457,36 @@
             x-on:message-sent.window="$nextTick(() => $el.scrollTop = $el.scrollHeight)"
             x-on:message-received.window="$nextTick(() => $el.scrollTop = $el.scrollHeight)"
         >
-            {{-- Quiet room empty state --}}
-            @if ($this->chatMessages->isEmpty())
-                <div class="h-full flex flex-col items-center justify-center text-center gap-2 pb-8">
-                    <p class="text-sm" style="color:#3d4451;">Quiet room right now.</p>
-                    <p class="text-xs" style="color:#21262D;">No rush — messages can start whenever they're ready.</p>
+            {{-- Guest preview label --}}
+            @if (! auth()->check())
+                <div class="flex items-center gap-2 mb-4 pb-2.5 border-b" style="border-color:#1A2028;">
+                    <span class="text-xs italic" style="color:#3d4451;">A glimpse inside —</span>
+                    <span class="text-xs" style="color:#252E3D;">last 10 messages</span>
                 </div>
+            @endif
+
+            {{-- Empty state --}}
+            @if ($this->chatMessages->isEmpty())
+                @if (! auth()->check())
+                    <div class="flex flex-col items-center justify-center text-center gap-2 py-12">
+                        <p class="text-sm" style="color:#3d4451;">No one has said anything yet.</p>
+                        <p class="text-xs" style="color:#21262D;">You could be the first.</p>
+                    </div>
+                @else
+                    <div class="h-full flex flex-col items-center justify-center text-center gap-2 pb-8">
+                        <p class="text-sm" style="color:#3d4451;">Quiet room right now.</p>
+                        <p class="text-xs" style="color:#21262D;">No rush — messages can start whenever they're ready.</p>
+                    </div>
+                @endif
             @endif
 
             @foreach ($this->chatMessages as $message)
                 @php
-                    $isMine         = $message->user_id === auth()->id();
+                    $isGuest        = ! auth()->check();
+                    $isMine         = ! $isGuest && $message->user_id === auth()->id();
                     $reactionCounts = $message->reactions->groupBy('reaction')->map->count();
-                    $myReactions    = $message->reactions->where('user_id', auth()->id())->pluck('reaction');
-                    $canPin         = $this->conversation->created_by === auth()->id() || auth()->user()->is_admin;
+                    $myReactions    = $isGuest ? collect() : $message->reactions->where('user_id', auth()->id())->pluck('reaction');
+                    $canPin         = ! $isGuest && ($this->conversation->created_by === auth()->id() || auth()->user()->is_admin);
                     $prevMsg        = $loop->index > 0 ? $this->chatMessages[$loop->index - 1] : null;
                     $isGrouped      = $prevMsg
                         && $prevMsg->user_id === $message->user_id
@@ -460,7 +514,9 @@
                             @touchmove.passive="clearTimeout(_lp)"
                         >
                             @if (!$isMine && !$isGrouped)
-                                @if ($message->user)
+                                @if ($isGuest)
+                                    <p class="text-xs font-semibold" style="color:#8B949E;">Someone</p>
+                                @elseif ($message->user)
                                     <x-user-name :user="$message->user" class="text-xs font-semibold" style="color:#8B949E;" />
                                 @else
                                     <p class="text-xs font-semibold" style="color:#8B949E;">{{ $message->author_name }}</p>
@@ -475,7 +531,7 @@
                                         $quoteText    = $replyParent
                                             ? Str::limit($replyParent->content, 70)
                                             : null;
-                                        $quoteSender  = $replyParent?->user?->display_name ?? null;
+                                        $quoteSender  = $isGuest ? 'Someone' : ($replyParent?->user?->display_name ?? null);
                                     } else {
                                         $quoteText   = Str::limit($message->reply_to_prompt, 70);
                                         $quoteSender = null;
@@ -519,7 +575,7 @@
                             @endif
                         </div>
 
-                        @if (!$hideReactions)
+                        @if (!$hideReactions && !$isGuest)
                             {{-- Reaction tray: floats at the bottom edge of the bubble --}}
                             <div
                                 x-show="reactOpen || pickerOpen"
@@ -652,6 +708,20 @@
 
         {{-- Compose --}}
         @php $isExpiredHangout = $this->conversation->hangoutPost && !$this->conversation->hangoutPost->is_persistent && $this->conversation->hangoutPost->isExpired(); @endphp
+        @if (! auth()->check())
+            {{-- Guest CTA — replaces the compose bar entirely --}}
+            <div class="px-4 pb-5 pt-3 border-t flex-none" style="border-color:#30363D;">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 rounded-xl" style="background:#1C2333;border:1px solid #30363D;">
+                    <p class="text-sm text-center sm:text-left" style="color:#8B949E;">Sign up to join the conversation</p>
+                    <a
+                        href="{{ route('register') }}"
+                        class="flex-none px-5 py-2 text-sm font-semibold rounded-xl transition whitespace-nowrap"
+                        style="background:#1D9E75;color:#fff;"
+                        onmouseover="this.style.background='#1a9068'" onmouseout="this.style.background='#1D9E75'"
+                    >Join the Conversation</a>
+                </div>
+            </div>
+        @else
         <div class="px-4 pb-4 pt-2 border-t flex-none" style="border-color:#30363D;">
             @if ($verificationBlock)
                 <p class="mb-1.5 text-xs" style="color:#C9A83C;">{{ $verificationBlock }}</p>
@@ -735,6 +805,7 @@
             </form>
             @endif
         </div>
+        @endif {{-- end auth()->check() compose block --}}
 
     </div>
 
@@ -771,20 +842,27 @@
             {{-- Participants list --}}
             <div class="flex-1 overflow-y-auto py-2 space-y-0.5">
                 @foreach ($activeParticipants as $participant)
-                    <a
-                        href="{{ route('profile.show', $participant->gamertag) }}"
-                        wire:navigate
-                        @click="showParticipants = false"
-                        class="flex items-center gap-3 px-4 py-2.5 transition"
-                        style="color:#8B949E;"
-                        onmouseover="this.style.background='#21262D'" onmouseout="this.style.background=''"
-                    >
-                        <img src="{{ $participant->avatar_url }}" alt="" class="w-8 h-8 rounded-full object-cover flex-none" style="background:#21262D;">
-                        <x-user-name :user="$participant" class="text-sm truncate" style="color:#E6EDF3;" />
-                        @if ($participant->isOnline())
-                            <span class="ml-auto w-1.5 h-1.5 rounded-full flex-none" style="background:#1D9E75;"></span>
-                        @endif
-                    </a>
+                    @if (auth()->check())
+                        <a
+                            href="{{ route('profile.show', $participant->gamertag) }}"
+                            wire:navigate
+                            @click="showParticipants = false"
+                            class="flex items-center gap-3 px-4 py-2.5 transition"
+                            style="color:#8B949E;"
+                            onmouseover="this.style.background='#21262D'" onmouseout="this.style.background=''"
+                        >
+                            <img src="{{ $participant->avatar_url }}" alt="" class="w-8 h-8 rounded-full object-cover flex-none" style="background:#21262D;">
+                            <x-user-name :user="$participant" class="text-sm truncate" style="color:#E6EDF3;" />
+                            @if ($participant->isOnline())
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full flex-none" style="background:#1D9E75;"></span>
+                            @endif
+                        </a>
+                    @else
+                        <div class="flex items-center gap-3 px-4 py-2.5">
+                            <span class="w-8 h-8 rounded-full flex-none" style="background:#21262D;"></span>
+                            <span class="text-sm truncate" style="color:#6B737C;">Someone</span>
+                        </div>
+                    @endif
                 @endforeach
             </div>
 
@@ -804,25 +882,27 @@
             @endif
 
             {{-- Collections (supporter only) --}}
-            @if(auth()->user()->isSupporter())
+            @if(auth()->check() && auth()->user()->isSupporter())
                 <div class="px-4 py-3 border-t flex-none" style="border-color:#30363D;">
                     <livewire:rooms.add-to-collection :conversationId="$conversationId" :key="'atc-mobile-'.$conversationId" />
                 </div>
             @endif
 
-            {{-- Leave quietly --}}
-            <div class="px-4 py-4 border-t flex-none" style="border-color:#30363D;">
-                <button
-                    type="button"
-                    wire:click="leaveQuietly"
-                    wire:confirm="Leave this room quietly? No one will be notified."
-                    @click="showParticipants = false"
-                    class="w-full text-sm py-2.5 rounded-xl transition"
-                    style="color:#8B949E;border:1px solid #30363D;"
-                    onmouseover="this.style.color='#E24B4A';this.style.borderColor='rgba(226,75,74,0.3)'"
-                    onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
-                >Leave quietly</button>
-            </div>
+            {{-- Leave quietly (authenticated only) --}}
+            @if (auth()->check())
+                <div class="px-4 py-4 border-t flex-none" style="border-color:#30363D;">
+                    <button
+                        type="button"
+                        wire:click="leaveQuietly"
+                        wire:confirm="Leave this room quietly? No one will be notified."
+                        @click="showParticipants = false"
+                        class="w-full text-sm py-2.5 rounded-xl transition"
+                        style="color:#8B949E;border:1px solid #30363D;"
+                        onmouseover="this.style.color='#E24B4A';this.style.borderColor='rgba(226,75,74,0.3)'"
+                        onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
+                    >Leave quietly</button>
+                </div>
+            @endif
         </div>
     </div>
 

@@ -77,7 +77,12 @@ Route::get('/dev-session', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::view('/', 'landing')->name('home');
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('feed');
+    }
+    return view('landing');
+})->name('home');
 Route::view('/privacy', 'privacy')->name('privacy');
 Route::view('/terms', 'terms')->name('terms');
 Route::view('/guidelines', 'guidelines')->name('guidelines');
@@ -166,14 +171,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/onboarding', OnboardingFlow::class)->name('onboarding');
 });
 
+// Guest-browseable routes — no auth required, but onboarding check still fires for logged-in users
+Route::middleware(['onboarded'])->group(function () {
+    Route::get('/feed', HangoutFeed::class)->name('feed');
+    Route::get('/room/{conversationId}', Room::class)->name('room.show');
+});
+
 // Core platform routes — auth + verified + onboarded
 Route::middleware(['auth', 'verified', 'onboarded'])->group(function () {
 
     // Interest tag selection
     Route::get('/tags', TagSelector::class)->name('tags.select');
-
-    // Hangout Feed (browseable; posting requires verified below)
-    Route::get('/feed', HangoutFeed::class)->name('feed');
 
     // Hangout room — redirect to room if one exists, otherwise placeholder
     Route::get('/hangout/{id}', function (string $id) {
@@ -189,7 +197,6 @@ Route::middleware(['auth', 'verified', 'onboarded'])->group(function () {
     // Messaging
     Route::get('/messages', ConversationList::class)->name('messages.index');
     Route::get('/messages/{conversationId}', DirectMessage::class)->name('messages.show');
-    Route::get('/room/{conversationId}', Room::class)->name('room.show');
 
     // Friends
     Route::get('/friends', FriendsList::class)->name('friends.index');

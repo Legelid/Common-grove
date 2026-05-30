@@ -81,7 +81,7 @@ class HangoutFeed extends Component
             return collect();
         }
 
-        $userTagIds = Auth::user()->tags()->pluck('tag_id')->flip()->all();
+        $userTagIds = Auth::check() ? Auth::user()->tags()->pluck('tag_id')->flip()->all() : [];
 
         if (strlen($this->filterSearch) >= 2) {
             $tags = Tag::approved()
@@ -137,7 +137,7 @@ class HangoutFeed extends Component
     #[Computed]
     public function officialRooms(): Collection
     {
-        if (! (Auth::user()->show_official_rooms ?? true)) {
+        if (Auth::check() && ! (Auth::user()->show_official_rooms ?? true)) {
             return collect();
         }
 
@@ -160,6 +160,11 @@ class HangoutFeed extends Component
     #[Computed]
     public function posts(): Collection
     {
+        // User-created rooms are hidden from guests; they see only the 4 official starter rooms.
+        if (! Auth::check()) {
+            return collect();
+        }
+
         if (empty($this->selectedFilterTagIds)) {
             return HangoutPost::active()
                 ->where('is_official', false)
@@ -202,6 +207,10 @@ class HangoutFeed extends Component
     #[Computed]
     public function pinnedConversationIds(): array
     {
+        if (! Auth::check()) {
+            return [];
+        }
+
         return PinnedRoom::where('user_id', Auth::id())
             ->pluck('conversation_id')
             ->all();
@@ -260,15 +269,28 @@ class HangoutFeed extends Component
 
     public function joinHangout(string $postId): void
     {
-        if (! Auth::user()->hasVerifiedEmail()) {
-            $this->joinMessage = 'Please verify your email before joining hangouts.';
-            return;
-        }
-
         $post = HangoutPost::active()->find($postId);
 
         if ($post === null) {
             $this->joinMessage = 'That hangout has already expired.';
+            return;
+        }
+
+        if (! Auth::check()) {
+            // Official starter rooms are previewable by guests — route them in directly.
+            if ($post->is_official) {
+                $conversation = Conversation::where('hangout_post_id', $post->id)->first();
+                if ($conversation) {
+                    $this->redirect(route('room.show', $conversation->id), navigate: true);
+                    return;
+                }
+            }
+            $this->redirect(route('register'), navigate: true);
+            return;
+        }
+
+        if (! Auth::user()->hasVerifiedEmail()) {
+            $this->joinMessage = 'Please verify your email before joining hangouts.';
             return;
         }
 
@@ -297,6 +319,11 @@ class HangoutFeed extends Component
 
     public function toggleCardPin(string $postId): void
     {
+        if (! Auth::check()) {
+            $this->redirect(route('register'), navigate: true);
+            return;
+        }
+
         $this->pinToast = null;
 
         $post = HangoutPost::active()->find($postId);

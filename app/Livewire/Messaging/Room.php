@@ -57,20 +57,30 @@ class Room extends Component
     {
         $conversation = Conversation::findOrFail($conversationId);
 
-        $this->authorize('view', $conversation);
+        if (Auth::check()) {
+            // Authenticated users must be participants of DMs; rooms are open to all members.
+            $this->authorize('view', $conversation);
+
+            // Mark messages as read on open
+            $conversation->participants()
+                ->updateExistingPivot(Auth::id(), ['last_read_at' => now()]);
+
+            // Track recent visit
+            RecentRoom::updateOrCreate(
+                ['user_id' => Auth::id(), 'conversation_id' => $conversationId],
+                ['last_visited_at' => now()],
+            );
+        } else {
+            // Guests may only browse room-type conversations, not DMs.
+            abort_if($conversation->type !== 'room', 403);
+            // Only official starter rooms are previewable — send all others to sign-up.
+            if (! ($conversation->hangoutPost?->is_official ?? false)) {
+                $this->redirect(route('register'), navigate: true);
+                return;
+            }
+        }
 
         $this->conversationId = $conversationId;
-
-        // Mark messages as read on open
-        $conversation->participants()
-            ->updateExistingPivot(Auth::id(), ['last_read_at' => now()]);
-
-        // Track recent visit
-        RecentRoom::updateOrCreate(
-            ['user_id' => Auth::id(), 'conversation_id' => $conversationId],
-            ['last_visited_at' => now()],
-        );
-
         $this->roomGradientTheme = $conversation->hangoutPost?->gradient_theme ?? '';
     }
 
@@ -89,6 +99,17 @@ class Room extends Component
     #[Computed]
     public function chatMessages(): Collection
     {
+        // Guests receive a capped preview — no reaction data needed since they can't interact.
+        if (! Auth::check()) {
+            return Message::where('conversation_id', $this->conversationId)
+                ->with(['user', 'replyToMessage.user'])
+                ->orderByDesc('created_at')
+                ->limit(10)
+                ->get()
+                ->reverse()
+                ->values();
+        }
+
         return Message::where('conversation_id', $this->conversationId)
             ->with(['user', 'reactions', 'replyToMessage.user'])
             ->orderBy('created_at')
@@ -132,6 +153,11 @@ class Room extends Component
 
     private function doSendMessage(): void
     {
+        if (! Auth::check()) {
+            $this->redirect(route('register'), navigate: true);
+            return;
+        }
+
         if (! Auth::user()->hasVerifiedEmail()) {
             $this->verificationBlock = 'Please verify your email before chatting.';
             return;
@@ -231,6 +257,10 @@ class Room extends Component
 
     public function broadcastTyping(): void
     {
+        if (! Auth::check()) {
+            return;
+        }
+
         broadcast(new UserTyping($this->conversation, Auth::user()))->toOthers();
     }
 
@@ -262,6 +292,11 @@ class Room extends Component
 
     public function reactToMessage(string $messageId, string $reaction): void
     {
+        if (! Auth::check()) {
+            $this->redirect(route('register'), navigate: true);
+            return;
+        }
+
         if (! in_array($reaction, MessageReaction::ALLOWED, true)) {
             return;
         }
@@ -355,6 +390,11 @@ class Room extends Component
 
     public function togglePin(): void
     {
+        if (! Auth::check()) {
+            $this->redirect(route('register'), navigate: true);
+            return;
+        }
+
         $this->roomPinMessage = null;
 
         $existing = PinnedRoom::where('user_id', Auth::id())
@@ -400,6 +440,10 @@ class Room extends Component
     #[Computed]
     public function isRoomOwner(): bool
     {
+        if (! Auth::check()) {
+            return false;
+        }
+
         return $this->conversation->hangoutPost?->user_id === Auth::id()
             || $this->conversation->created_by === Auth::id()
             || Auth::user()->is_admin;
@@ -414,6 +458,10 @@ class Room extends Component
     #[Computed]
     public function lockedRoomAtmosphereKeys(): array
     {
+        if (! Auth::check()) {
+            return [];
+        }
+
         if (Auth::user()->is_admin || Auth::user()->isSupporter()) {
             return [];
         }
@@ -431,6 +479,11 @@ class Room extends Component
     public function enabledPrompts(): array
     {
         $user = Auth::user();
+
+        // Prompts have reply buttons — not shown to guests in preview mode.
+        if ($user === null) {
+            return [];
+        }
 
         if ($user->low_stimulation_mode || ! ($user->show_conversation_prompts ?? true)) {
             return [];
@@ -501,8 +554,10 @@ class Room extends Component
     {
         unset($this->chatMessages);
 
-        $this->conversation->participants()
-            ->updateExistingPivot(Auth::id(), ['last_read_at' => now()]);
+        if (Auth::check()) {
+            $this->conversation->participants()
+                ->updateExistingPivot(Auth::id(), ['last_read_at' => now()]);
+        }
 
         $this->dispatch('message-received');
     }
