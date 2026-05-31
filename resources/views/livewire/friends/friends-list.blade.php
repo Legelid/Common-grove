@@ -66,7 +66,7 @@
                 <div class="flex items-center justify-between py-3 border-b" style="border-color:#30363D;">
                     <div class="flex items-center gap-3">
                         <div class="relative">
-                            <img src="{{ $friend->avatar_url }}" alt="" class="w-10 h-10 rounded-full" style="background:#1C2333;">
+                            <x-avatar :user="$friend" size="md" />
                             <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2" style="background:#1D9E75;border-color:#0D1117;" title="Online"></span>
                         </div>
                         <div>
@@ -95,7 +95,7 @@
                 <div class="flex items-center justify-between py-3 border-b" style="border-color:#30363D;">
                     <div class="flex items-center gap-3">
                         <div class="relative">
-                            <img src="{{ $friend->avatar_url }}" alt="" class="w-10 h-10 rounded-full" style="background:#1C2333;">
+                            <x-avatar :user="$friend" size="md" />
                             <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2" style="background:#30363D;border-color:#0D1117;" title="Offline"></span>
                         </div>
                         <div>
@@ -137,7 +137,7 @@
             @foreach ($this->pendingRequests as $friendship)
                 <div class="flex items-center justify-between py-3 border-b" style="border-color:#30363D;">
                     <div class="flex items-center gap-3">
-                        <img src="{{ $friendship->requester->avatar_url }}" alt="" class="w-10 h-10 rounded-full" style="background:#1C2333;">
+                        <x-avatar :user="$friendship->requester" size="md" />
                         <div>
                             <p class="font-medium text-sm" style="color:#E6EDF3;">{{ $friendship->requester->gamertag }}</p>
                             <p class="text-xs" style="color:#8B949E;">Sent {{ $friendship->created_at->diffForHumans() }}</p>

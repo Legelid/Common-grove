@@ -19,7 +19,7 @@
                     class="flex items-center gap-3 rounded-xl px-4 py-3"
                     style="background:#161B22;border:1px solid #30363D;"
                 >
-                    <img src="{{ $person->avatar_url }}" alt="" class="w-8 h-8 rounded-full object-cover flex-none" style="background:#21262D;">
+                    <x-avatar :user="$person" size="sm" />
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium truncate" style="color:#E6EDF3;">{{ $person->gamertag }}</p>
                         <p class="text-xs" style="color:#8B949E;">{{ $person->shared_tag_count }} {{ Str::plural('interest', $person->shared_tag_count) }} in common</p>

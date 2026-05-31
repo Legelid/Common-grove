@@ -6,6 +6,7 @@ namespace App\Livewire\Auth;
 
 use App\Models\User;
 use App\Rules\ValidGamertag;
+use App\Services\FirstRootsService;
 use App\Services\GamertagSuggestionService;
 use App\Services\PasswordService;
 use Carbon\Carbon;
@@ -196,6 +197,11 @@ class Register extends Component
 
         Auth::login($user);
         session()->regenerate();
+
+        $betaToken = session()->pull('beta_invite_token');
+        if ($betaToken) {
+            app(FirstRootsService::class)->claimInvite((string) $betaToken, $user);
+        }
 
         $this->redirect(route('verification.notice'));
     }

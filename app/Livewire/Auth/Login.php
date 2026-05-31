@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Auth;
 
 use App\Models\User;
+use App\Services\FirstRootsService;
 use App\Services\PasswordService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -73,6 +74,11 @@ class Login extends Component
 
         Auth::login($user, $this->remember);
         session()->regenerate();
+
+        $betaToken = session()->pull('beta_invite_token');
+        if ($betaToken) {
+            app(FirstRootsService::class)->claimInvite((string) $betaToken, $user);
+        }
 
         Log::info('Login: success', [
             'gamertag'          => $user->gamertag,

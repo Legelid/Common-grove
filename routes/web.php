@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\PayPal\SubscriptionController;
 use App\Http\Controllers\PayPal\WebhookController as PayPalWebhookController;
 use App\Livewire\Account\SupporterSettings;
+use App\Livewire\Admin\BetaInvites;
 use App\Livewire\Admin\CrisisLog;
 use App\Livewire\Admin\Dashboard as AdminDashboard;
 use App\Livewire\Admin\PlatformStats;
@@ -15,6 +16,7 @@ use App\Livewire\Admin\ReportsQueue;
 use App\Livewire\Admin\TagModeration;
 use App\Livewire\Admin\AllRooms;
 use App\Livewire\Admin\UserManagement;
+use App\Livewire\Beta\ClaimFirstRoots;
 use App\Livewire\Account\CollectDateOfBirth;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -87,6 +89,7 @@ Route::view('/privacy', 'privacy')->name('privacy');
 Route::view('/terms', 'terms')->name('terms');
 Route::view('/guidelines', 'guidelines')->name('guidelines');
 Route::get('/report', ProblemReportForm::class)->name('report');
+Route::get('/beta/claim/{token}', ClaimFirstRoots::class)->name('beta.claim');
 Route::get('/support', SupportPage::class)->name('support');
 Route::get('/support/compare', ComparePage::class)->name('support.compare');
 
@@ -244,6 +247,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
     Route::get('/rooms', AllRooms::class)->name('admin.rooms');
     Route::get('/stats', PlatformStats::class)->name('admin.stats');
     Route::get('/crisis', CrisisLog::class)->name('admin.crisis');
+    Route::get('/beta-invites', BetaInvites::class)->name('admin.beta-invites');
 
     Route::get('/problem-reports/{id}/screenshot', function (string $id) {
         $report = \App\Models\ProblemReport::findOrFail($id);

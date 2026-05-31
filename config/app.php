@@ -136,4 +136,17 @@ return [
 
     'password_pepper' => env('PASSWORD_PEPPER', ''),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Beta Close Date (FirstRoots)
+    |--------------------------------------------------------------------------
+    |
+    | Set to a date string (e.g. "2026-12-31") to close the beta window and
+    | stop awarding FirstRoots badges. Set to null (or leave blank) to keep
+    | the beta open indefinitely.
+    |
+    */
+
+    'beta_closes_at' => env('BETA_CLOSES_AT', null),
+
 ];

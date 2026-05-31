@@ -187,7 +187,7 @@
                         style="color:#8B949E;"
                         onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
                     >
-                        <img src="{{ auth()->user()->avatar_url }}" alt="" class="w-7 h-7 rounded-full object-cover" style="background:#21262D;">
+                        <x-avatar :user="auth()->user()" size="sm" />
                         <span class="hidden sm:block text-xs">{{ auth()->user()->gamertag }}</span>
                         <svg x-show="!open" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
                         <svg x-show="open" style="display:none;" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
@@ -564,7 +564,7 @@
                             @click="navOpen = false"
                             class="flex items-center gap-3 min-w-0"
                         >
-                            <img src="{{ auth()->user()->avatar_url }}" alt="" class="w-9 h-9 rounded-full object-cover flex-none" style="background:#21262D;">
+                            <x-avatar :user="auth()->user()" size="md" />
                             <div class="min-w-0">
                                 <p class="text-sm font-medium truncate" style="color:#C9D1D9;">{{ auth()->user()->display_name ?? auth()->user()->gamertag }}</p>
                                 <p class="text-xs truncate" style="color:#8B949E;">{{ auth()->user()->gamertag }}</p>

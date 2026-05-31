@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Auth;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
@@ -45,6 +46,14 @@ class VerifyEmail extends Component
 
         $this->message     = 'Sent — check your inbox.';
         $this->rateLimited = false;
+    }
+
+    public function logout(Request $request): void
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        $this->redirect(route('login'), navigate: true);
     }
 
     public function render(): \Illuminate\View\View

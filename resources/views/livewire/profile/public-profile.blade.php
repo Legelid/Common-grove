@@ -87,12 +87,7 @@
         <div class="flex items-center gap-5">
             @if (auth()->id() === $profileUser->id)
                 <div class="relative flex-none" style="width:5rem;height:5rem;">
-                    <img
-                        src="{{ $profileUser->avatar_url }}"
-                        alt="{{ $profileUser->gamertag }}"
-                        class="w-20 h-20 rounded-full object-cover"
-                        style="background:#1C2333;outline:2px solid {{ $accentColor ?? '#30363D' }};outline-offset:2px;"
-                    >
+                    <x-avatar :user="$profileUser" size="xl" />
                     <a href="{{ route('profile.edit') }}#avatar" wire:navigate
                        class="absolute inset-0 rounded-full flex items-center justify-center"
                        style="background:rgba(0,0,0,0.55);opacity:0;transition:opacity 0.15s;"
@@ -104,12 +99,7 @@
                     </a>
                 </div>
             @else
-                <img
-                    src="{{ $profileUser->avatar_url }}"
-                    alt="{{ $profileUser->gamertag }}"
-                    class="w-20 h-20 rounded-full object-cover flex-none"
-                    style="background:#1C2333;outline:2px solid {{ $accentColor ?? '#30363D' }};outline-offset:2px;"
-                >
+                <x-avatar :user="$profileUser" size="xl" />
             @endif
             <div class="min-w-0">
                 <h1 class="text-xl font-bold inline-flex items-center gap-1.5" style="color:#E6EDF3;">
@@ -130,6 +120,16 @@
                         Last seen {{ $profileUser->last_seen_at?->diffForHumans() ?? 'a while ago' }}
                     @endif
                 </p>
+
+                {{-- FirstRoots badge --}}
+                @if ($profileUser->is_first_roots)
+                    <div class="mt-2 inline-flex items-center gap-1.5">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 4-3.5 8-7 11C8.5 17 5 13 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                        <span class="text-xs font-semibold" style="color:#1D9E75;">FirstRoots</span>
+                        <span class="text-xs" style="color:#3d4451;">·</span>
+                        <span class="text-xs" style="color:#3d4451;">Founding Member · Beta {{ $profileUser->first_roots_awarded_at?->year ?? now()->year }}</span>
+                    </div>
+                @endif
 
                 {{-- Status (Group 2) --}}
                 @if ($profileUser->hasActiveStatus())

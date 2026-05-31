@@ -17,7 +17,7 @@
                         class="flex items-center gap-2 px-3 py-1.5 rounded transition"
                         style="color:#8B949E;" onmouseover="this.style.background='#21262D'" onmouseout="this.style.background=''"
                     >
-                        <img src="{{ $participant->avatar_url }}" alt="" class="w-6 h-6 rounded-full object-cover" style="background:#21262D;">
+                        <x-avatar :user="$participant" size="xs" />
                         <x-user-name :user="$participant" class="text-xs truncate" style="color:#E6EDF3;" />
                         @if ($participant->isOnline())
                             <span class="ml-auto w-1.5 h-1.5 rounded-full flex-none" style="background:#1D9E75;"></span>
@@ -851,7 +851,7 @@
                             style="color:#8B949E;"
                             onmouseover="this.style.background='#21262D'" onmouseout="this.style.background=''"
                         >
-                            <img src="{{ $participant->avatar_url }}" alt="" class="w-8 h-8 rounded-full object-cover flex-none" style="background:#21262D;">
+                            <x-avatar :user="$participant" size="sm" />
                             <x-user-name :user="$participant" class="text-sm truncate" style="color:#E6EDF3;" />
                             @if ($participant->isOnline())
                                 <span class="ml-auto w-1.5 h-1.5 rounded-full flex-none" style="background:#1D9E75;"></span>

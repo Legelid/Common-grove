@@ -33,13 +33,14 @@
         <span wire:loading>Sending…</span>
     </button>
 
-    <form method="POST" action="/logout" class="mt-5 text-center">
-        @csrf
+    <div class="mt-5 text-center">
         <button
-            type="submit"
-            class="text-xs underline transition"
+            type="button"
+            wire:click="logout"
+            wire:loading.attr="disabled"
+            class="text-xs underline transition disabled:opacity-50"
             style="color:#3d4451;"
             onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'"
         >Sign out</button>
-    </form>
+    </div>
 </div>

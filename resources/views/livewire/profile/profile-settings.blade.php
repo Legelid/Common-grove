@@ -89,7 +89,7 @@
     <section class="space-y-4">
         <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:#8B949E;border-color:#30363D;">Avatar</h2>
         <div class="flex items-center gap-4">
-            <img src="{{ auth()->user()->avatar_url }}" alt="Current avatar" class="w-16 h-16 rounded-full object-cover" style="background:#1C2333;">
+            <x-avatar :user="auth()->user()" size="lg" />
             <a href="{{ route('profile.edit') }}#avatar" wire:navigate
                class="text-sm transition"
                style="color:#8B949E;"

@@ -18,12 +18,7 @@
                 <div class="space-y-2.5">
                     @foreach ($this->suggestedPeople as $person)
                         <div class="flex items-center gap-2.5">
-                            <img
-                                src="{{ $person->avatar_url }}"
-                                alt=""
-                                class="w-7 h-7 rounded-full object-cover flex-none"
-                                style="background:#21262D;"
-                            >
+                            <x-avatar :user="$person" size="sm" />
                             <div class="flex-1 min-w-0">
                                 <a
                                     href="{{ route('profile.show', $person->gamertag) }}"

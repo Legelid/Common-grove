@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\BetaInvite;
 use App\Models\UserSubscription;
 use App\Models\RoomCollection;
 use App\Notifications\ResetPasswordNotification;
@@ -80,6 +81,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'enabled_prompt_packs',
         'advanced_comfort_settings',
         'hide_reactions',
+        // FirstRoots
+        'is_first_roots',
+        'first_roots_awarded_at',
+        'beta_invite_id',
     ];
 
     /** @var list<string> */
@@ -120,6 +125,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'comfort_things'             => 'array',
             'open_to'                    => 'array',
             'social_styles'              => 'array',
+            'is_first_roots'             => 'boolean',
+            'first_roots_awarded_at'     => 'datetime',
         ];
     }
 
@@ -552,5 +559,10 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where('recipient_id', $user->id)
             ->where('status', 'pending')
             ->exists();
+    }
+
+    public function betaInvite(): BelongsTo
+    {
+        return $this->belongsTo(BetaInvite::class);
     }
 }

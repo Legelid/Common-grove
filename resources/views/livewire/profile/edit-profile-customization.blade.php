@@ -118,10 +118,7 @@
 
         {{-- Current avatar + reset --}}
         <div class="flex items-center gap-4">
-            <img src="{{ auth()->user()->avatar_url }}"
-                 alt="Your avatar"
-                 class="w-16 h-16 rounded-full object-cover flex-none"
-                 style="background:#1C2333;outline:2px solid #30363D;outline-offset:2px;">
+            <x-avatar :user="auth()->user()" size="lg" />
             @if ($hasAvatar)
                 <button type="button" wire:click="resetAvatar"
                         class="text-xs transition"
