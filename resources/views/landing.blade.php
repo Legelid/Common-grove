@@ -9,8 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
-    @livewireStyles
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/landing.js'])
     <style>
         /*
          * The side-panel lift shadow only makes visual sense on desktop where the
@@ -254,6 +253,7 @@
         x-on:open-story.window="open = true; slide = 0"
         x-show="open"
         x-cloak
+        style="display:none;"
         x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -473,6 +473,5 @@
 
     </div>{{-- end overlay --}}
 
-    @livewireScripts
 </body>
 </html>
