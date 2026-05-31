@@ -161,8 +161,14 @@ Route::middleware('auth')->group(function () {
         return redirect($destination);
     })->middleware(['signed', 'throttle:10,1'])->name('verification.verify');
 
-    // Logout
+    // Logout — POST (Livewire/form) and GET (link-based, avoids CSRF issues)
     Route::post('/logout', LogoutController::class)->name('logout');
+    Route::get('/logout', function () {
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        return redirect('/');
+    })->name('logout.get');
 
 });
 

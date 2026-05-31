@@ -237,16 +237,13 @@
                             onmouseout="this.style.color='#8B949E';this.style.background=''"
                         >Supporter</a>
                         <div class="my-1 border-t" style="border-color:#21262D;"></div>
-                        <form method="POST" action="/logout">
-                            @csrf
-                            <button
-                                type="submit"
-                                class="flex items-center w-full px-4 py-2.5 text-sm transition text-left"
-                                style="color:#8B949E;"
-                                onmouseover="this.style.color='#E24B4A';this.style.background='rgba(226,75,74,0.06)'"
-                                onmouseout="this.style.color='#8B949E';this.style.background=''"
-                            >Sign out</button>
-                        </form>
+                        <a
+                            href="{{ route('logout.get') }}"
+                            class="flex items-center w-full px-4 py-2.5 text-sm transition text-left"
+                            style="color:#8B949E;"
+                            onmouseover="this.style.color='#E24B4A';this.style.background='rgba(226,75,74,0.06)'"
+                            onmouseout="this.style.color='#8B949E';this.style.background=''"
+                        >Sign out</a>
                     </div>
                 </div>
             @endauth
@@ -570,16 +567,13 @@
                                 <p class="text-xs truncate" style="color:#8B949E;">{{ auth()->user()->gamertag }}</p>
                             </div>
                         </a>
-                        <form method="POST" action="/logout" class="flex-none">
-                            @csrf
-                            <button
-                                type="submit"
-                                class="text-xs px-2.5 py-1.5 rounded-lg transition"
-                                style="color:#8B949E;border:1px solid #30363D;"
-                                onmouseover="this.style.color='#E24B4A';this.style.borderColor='rgba(226,75,74,0.4)'"
-                                onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
-                            >Sign out</button>
-                        </form>
+                        <a
+                            href="{{ route('logout.get') }}"
+                            class="flex-none text-xs px-2.5 py-1.5 rounded-lg transition"
+                            style="color:#8B949E;border:1px solid #30363D;"
+                            onmouseover="this.style.color='#E24B4A';this.style.borderColor='rgba(226,75,74,0.4)'"
+                            onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
+                        >Sign out</a>
                     </div>
                 </div>
             </div>
