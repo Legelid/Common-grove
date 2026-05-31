@@ -34,9 +34,9 @@ class ForcePasswordReset extends Component
         $user->password_reset_required = false;
         $user->save();
 
-        session()->flash('status', 'Your password has been updated. Welcome to CommonGrove!');
+        session()->flash('message', 'Password updated successfully. Welcome to CommonGrove!');
 
-        return $this->redirect(route('feed'), navigate: true);
+        return redirect()->intended(route('feed'));
     }
 
     public function render(): \Illuminate\View\View
