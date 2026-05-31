@@ -63,12 +63,15 @@ class SecurityHeaders
             : '';
         $unsafeEval = " 'unsafe-eval'";
 
+        $reverbHost = config('app.reverb_host', 'localhost:8080');
+        $reverbWs   = "ws://{$reverbHost} wss://{$reverbHost}";
+
         $response->headers->set('Content-Security-Policy',
             "default-src 'self';" .
-            "script-src 'self' 'unsafe-inline'{$unsafeEval}{$viteDevSources} https://static.cloudflareinsights.com;" .
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com{$viteDevSources};" .
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com{$viteDevSources};" .
-            "img-src 'self' data: " . config('filesystems.disks.s3.url', '') . ";" .
-            "connect-src 'self' ws://" . config('app.reverb_host', 'localhost:8080') . " wss://" . config('app.reverb_host', 'localhost:8080') . "{$viteDevSources};" .
+            "img-src 'self' data: blob: " . config('filesystems.disks.s3.url', '') . ";" .
+            "connect-src 'self' {$reverbWs} https://cloudflareinsights.com{$viteDevSources};" .
             "font-src 'self' https://fonts.gstatic.com;" .
             "frame-ancestors 'none';" .
             "form-action 'self';" .
