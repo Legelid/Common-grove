@@ -20,7 +20,7 @@ class ForcePasswordReset extends Component
         }
     }
 
-    public function save(): void
+    public function save(): mixed
     {
         $this->validate([
             'password' => ['required', 'string', 'min:10', 'confirmed'],
@@ -29,14 +29,14 @@ class ForcePasswordReset extends Component
         /** @var PasswordService $passwordService */
         $passwordService = app(PasswordService::class);
 
-        $user                        = Auth::user();
-        $user->password              = $passwordService->hash($this->password);
+        $user                          = Auth::user();
+        $user->password                = $passwordService->hash($this->password);
         $user->password_reset_required = false;
         $user->save();
 
         session()->flash('status', 'Your password has been updated. Welcome to CommonGrove!');
 
-        $this->redirect(route('feed'), navigate: false);
+        return $this->redirect(route('feed'), navigate: true);
     }
 
     public function render(): \Illuminate\View\View
