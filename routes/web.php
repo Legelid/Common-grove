@@ -18,6 +18,7 @@ use App\Livewire\Admin\AllRooms;
 use App\Livewire\Admin\UserManagement;
 use App\Livewire\Beta\ClaimFirstRoots;
 use App\Livewire\Account\CollectDateOfBirth;
+use App\Livewire\Auth\ForcePasswordReset;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\VerifyEmail;
@@ -135,6 +136,9 @@ Route::post('/reset-password', [NewPasswordController::class, 'store'])
 */
 
 Route::middleware('auth')->group(function () {
+
+    // Forced password reset — for users migrated from a server with a different hash algorithm
+    Route::get('/password/reset-required', ForcePasswordReset::class)->name('password.reset-required');
 
     // Date of birth collection (for existing users prompted after login)
     Route::get('/account/birthday', CollectDateOfBirth::class)->name('account.birthday');

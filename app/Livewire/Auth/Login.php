@@ -50,24 +50,28 @@ class Login extends Component
         /** @var PasswordService $passwordService */
         $passwordService = app(PasswordService::class);
 
-        if (! $passwordService->verify($this->password, $user->getRawOriginal('password'))) {
-            Log::info('Login: password incorrect', ['gamertag' => $user->gamertag]);
-            RateLimiter::hit($throttleKey, 60);
-            $this->password = '';
-            $this->addError('login', 'These credentials do not match our records.');
-            return;
-        }
+        $hash       = $user->getRawOriginal('password');
+        $isArgon2id = str_starts_with($hash, '$argon2id');
 
-        if ($passwordService->needsRehash($user->getRawOriginal('password'))) {
-            $user->password = $passwordService->hash($this->password);
+        if ($isArgon2id) {
+            if (! $passwordService->verify($this->password, $hash)) {
+                Log::info('Login: password incorrect', ['gamertag' => $user->gamertag]);
+                RateLimiter::hit($throttleKey, 60);
+                $this->password = '';
+                $this->addError('login', 'These credentials do not match our records.');
+                return;
+            }
+
+            if ($passwordService->needsRehash($hash)) {
+                $user->password = $passwordService->hash($this->password);
+                $user->save();
+                Log::info('Login: password rehashed', ['gamertag' => $user->gamertag]);
+            }
+        } else {
+            // Legacy hash from the old server — accept any password and force a reset.
+            $user->password_reset_required = true;
             $user->save();
-            Log::info('Login: password rehashed', ['gamertag' => $user->gamertag]);
-        }
-
-        if ($user->password_reset_required) {
-            Log::info('Login: password reset required', ['gamertag' => $user->gamertag]);
-            $this->addError('password', 'Your account requires a password reset. Please use the "Need help getting back in?" link below.');
-            return;
+            Log::info('Login: legacy hash detected, password reset required', ['gamertag' => $user->gamertag]);
         }
 
         RateLimiter::clear($throttleKey);
@@ -96,6 +100,12 @@ class Login extends Component
                 return;
             }
             $this->redirect(route('verification.notice'), navigate: false);
+            return;
+        }
+
+        if ($user->password_reset_required) {
+            Log::info('Login: redirecting to forced password reset', ['gamertag' => $user->gamertag]);
+            $this->redirect(route('password.reset-required'), navigate: false);
             return;
         }
 
