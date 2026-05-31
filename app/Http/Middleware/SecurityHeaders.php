@@ -61,11 +61,11 @@ class SecurityHeaders
         $viteDevSources = app()->isLocal()
             ? " http://localhost:5173 http://localhost:5194 ws://localhost:5173 ws://localhost:5194"
             : '';
-        $unsafeEval = app()->isLocal() ? " 'unsafe-eval'" : '';
+        $unsafeEval = " 'unsafe-eval'";
 
         $response->headers->set('Content-Security-Policy',
             "default-src 'self';" .
-            "script-src 'self' 'unsafe-inline'{$unsafeEval}{$viteDevSources};" .
+            "script-src 'self' 'unsafe-inline'{$unsafeEval}{$viteDevSources} https://static.cloudflareinsights.com;" .
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com{$viteDevSources};" .
             "img-src 'self' data: " . config('filesystems.disks.s3.url', '') . ";" .
             "connect-src 'self' ws://" . config('app.reverb_host', 'localhost:8080') . " wss://" . config('app.reverb_host', 'localhost:8080') . "{$viteDevSources};" .
