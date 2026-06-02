@@ -18,4 +18,14 @@ class ConversationPolicy
             ->where('user_id', $user->id)
             ->exists();
     }
+
+    /**
+     * The hangout post creator, conversation creator, or an admin may delete a room.
+     */
+    public function delete(User $user, Conversation $conversation): bool
+    {
+        return $conversation->hangoutPost?->user_id === $user->id
+            || $conversation->created_by === $user->id
+            || $user->is_admin;
+    }
 }

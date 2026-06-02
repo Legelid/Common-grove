@@ -17,6 +17,7 @@ use App\Services\CrisisDetectionService;
 use App\Services\MessageLimitService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
@@ -433,6 +434,21 @@ class Room extends Component
         $this->redirect(route('messages.index'), navigate: true);
     }
 
+    public function deleteRoom(): void
+    {
+        if (! $this->canDeleteRoom) {
+            return;
+        }
+
+        DB::transaction(function (): void {
+            $post = $this->conversation->hangoutPost;
+            $this->conversation->delete();
+            $post?->delete();
+        });
+
+        $this->redirect(route('feed'), navigate: true);
+    }
+
     // -------------------------------------------------------------------------
     // Room atmosphere (owner / admin only)
     // -------------------------------------------------------------------------
@@ -447,6 +463,14 @@ class Room extends Component
         return $this->conversation->hangoutPost?->user_id === Auth::id()
             || $this->conversation->created_by === Auth::id()
             || Auth::user()->is_admin;
+    }
+
+    /** Room owners can delete user-created rooms; official rooms are excluded. */
+    #[Computed]
+    public function canDeleteRoom(): bool
+    {
+        return $this->isRoomOwner
+            && ! ($this->conversation->hangoutPost?->is_official ?? false);
     }
 
     /**
