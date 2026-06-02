@@ -165,14 +165,20 @@ class HangoutFeed extends Component
             return collect();
         }
 
+        $isAdmin = Auth::user()->is_admin;
+
         if (empty($this->selectedFilterTagIds)) {
-            return HangoutPost::active()
+            $query = HangoutPost::active()
                 ->where('is_official', false)
-                ->forUser(Auth::user())
                 ->with(['user', 'tags', 'conversation'])
                 ->latest()
-                ->limit(30)
-                ->get();
+                ->limit(30);
+
+            if (! $isAdmin) {
+                $query->forUser(Auth::user());
+            }
+
+            return $query->get();
         }
 
         $scoreSubquery = DB::table('hangout_post_tags')
@@ -189,6 +195,10 @@ class HangoutFeed extends Component
             ->orderByDesc('hangout_posts.created_at')
             ->limit(40)
             ->get();
+
+        if ($isAdmin) {
+            return $posts;
+        }
 
         $blocked = collect(
             DB::table('blocks')
