@@ -54,7 +54,7 @@
             <input
                 id="remember"
                 type="checkbox"
-                wire:model="remember"
+                wire:model.live="remember"
                 class="w-4 h-4 rounded"
                 style="background:#1C2333;border-color:#30363D;accent-color:#1D9E75;"
             >

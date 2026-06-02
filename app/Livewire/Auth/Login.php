@@ -76,6 +76,8 @@ class Login extends Component
 
         RateLimiter::clear($throttleKey);
 
+        Log::info('Login: remember flag', ['remember' => $this->remember, 'gamertag' => $user->gamertag]);
+
         Auth::login($user, $this->remember);
         session()->regenerate();
 
