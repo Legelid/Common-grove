@@ -10,7 +10,7 @@
         <section>
             <div class="flex items-center justify-between mb-2">
                 <span class="text-xs font-semibold uppercase tracking-wider" style="color:#8B949E;">
-                    Selected ({{ count($selectedTagIds) }}/30)
+                    Selected ({{ count($selectedTagIds) }}/100)
                     @if (count($selectedTagIds) >= 3)
                         &nbsp;<span style="color:#1D9E75;">✓</span>
                     @else

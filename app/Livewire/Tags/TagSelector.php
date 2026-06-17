@@ -36,7 +36,7 @@ class TagSelector extends Component
     private const MAX_CUSTOM_PER_USER = 10;
 
     /** Maximum total selected tags. */
-    private const MAX_SELECTED = 30;
+    private const MAX_SELECTED = 100;
 
     public function mount(): void
     {
@@ -285,6 +285,7 @@ class TagSelector extends Component
 
     public function render(): View
     {
-        return view('livewire.tags.tag-selector');
+        return view('livewire.tags.tag-selector')
+            ->layout('layouts.app', ['title' => 'Your Interests — CommonGrove']);
     }
 }
