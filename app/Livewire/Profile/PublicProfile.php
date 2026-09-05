@@ -27,6 +27,13 @@ class PublicProfile extends Component
     {
         $this->profileUser = User::whereRaw('LOWER(gamertag) = LOWER(?)', [$gamertag])
             ->firstOrFail();
+
+        // 404, not 403 — matches firstOrFail() above so a blocked profile
+        // looks identical to a nonexistent one from the viewer's side,
+        // rather than confirming a block relationship exists.
+        if (app(BlockService::class)->isBlocked(Auth::user(), $this->profileUser)) {
+            abort(404);
+        }
     }
 
     /**
@@ -268,7 +275,7 @@ class PublicProfile extends Component
         return view('livewire.profile.public-profile', [
             'visibleName' => $this->visibleName(),
         ])->layout('layouts.app', [
-            'title' => $this->profileUser->gamertag . ' — CommonGrove',
+            'title' => $this->profileUser->gamertag . ' | CommonGrove',
         ]);
     }
 }

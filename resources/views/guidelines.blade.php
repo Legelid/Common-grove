@@ -6,9 +6,9 @@
 
     {{-- Page heading --}}
     <div class="mb-10">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:#3d4451;">Community</p>
-        <h1 class="text-3xl font-bold mb-3" style="color:#E6EDF3;letter-spacing:-0.02em;">Community Guidelines</h1>
-        <p class="text-sm leading-relaxed" style="color:#8B949E;">
+        <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--text-faint);">Community</p>
+        <h1 class="text-3xl font-bold mb-3" style="color:var(--text);letter-spacing:-0.02em;">Community Guidelines</h1>
+        <p class="text-sm leading-relaxed" style="color:var(--text-muted);">
             CommonGrove is an 18+ community meant to be calm, low-pressure, and safe enough to actually talk. These guidelines exist to keep it that way.
         </p>
     </div>
@@ -72,11 +72,11 @@
         @endphp
 
         @foreach ($rules as $rule)
-            <div class="flex gap-5 py-6 border-b" style="border-color:#21262D;">
-                <div class="flex-none w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-none mt-0.5" style="background:#21262D;color:#8B949E;">{{ $rule['num'] }}</div>
+            <div class="flex gap-5 py-6 border-b" style="border-color:var(--border);">
+                <div class="flex-none w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-none mt-0.5" style="background:var(--border);color:var(--text-muted);">{{ $rule['num'] }}</div>
                 <div class="flex-1">
-                    <p class="text-sm font-semibold mb-1.5" style="color:#E6EDF3;">{{ $rule['title'] }}</p>
-                    <p class="text-sm leading-relaxed" style="color:#C9D1D9;">{{ $rule['body'] }}</p>
+                    <p class="text-sm font-semibold mb-1.5" style="color:var(--text);">{{ $rule['title'] }}</p>
+                    <p class="text-sm leading-relaxed" style="color:var(--text);">{{ $rule['body'] }}</p>
                 </div>
             </div>
         @endforeach
@@ -84,48 +84,48 @@
     </div>
 
     {{-- 18+ notice --}}
-    <div class="mt-10 rounded-xl border px-5 py-4 text-sm leading-relaxed" style="background:#161B22;border-color:#30363D;color:#C9D1D9;">
-        <p><span style="color:#E6EDF3;font-weight:500;">CommonGrove is an 18+ community.</span> By creating an account you confirm that you are at least 18 years old. Accounts found to belong to users under 18 will be removed.</p>
-    </div>
+    <x-card padding="px-5 py-4" class="mt-10 text-sm leading-relaxed text-text">
+        <p><span style="font-weight:500;">CommonGrove is an 18+ community.</span> By creating an account you confirm that you are at least 18 years old. Accounts found to belong to users under 18 will be removed.</p>
+    </x-card>
 
     {{-- Crisis disclaimer --}}
-    <div class="mt-4 rounded-xl border px-5 py-4 text-sm leading-relaxed" style="background:#161B22;border-color:#30363D;color:#C9D1D9;">
-        <p><span style="color:#E6EDF3;font-weight:500;">CommonGrove is not a crisis service, therapy platform, or emergency support system.</span> It is a social space for conversation and connection. If you or someone you know is in immediate danger, please contact emergency services in your area.</p>
-    </div>
+    <x-card padding="px-5 py-4" class="mt-4 text-sm leading-relaxed text-text">
+        <p><span style="font-weight:500;">CommonGrove is not a crisis service, therapy platform, or emergency support system.</span> It is a social space for conversation and connection. If you or someone you know is in immediate danger, please contact emergency services in your area.</p>
+    </x-card>
 
     {{-- Room moderators --}}
-    <div class="mt-5 rounded-xl border p-6 space-y-3" style="background:#161B22;border-color:#30363D;">
-        <h2 class="text-base font-semibold" style="color:#E6EDF3;">Room owners & moderators</h2>
-        <p class="text-sm leading-relaxed" style="color:#C9D1D9;">
+    <x-card padding="p-6" class="mt-5 space-y-3">
+        <h2 class="text-base font-semibold text-text">Room owners & moderators</h2>
+        <p class="text-sm leading-relaxed text-text">
             People who create rooms can set a tone for their space and guide conversations within it. Room-level rules are allowed as long as they do not contradict these community guidelines. Room owners are not platform administrators — they have authority within their own room, not over other users more broadly.
         </p>
-    </div>
+    </x-card>
 
     {{-- Enforcement --}}
-    <div class="mt-5 rounded-xl border p-6 space-y-3" style="background:#161B22;border-color:#30363D;">
-        <h2 class="text-base font-semibold" style="color:#E6EDF3;">Enforcement</h2>
-        <p class="text-sm leading-relaxed" style="color:#C9D1D9;">
+    <x-card padding="p-6" class="mt-5 space-y-3">
+        <h2 class="text-base font-semibold text-text">Enforcement</h2>
+        <p class="text-sm leading-relaxed text-text">
             Platform administrators (Grovekeepers) can step in anywhere on the platform. Repeated or serious rule-breaking can lead to a warning, a temporary suspension, or a permanent ban — depending on what happened. We try to be fair, but safety comes first.
         </p>
-    </div>
+    </x-card>
 
     {{-- Reporting --}}
-    <div class="mt-5 rounded-xl border p-6 space-y-3" style="background:#161B22;border-color:#30363D;">
-        <h2 class="text-base font-semibold" style="color:#E6EDF3;">Reporting a problem</h2>
-        <p class="text-sm leading-relaxed" style="color:#C9D1D9;">
-            If something is wrong — a rule is being broken, someone made you feel unsafe, or you just noticed a bug — use the <a href="{{ route('report') }}" style="color:#1D9E75;">Report a problem</a> page. Reports go directly to the site administrator. Every report is read personally.
+    <x-card padding="p-6" class="mt-5 space-y-3">
+        <h2 class="text-base font-semibold text-text">Reporting a problem</h2>
+        <p class="text-sm leading-relaxed text-text">
+            If something is wrong — a rule is being broken, someone made you feel unsafe, or you just noticed a bug — use the <a href="{{ route('report') }}" style="color:var(--accent);">Report a problem</a> page. Reports go directly to the site administrator. Every report is read personally.
         </p>
-    </div>
+    </x-card>
 
     {{-- Beta note --}}
-    <div class="mt-10 py-6 border-t" style="border-color:#21262D;">
-        <p class="text-sm leading-relaxed" style="color:#8B949E;">
+    <div class="mt-10 py-6 border-t" style="border-color:var(--border);">
+        <p class="text-sm leading-relaxed" style="color:var(--text-muted);">
             CommonGrove is in beta — things won't be perfect yet. But reports help. If something feels off, say so.
         </p>
     </div>
 
-    <div class="mt-4 pt-4 border-t" style="border-color:#21262D;">
-        <p class="text-xs" style="color:#3d4451;">CommonGrove · Coldev Enterprises · Logo by <a href="https://atccreative.com/" target="_blank" rel="noopener" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">AC Creative</a> · <a href="{{ route('report') }}" style="color:#3d4451;" onmouseover="this.style.color='#8B949E'" onmouseout="this.style.color='#3d4451'">Contact</a></p>
+    <div class="mt-4 pt-4 border-t" style="border-color:var(--border);">
+        <p class="text-xs" style="color:var(--text-faint);">CommonGrove · Coldev Enterprises · Logo by <a href="https://atccreative.com/" target="_blank" rel="noopener" style="color:var(--text-faint);" onmouseover="this.style.color='var(--text-muted)'" onmouseout="this.style.color='var(--text-faint)'">AC Creative</a> · <a href="{{ route('report') }}" style="color:var(--text-faint);" onmouseover="this.style.color='var(--text-muted)'" onmouseout="this.style.color='var(--text-faint)'">Contact</a></p>
     </div>
 
 @endsection

@@ -1,12 +1,5 @@
 <div class="relative" style="min-height:100vh;">
     @php
-        $accentMap = [
-            'green'  => '#1D9E75',
-            'blue'   => '#4A8BB5',
-            'amber'  => '#D29922',
-            'purple' => '#8B5CF6',
-            'slate'  => '#8B949E',
-        ];
         $atmosphereGradients = [
             'night_rain'    => 'linear-gradient(160deg, #163055 0%, #0d1f3a 60%, #0a1828 100%)',
             'forest'        => 'linear-gradient(160deg, #0d3318 0%, #062210 60%, #041a0c 100%)',
@@ -21,7 +14,6 @@
             'deep_blue'     => 'linear-gradient(180deg, #042060 0%, #031840 60%, #021028 100%)',
             'warm_lamp'     => 'radial-gradient(ellipse at top left, #3c2800 0%, #281a00 60%, #1a1000 100%)',
         ];
-        $accentColor        = $accentMap[$profileUser->accent_color ?? ''] ?? null;
         $atmosphere         = $atmosphereGradients[$profileUser->banner_style ?? ''] ?? null;
         $lowStim            = auth()->user()->low_stimulation_mode;
         $atmosphereOpacity  = $atmosphere ? ($lowStim ? '0.06' : '0.22') : '0';
@@ -95,26 +87,26 @@
                        onfocus="this.style.opacity='1'" onblur="this.style.opacity='0'"
                        aria-label="Change profile photo"
                     >
-                        <span class="text-xs font-medium" style="color:#E6EDF3;">Change photo</span>
+                        <span class="text-xs font-medium" style="color:var(--text);">Change photo</span>
                     </a>
                 </div>
             @else
                 <x-avatar :user="$profileUser" size="xl" />
             @endif
             <div class="min-w-0">
-                <h1 class="text-xl font-bold inline-flex items-center gap-1.5" style="color:#E6EDF3;">
+                <h1 class="text-xl font-bold inline-flex items-center gap-1.5" style="color:var(--text);">
                     <span class="truncate">{{ $visibleName }}</span>
                     @if ($profileUser->is_supporter && ($profileUser->show_supporter_icon ?? true))<x-supporter-icon />@endif
                 </h1>
 
                 {{-- Tagline --}}
                 @if ($profileUser->profile_status)
-                    <p class="text-xs leading-snug mt-0.5" style="color:#6B7790;">{{ $profileUser->profile_status }}</p>
+                    <p class="text-xs leading-snug mt-0.5" style="color:var(--text-muted);">{{ $profileUser->profile_status }}</p>
                 @endif
 
-                <p class="mt-1 flex items-center gap-1.5 text-xs font-medium" style="color:{{ $profileUser->isOnline() ? '#1D9E75' : '#8B949E' }};">
+                <p class="mt-1 flex items-center gap-1.5 text-xs font-medium" style="color:{{ $profileUser->isOnline() ? 'var(--accent)' : 'var(--text-muted)' }};">
                     @if ($profileUser->isOnline())
-                        <span class="w-2 h-2 rounded-full inline-block flex-none" style="background:#1D9E75;"></span>
+                        <span class="w-2 h-2 rounded-full inline-block flex-none" style="background:var(--accent);"></span>
                         Online now
                     @else
                         Last seen {{ $profileUser->last_seen_at?->diffForHumans() ?? 'a while ago' }}
@@ -124,16 +116,16 @@
                 {{-- FirstRoots badge --}}
                 @if ($profileUser->is_first_roots)
                     <div class="mt-2 inline-flex items-center gap-1.5">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 4-3.5 8-7 11C8.5 17 5 13 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-                        <span class="text-xs font-semibold" style="color:#1D9E75;">FirstRoots</span>
-                        <span class="text-xs" style="color:#3d4451;">·</span>
-                        <span class="text-xs" style="color:#3d4451;">Founding Member · Beta {{ $profileUser->first_roots_awarded_at?->year ?? now()->year }}</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 4-3.5 8-7 11C8.5 17 5 13 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                        <span class="text-xs font-semibold" style="color:var(--accent);">FirstRoots</span>
+                        <span class="text-xs" style="color:var(--text-faint);">·</span>
+                        <span class="text-xs" style="color:var(--text-faint);">Founding Member · Beta {{ $profileUser->first_roots_awarded_at?->year ?? now()->year }}</span>
                     </div>
                 @endif
 
                 {{-- Status (Group 2) --}}
                 @if ($profileUser->hasActiveStatus())
-                    <p class="mt-1 text-xs" style="color:#8B949E;">
+                    <p class="mt-1 text-xs" style="color:var(--text-muted);">
                         @if ($profileUser->status_mood)
                             <span class="capitalize">{{ $profileUser->status_mood }}</span>
                             @if ($profileUser->status_text) · @endif
@@ -149,7 +141,7 @@
             <div class="flex flex-wrap gap-1.5">
                 @foreach ($profileUser->social_styles as $style)
                     @if (isset($styleLabels[$style]))
-                        <span class="px-2.5 py-1 rounded-full text-xs" style="background:#1C2333;color:#8B949E;border:1px solid #21262D;">{{ $styleLabels[$style] }}</span>
+                        <span class="px-2.5 py-1 rounded-full text-xs" style="background:var(--surface);color:var(--text-muted);border:1px solid var(--surface-raised);">{{ $styleLabels[$style] }}</span>
                     @endif
                 @endforeach
             </div>
@@ -157,7 +149,7 @@
 
         {{-- Bio --}}
         @if ($profileUser->bio)
-            <p class="text-sm leading-relaxed" style="color:#E6EDF3;">{{ $profileUser->bio }}</p>
+            <p class="text-sm leading-relaxed" style="color:var(--text);">{{ $profileUser->bio }}</p>
         @endif
 
         {{-- Currently Into + comfort things --}}
@@ -166,29 +158,29 @@
             $hasComfort   = !empty($profileUser->comfort_things);
         @endphp
         @if ($hasCurrently || $hasComfort)
-            <div class="rounded-xl border p-4 space-y-1.5" style="background:#161B22;border-color:#30363D;">
+            <div class="rounded-xl border p-4 space-y-1.5" style="background:var(--surface);border-color:var(--border);">
                 @if ($hasCurrently)
-                    <h2 class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#8B949E;">Comfort lately</h2>
+                    <h2 class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--text-muted);">Comfort lately</h2>
                     @if ($profileUser->currently_playing)
-                        <p class="text-sm" style="color:#E6EDF3;"><span style="color:#8B949E;">Returning to</span> · {{ $profileUser->currently_playing }}</p>
+                        <p class="text-sm" style="color:var(--text);"><span style="color:var(--text-muted);">Returning to</span> · {{ $profileUser->currently_playing }}</p>
                     @endif
                     @if ($profileUser->currently_reading)
-                        <p class="text-sm" style="color:#E6EDF3;"><span style="color:#8B949E;">Comforting lately</span> · {{ $profileUser->currently_reading }}</p>
+                        <p class="text-sm" style="color:var(--text);"><span style="color:var(--text-muted);">Comforting lately</span> · {{ $profileUser->currently_reading }}</p>
                     @endif
                     @if ($profileUser->currently_watching)
-                        <p class="text-sm" style="color:#E6EDF3;"><span style="color:#8B949E;">On my mind</span> · {{ $profileUser->currently_watching }}</p>
+                        <p class="text-sm" style="color:var(--text);"><span style="color:var(--text-muted);">On my mind</span> · {{ $profileUser->currently_watching }}</p>
                     @endif
                 @endif
 
                 @if ($hasComfort)
                     @if ($hasCurrently)
-                        <div class="pt-2 border-t" style="border-color:#21262D;"></div>
+                        <div class="pt-2 border-t" style="border-color:var(--surface-raised);"></div>
                     @endif
                     @foreach ($profileUser->comfort_things as $thing)
                         @if (!empty(trim($thing['value'] ?? '')))
-                            <p class="text-sm" style="color:#E6EDF3;">
+                            <p class="text-sm" style="color:var(--text);">
                                 @if (!empty(trim($thing['label'] ?? '')))
-                                    <span style="color:#8B949E;">{{ $thing['label'] }}</span> ·
+                                    <span style="color:var(--text-muted);">{{ $thing['label'] }}</span> ·
                                 @endif
                                 {{ $thing['value'] }}
                             </p>
@@ -201,7 +193,7 @@
         {{-- Open To --}}
         @if (!empty($profileUser->open_to))
             <div>
-                <h2 class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#8B949E;">Open To</h2>
+                <h2 class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--text-muted);">Open To</h2>
                 <div class="flex flex-wrap gap-1.5">
                     @foreach ($profileUser->open_to as $option)
                         @if (isset($openToLabels[$option]))
@@ -217,9 +209,9 @@
         @if ($tags->isNotEmpty())
             <div>
                 <div class="flex items-center justify-between mb-2">
-                    <h2 class="text-xs font-semibold uppercase tracking-wider" style="color:#8B949E;">Interests</h2>
+                    <h2 class="text-xs font-semibold uppercase tracking-wider" style="color:var(--text-muted);">Interests</h2>
                     @if ($this->sharedTagCount > 0 && !$profileUser->is(auth()->user()))
-                        <span class="text-xs" style="color:#1D9E75;">{{ $this->sharedTagCount }} {{ Str::plural('interest', $this->sharedTagCount) }} in common</span>
+                        <span class="text-xs" style="color:var(--accent);">{{ $this->sharedTagCount }} {{ Str::plural('interest', $this->sharedTagCount) }} in common</span>
                     @endif
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -228,12 +220,12 @@
                             href="{{ route('feed') }}?tag={{ $item['tag']->id }}"
                             wire:navigate
                             class="px-3 py-1 rounded-full text-xs transition"
-                            style="{{ ($item['is_shared'] && !$profileUser->is(auth()->user())) ? 'background:rgba(29,158,117,0.15);color:#1D9E75;outline:1px solid #1D9E75;' : 'background:#1C2333;color:#8B949E;' }}"
-                            onmouseover="this.style.color='#E6EDF3'" onmouseout=""
+                            style="{{ ($item['is_shared'] && !$profileUser->is(auth()->user())) ? 'background:rgba(var(--accent-rgb),0.15);color:var(--accent);outline:1px solid var(--accent);' : 'background:var(--surface);color:var(--text-muted);' }}"
+                            onmouseover="this.style.color='var(--text)'" onmouseout=""
                         >{{ $item['tag']->name }}</a>
                     @endforeach
                     @if ($this->profileTags->count() > 8)
-                        <span class="px-3 py-1 text-xs" style="color:#8B949E;">+{{ $this->profileTags->count() - 8 }} more</span>
+                        <span class="px-3 py-1 text-xs" style="color:var(--text-muted);">+{{ $this->profileTags->count() - 8 }} more</span>
                     @endif
                 </div>
             </div>
@@ -242,11 +234,11 @@
         {{-- Usually found in --}}
         @if ($this->usualRooms->isNotEmpty())
             <div>
-                <h2 class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#8B949E;">Usually Found In</h2>
+                <h2 class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--text-muted);">Usually Found In</h2>
                 <ul class="space-y-1">
                     @foreach ($this->usualRooms as $room)
-                        <li class="text-sm flex items-center gap-2" style="color:#C9D1D9;">
-                            <span style="color:#8B949E;">·</span>
+                        <li class="text-sm flex items-center gap-2" style="color:var(--text);">
+                            <span style="color:var(--text-muted);">·</span>
                             {{ $room->title }}
                         </li>
                     @endforeach
@@ -256,7 +248,7 @@
 
         {{-- Action flash --}}
         @if ($actionFlash)
-            <div class="rounded-lg border px-4 py-3 text-sm" style="background:#21262D;border-color:#30363D;color:#E6EDF3;">
+            <div class="rounded-lg border px-4 py-3 text-sm" style="background:var(--surface-raised);border-color:var(--border);color:var(--text);">
                 {{ $actionFlash }}
             </div>
         @endif
@@ -268,72 +260,65 @@
                     href="{{ route('feed') }}"
                     wire:navigate
                     class="px-5 py-2.5 text-sm font-semibold rounded-lg transition"
-                    style="background:#21262D;color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
+                    style="background:var(--surface-raised);color:var(--text-muted);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
                 >Back to feed</a>
 
                 @php $friendState = $this->friendshipState; @endphp
                 @if ($friendState === 'none')
-                    <button type="button" wire:click="sendFriendRequest"
-                        class="px-4 py-2.5 text-sm font-semibold rounded-lg transition"
-                        style="background:rgba(29,158,117,0.2);color:#1D9E75;border:1px solid #1D9E75;"
-                        onmouseover="this.style.background='#1D9E75';this.style.color='#fff'" onmouseout="this.style.background='rgba(29,158,117,0.2)';this.style.color='#1D9E75'"
-                    >Send friend request</button>
+                    <x-button type="button" wire:click="sendFriendRequest" variant="secondary" class="!px-4">Send friend request</x-button>
                 @elseif ($friendState === 'pending_sent')
                     <button type="button" wire:click="cancelFriendRequest"
                         class="px-4 py-2.5 text-sm font-semibold rounded-lg transition"
-                        style="background:#21262D;color:#8B949E;"
+                        style="background:var(--surface-raised);color:var(--text-muted);"
                     >Request sent · Cancel</button>
                 @elseif ($friendState === 'pending_received')
-                    <button type="button" wire:click="acceptFriendRequest"
-                        class="px-4 py-2.5 text-sm font-semibold rounded-lg transition"
-                        style="background:#1D9E75;color:#fff;" onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'"
-                    >Accept friend request</button>
+                    <x-button type="button" wire:click="acceptFriendRequest" variant="primary" class="!px-4">Accept friend request</x-button>
                 @elseif ($friendState === 'friends')
                     <button type="button" wire:click="unfriend"
                         wire:confirm="Remove {{ $profileUser->gamertag }} from your friends?"
                         class="px-4 py-2.5 text-sm font-semibold rounded-lg transition"
-                        style="background:#21262D;color:#8B949E;"
+                        style="background:var(--surface-raised);color:var(--text-muted);"
                     >Friends · Unfriend</button>
                 @endif
 
                 @if ($this->isBlocked)
                     <button type="button" wire:click="unblock"
                         class="px-4 py-2.5 text-sm font-semibold rounded-lg transition"
-                        style="background:#21262D;color:#8B949E;">Unblock</button>
+                        style="background:var(--surface-raised);color:var(--text-muted);">Unblock</button>
                 @else
                     <button type="button" wire:click="block"
                         class="px-4 py-2.5 text-sm font-semibold rounded-lg transition"
-                        style="background:#21262D;color:#8B949E;" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='#8B949E'"
+                        style="background:var(--surface-raised);color:var(--text-muted);" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'"
                     >Block</button>
                 @endif
 
                 @if ($this->isMuted)
                     <button type="button" wire:click="unmute"
                         class="px-4 py-2.5 text-sm font-semibold rounded-lg transition"
-                        style="background:#21262D;color:#8B949E;">Unmute</button>
+                        style="background:var(--surface-raised);color:var(--text-muted);">Unmute</button>
                 @else
                     <button type="button" wire:click="mute"
                         class="px-4 py-2.5 text-sm font-semibold rounded-lg transition"
-                        style="background:#21262D;color:#8B949E;">Mute</button>
+                        style="background:var(--surface-raised);color:var(--text-muted);">Mute</button>
                 @endif
 
                 <button
                     type="button"
                     x-on:click="$dispatch('open-report-modal', { reportedUserId: '{{ $profileUser->id }}', reportableType: 'App\\\\Models\\\\User', reportableId: '{{ $profileUser->id }}' })"
                     class="px-4 py-2.5 text-sm font-semibold rounded-lg transition"
-                    style="background:#21262D;color:#8B949E;" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='#8B949E'"
+                    style="background:var(--surface-raised);color:var(--text-muted);" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'"
                 >Report</button>
             </div>
         @else
             <div class="pt-2 flex flex-wrap gap-3">
                 <a href="{{ route('profile.edit') }}" wire:navigate
                     class="px-5 py-2.5 text-sm font-semibold rounded-lg transition inline-block"
-                    style="background:#1C2333;color:#E6EDF3;border:1px solid #30363D;"
-                    onmouseover="this.style.borderColor='#4B5563'" onmouseout="this.style.borderColor='#30363D'"
+                    style="background:var(--surface);color:var(--text);border:1px solid var(--border);"
+                    onmouseover="this.style.borderColor='var(--text-muted)'" onmouseout="this.style.borderColor='var(--border)'"
                 >Edit profile</a>
                 <a href="{{ route('feed') }}" wire:navigate
                     class="px-5 py-2.5 text-sm font-semibold rounded-lg transition inline-block"
-                    style="background:#21262D;color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
+                    style="background:var(--surface-raised);color:var(--text-muted);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
                 >Back to feed</a>
             </div>
         @endif

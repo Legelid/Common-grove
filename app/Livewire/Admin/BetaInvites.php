@@ -98,6 +98,6 @@ class BetaInvites extends Component
     public function render(): View
     {
         return view('livewire.admin.beta-invites')
-            ->layout('layouts.admin', ['title' => 'Beta Invites — FirstRoots']);
+            ->layout('layouts.admin', ['title' => 'Beta Invites | FirstRoots']);
     }
 }

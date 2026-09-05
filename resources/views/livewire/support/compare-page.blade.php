@@ -1,17 +1,17 @@
 <div class="px-6 py-12 max-w-2xl mx-auto space-y-8">
 
     <div class="space-y-2">
-        <h1 class="text-2xl font-bold" style="color:#E6EDF3;">Free vs Supporter</h1>
-        <p class="text-sm leading-relaxed" style="color:#8B949E;">An honest look at what's included at each level. Core connection features stay free, always.</p>
+        <h1 class="text-2xl font-bold" style="color:var(--text);">Free vs Supporter</h1>
+        <p class="text-sm leading-relaxed" style="color:var(--text-muted);">An honest look at what's included at each level. Core connection features stay free, always.</p>
     </div>
 
     <div class="grid md:grid-cols-2 gap-6">
 
         {{-- ── Free column ─────────────────────────────────────────────────── --}}
-        <div class="rounded-xl border p-6 space-y-5" style="background:#161B22;border-color:#30363D;">
+        <x-card padding="p-6" class="space-y-5">
             <div>
-                <h2 class="text-base font-semibold" style="color:#E6EDF3;">Free</h2>
-                <p class="text-xs mt-0.5" style="color:#8B949E;">Always — no expiry, no catch</p>
+                <h2 class="text-base font-semibold" style="color:var(--text);">Free</h2>
+                <p class="text-xs mt-0.5" style="color:var(--text-muted);">Always · no expiry, no catch</p>
             </div>
 
             @foreach ([
@@ -29,30 +29,30 @@
                     'Profile expression fields',
                 ],
                 'Platform'    => [
-                    'Use CommonGrove without ads — ever',
+                    'Use CommonGrove without ads · ever',
                     'Report problems',
                     'Community guidelines access',
                 ],
             ] as $group => $items)
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#3d4451;">{{ $group }}</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--text-faint);">{{ $group }}</p>
                     <ul class="space-y-1.5">
                         @foreach ($items as $item)
-                            <li class="flex items-start gap-2 text-sm" style="color:#C9D1D9;">
-                                <span class="mt-0.5 flex-none" style="color:#8B949E;">–</span>
+                            <li class="flex items-start gap-2 text-sm" style="color:var(--text);">
+                                <span class="mt-0.5 flex-none" style="color:var(--text-muted);">–</span>
                                 {{ $item }}
                             </li>
                         @endforeach
                     </ul>
                 </div>
             @endforeach
-        </div>
+        </x-card>
 
         {{-- ── Supporter column ─────────────────────────────────────────────── --}}
-        <div class="rounded-xl border p-6 space-y-5" style="background:#161B22;border-color:rgba(29,158,117,0.3);">
+        <div class="rounded-card border p-6 space-y-5 bg-surface shadow-card" style="border-color:rgba(var(--accent-rgb),0.3);">
             <div>
-                <h2 class="text-base font-semibold" style="color:#E6EDF3;">Supporter</h2>
-                <p class="text-xs mt-0.5" style="color:#1D9E75;">$1 / month · cancel any time</p>
+                <h2 class="text-base font-semibold" style="color:var(--text);">Supporter</h2>
+                <p class="text-xs mt-0.5 text-accent">$1 / month · cancel any time</p>
             </div>
 
             @foreach ([
@@ -77,11 +77,11 @@
                 ],
             ] as $group => $items)
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:rgba(29,158,117,0.7);">{{ $group }}</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider mb-2 text-accent/70">{{ $group }}</p>
                     <ul class="space-y-1.5">
                         @foreach ($items as $item)
-                            <li class="flex items-start gap-2 text-sm" style="color:#C9D1D9;">
-                                <span class="mt-0.5 flex-none" style="color:#1D9E75;">✓</span>
+                            <li class="flex items-start gap-2 text-sm" style="color:var(--text);">
+                                <span class="mt-0.5 flex-none text-accent">✓</span>
                                 {{ $item }}
                             </li>
                         @endforeach
@@ -91,12 +91,7 @@
 
             @auth
                 @if (! auth()->user()->isSupporter())
-                    <a
-                        href="{{ route('support.subscribe') }}"
-                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition"
-                        style="background:#1D9E75;color:#fff;"
-                        onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'"
-                    >Subscribe — $1/month</a>
+                    <x-button :href="route('support.subscribe')" variant="primary">Subscribe · $1/month</x-button>
                 @endif
             @endauth
         </div>
@@ -104,16 +99,16 @@
     </div>
 
     {{-- ── Core connection note ──────────────────────────────────────────── --}}
-    <div class="rounded-xl border px-6 py-4 text-center" style="background:rgba(29,158,117,0.04);border-color:rgba(29,158,117,0.18);">
-        <p class="text-sm leading-relaxed" style="color:#8B949E;">
+    <div class="rounded-card border px-6 py-4 text-center bg-accent/[0.04]" style="border-color:rgba(var(--accent-rgb),0.18);">
+        <p class="text-sm leading-relaxed" style="color:var(--text-muted);">
             Core connection features stay free. Supporter perks are comfort, personalization, and atmosphere only —
             no visibility boosts, no social ranking, no second-class free experience.
         </p>
     </div>
 
     {{-- ── What it's NOT ────────────────────────────────────────────────── --}}
-    <div class="rounded-xl border px-6 py-4 space-y-2" style="background:#161B22;border-color:#21262D;">
-        <p class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#3d4451;">What supporter status is not</p>
+    <x-card padding="px-6 py-4" class="space-y-2">
+        <p class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--text-faint);">What supporter status is not</p>
         <ul class="grid grid-cols-2 gap-x-6 gap-y-1.5">
             @foreach ([
                 'No follower or like systems',
@@ -125,16 +120,16 @@
                 'No exclusive popularity badges',
                 'No second-class free tier',
             ] as $item)
-                <li class="flex items-start gap-2 text-xs" style="color:#3d4451;">
+                <li class="flex items-start gap-2 text-xs" style="color:var(--text-faint);">
                     <span class="flex-none">×</span>{{ $item }}
                 </li>
             @endforeach
         </ul>
-    </div>
+    </x-card>
 
     <div class="text-center">
-        <a href="{{ route('support') }}" class="text-sm underline transition" style="color:#8B949E;"
-            onmouseover="this.style.color='#C9D1D9'" onmouseout="this.style.color='#8B949E'"
+        <a href="{{ route('support') }}" class="text-sm underline transition" style="color:var(--text-muted);"
+            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
         >← Back to support page</a>
     </div>
 

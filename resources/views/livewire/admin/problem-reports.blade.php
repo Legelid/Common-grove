@@ -3,8 +3,8 @@
     {{-- Header --}}
     <div class="flex items-start justify-between">
         <div>
-            <h1 class="text-xl font-bold" style="color:#E6EDF3;">Problem Reports</h1>
-            <p class="text-xs mt-1" style="color:#8B949E;">
+            <h1 class="text-xl font-bold font-display" style="color:var(--text);">Problem Reports</h1>
+            <p class="text-xs mt-1" style="color:var(--text-muted);">
                 Reports submitted via the "Report a problem" page.
                 Open: {{ $this->statusCounts['open'] ?? 0 }} &middot;
                 Reviewing: {{ $this->statusCounts['reviewing'] ?? 0 }} &middot;
@@ -17,8 +17,10 @@
     {{-- Filters --}}
     <div class="flex flex-wrap gap-3">
         <select wire:model.live="filterType"
-            class="rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-            style="background:#1C2333;border:1px solid #30363D;color:#8B949E;">
+            class="rounded-lg px-3 py-1.5 text-sm"
+            style="background:var(--surface);border:1px solid var(--border);color:var(--text-muted);outline:none;"
+            onfocus="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='2px'"
+            onblur="this.style.outline='none'"
             <option value="">All types</option>
             @foreach (\App\Models\ProblemReport::TYPES as $val => $label)
                 <option value="{{ $val }}">{{ $label }}</option>
@@ -26,8 +28,10 @@
         </select>
 
         <select wire:model.live="filterStatus"
-            class="rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-            style="background:#1C2333;border:1px solid #30363D;color:#8B949E;">
+            class="rounded-lg px-3 py-1.5 text-sm"
+            style="background:var(--surface);border:1px solid var(--border);color:var(--text-muted);outline:none;"
+            onfocus="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='2px'"
+            onblur="this.style.outline='none'"
             <option value="">All statuses</option>
             @foreach (\App\Models\ProblemReport::STATUSES as $s)
                 <option value="{{ $s }}">{{ ucfirst($s) }}</option>
@@ -35,8 +39,10 @@
         </select>
 
         <select wire:model.live="filterPriority"
-            class="rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-            style="background:#1C2333;border:1px solid #30363D;color:#8B949E;">
+            class="rounded-lg px-3 py-1.5 text-sm"
+            style="background:var(--surface);border:1px solid var(--border);color:var(--text-muted);outline:none;"
+            onfocus="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='2px'"
+            onblur="this.style.outline='none'"
             <option value="">All priorities</option>
             @foreach (\App\Models\ProblemReport::PRIORITIES as $p)
                 <option value="{{ $p }}">{{ ucfirst($p) }}</option>
@@ -50,23 +56,23 @@
 
             @php
                 $priorityColour = match($report->priority) {
-                    'urgent' => '#E24B4A',
+                    'urgent' => 'var(--danger)',
                     'high'   => '#D29922',
-                    'low'    => '#3d4451',
-                    default  => '#8B949E',
+                    'low'    => 'var(--text-faint)',
+                    default  => 'var(--text-muted)',
                 };
                 $statusColour = match($report->status) {
-                    'resolved'  => '#1D9E75',
-                    'dismissed' => '#3d4451',
+                    'resolved'  => 'var(--accent)',
+                    'dismissed' => 'var(--text-faint)',
                     'reviewing' => '#D29922',
-                    default     => '#8B949E',
+                    default     => 'var(--text-muted)',
                 };
                 $isViewing = $viewingId === $report->id;
             @endphp
 
             <div
                 class="rounded-xl border overflow-hidden"
-                style="background:#161B22;border-color:#30363D;"
+                style="background:var(--surface);border-color:var(--border);"
                 wire:key="pr-{{ $report->id }}"
             >
                 {{-- Summary row --}}
@@ -79,13 +85,13 @@
 
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-xs px-2 py-0.5 rounded font-medium" style="background:#21262D;color:#8B949E;">
+                            <span class="text-xs px-2 py-0.5 rounded font-medium" style="background:var(--surface-raised);color:var(--text-muted);">
                                 {{ $report->typeLabel() }}
                             </span>
                             <span class="text-xs font-medium" style="color:{{ $statusColour }};">
                                 {{ ucfirst($report->status) }}
                             </span>
-                            <span class="text-xs" style="color:#3d4451;">
+                            <span class="text-xs" style="color:var(--text-faint);">
                                 {{ $report->created_at->diffForHumans() }}
                                 @if ($report->user)
                                     &middot; {{ $report->user->gamertag }}
@@ -96,20 +102,20 @@
                                 @endif
                             </span>
                         </div>
-                        <p class="mt-1 text-sm font-medium truncate" style="color:#C9D1D9;">{{ $report->subject }}</p>
+                        <p class="mt-1 text-sm font-medium truncate" style="color:var(--text);">{{ $report->subject }}</p>
                     </div>
 
-                    <span class="text-xs flex-none mt-1" style="color:#3d4451;">{{ $isViewing ? '▴' : '▾' }}</span>
+                    <span class="text-xs flex-none mt-1" style="color:var(--text-faint);">{{ $isViewing ? '▴' : '▾' }}</span>
                 </div>
 
                 {{-- Expanded detail --}}
                 @if ($isViewing)
-                    <div class="border-t px-5 py-5 space-y-5" style="border-color:#21262D;">
+                    <div class="border-t px-5 py-5 space-y-5" style="border-color:var(--border);">
 
                         {{-- Description --}}
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:#3d4451;">Description</p>
-                            <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:#C9D1D9;">{{ $report->description }}</p>
+                            <p class="text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-faint);">Description</p>
+                            <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--text);">{{ $report->description }}</p>
                         </div>
 
                         {{-- Context fields --}}
@@ -117,26 +123,26 @@
                             <div class="grid grid-cols-2 gap-3 text-xs">
                                 @if ($report->page_url)
                                     <div>
-                                        <span style="color:#3d4451;">Page URL</span><br>
-                                        <a href="{{ $report->page_url }}" target="_blank" rel="noopener" class="underline break-all" style="color:#1D9E75;">{{ $report->page_url }}</a>
+                                        <span style="color:var(--text-faint);">Page URL</span><br>
+                                        <a href="{{ $report->page_url }}" target="_blank" rel="noopener" class="underline break-all" style="color:var(--accent);">{{ $report->page_url }}</a>
                                     </div>
                                 @endif
                                 @if ($report->related_user)
                                     <div>
-                                        <span style="color:#3d4451;">Related user</span><br>
-                                        <span style="color:#C9D1D9;">{{ $report->related_user }}</span>
+                                        <span style="color:var(--text-faint);">Related user</span><br>
+                                        <span style="color:var(--text);">{{ $report->related_user }}</span>
                                     </div>
                                 @endif
                                 @if ($report->related_room)
                                     <div>
-                                        <span style="color:#3d4451;">Related room</span><br>
-                                        <span style="color:#C9D1D9;">{{ $report->related_room }}</span>
+                                        <span style="color:var(--text-faint);">Related room</span><br>
+                                        <span style="color:var(--text);">{{ $report->related_room }}</span>
                                     </div>
                                 @endif
                                 @if ($report->contact_email)
                                     <div>
-                                        <span style="color:#3d4451;">Contact email</span><br>
-                                        <span style="color:#C9D1D9;">{{ $report->contact_email }}</span>
+                                        <span style="color:var(--text-faint);">Contact email</span><br>
+                                        <span style="color:var(--text);">{{ $report->contact_email }}</span>
                                     </div>
                                 @endif
                             </div>
@@ -145,11 +151,11 @@
                         {{-- Screenshot --}}
                         @if ($report->screenshot_path)
                             <div>
-                                <p class="text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:#3d4451;">Screenshot</p>
+                                <p class="text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-faint);">Screenshot</p>
                                 <a
                                     href="{{ route('admin.problem-reports.screenshot', $report->id) }}"
                                     target="_blank"
-                                    class="text-sm underline" style="color:#1D9E75;"
+                                    class="text-sm underline" style="color:var(--accent);"
                                 >View screenshot</a>
                             </div>
                         @endif
@@ -157,11 +163,13 @@
                         {{-- Admin controls --}}
                         <div class="flex flex-wrap gap-4 items-end pt-1">
                             <div>
-                                <label class="block text-xs mb-1" style="color:#3d4451;">Status</label>
+                                <label class="block text-xs mb-1" style="color:var(--text-faint);">Status</label>
                                 <select
                                     wire:change="updateStatus('{{ $report->id }}', $event.target.value)"
-                                    class="rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-                                    style="background:#1C2333;border:1px solid #30363D;color:#E6EDF3;"
+                                    class="rounded-lg px-3 py-1.5 text-sm"
+                                    style="background:var(--surface);border:1px solid var(--border);color:var(--text);outline:none;"
+                                    onfocus="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='2px'"
+                                    onblur="this.style.outline='none'"
                                 >
                                     @foreach (\App\Models\ProblemReport::STATUSES as $s)
                                         <option value="{{ $s }}" {{ $report->status === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
@@ -170,11 +178,13 @@
                             </div>
 
                             <div>
-                                <label class="block text-xs mb-1" style="color:#3d4451;">Priority</label>
+                                <label class="block text-xs mb-1" style="color:var(--text-faint);">Priority</label>
                                 <select
                                     wire:change="updatePriority('{{ $report->id }}', $event.target.value)"
-                                    class="rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-                                    style="background:#1C2333;border:1px solid #30363D;color:#E6EDF3;"
+                                    class="rounded-lg px-3 py-1.5 text-sm"
+                                    style="background:var(--surface);border:1px solid var(--border);color:var(--text);outline:none;"
+                                    onfocus="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='2px'"
+                                    onblur="this.style.outline='none'"
                                 >
                                     @foreach (\App\Models\ProblemReport::PRIORITIES as $p)
                                         <option value="{{ $p }}" {{ $report->priority === $p ? 'selected' : '' }}>{{ ucfirst($p) }}</option>
@@ -184,27 +194,24 @@
 
                             {{-- Admin note --}}
                             <div class="flex-1 min-w-48" x-data="{ note: @js($report->admin_note ?? ''), saved: false }">
-                                <label class="block text-xs mb-1" style="color:#3d4451;">Internal note</label>
+                                <label class="block text-xs mb-1" style="color:var(--text-faint);">Internal note</label>
                                 <div class="flex gap-2">
-                                    <input
+                                    <x-input
                                         type="text"
                                         x-model="note"
                                         placeholder="Add a note…"
                                         maxlength="500"
-                                        class="flex-1 rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-                                        style="background:#1C2333;border:1px solid #30363D;color:#E6EDF3;"
-                                        onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-                                    >
-                                    <button
+                                        class="flex-1 !py-1.5"
+                                    />
+                                    <x-button
                                         type="button"
+                                        variant="secondary"
                                         @click="$wire.saveNote('{{ $report->id }}', note); saved = true; setTimeout(() => saved = false, 2000)"
-                                        class="px-3 py-1.5 rounded-lg text-xs font-medium transition"
-                                        style="background:#21262D;color:#8B949E;"
-                                        onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
+                                        class="!px-3 !py-1.5 !text-xs"
                                     >
                                         <span x-show="!saved">Save</span>
-                                        <span x-show="saved" style="color:#1D9E75;">Saved</span>
-                                    </button>
+                                        <span x-show="saved" style="color:var(--accent);">Saved</span>
+                                    </x-button>
                                 </div>
                             </div>
                         </div>
@@ -214,7 +221,7 @@
             </div>
 
         @empty
-            <p class="text-sm" style="color:#8B949E;">No reports match those filters.</p>
+            <p class="text-sm" style="color:var(--text-muted);">No reports match those filters.</p>
         @endforelse
     </div>
 

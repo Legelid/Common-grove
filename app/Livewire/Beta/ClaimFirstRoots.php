@@ -88,6 +88,6 @@ class ClaimFirstRoots extends Component
     public function render(): View
     {
         return view('livewire.beta.claim-first-roots')
-            ->layout('layouts.app', ['title' => 'FirstRoots — Founding Member · CommonGrove']);
+            ->layout('layouts.app', ['title' => 'FirstRoots | Founding Member · CommonGrove']);
     }
 }

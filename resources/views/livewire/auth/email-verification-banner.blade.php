@@ -5,7 +5,7 @@
                 Verify your email to unlock messaging, rooms, and hangouts.
             </span>
             @if ($message)
-                <span class="text-xs flex-none" style="color:{{ $rateLimited ? '#E24B4A' : '#1D9E75' }};">{{ $message }}</span>
+                <span class="text-xs flex-none" style="color:{{ $rateLimited ? 'var(--danger)' : 'var(--accent)' }};">{{ $message }}</span>
             @endif
         </div>
         <div class="flex items-center gap-3 flex-none">
@@ -23,8 +23,8 @@
             <a
                 href="{{ url()->current() }}"
                 class="text-xs transition hidden sm:inline"
-                style="color:#8B949E;"
-                onmouseover="this.style.color='#C9D1D9'" onmouseout="this.style.color='#8B949E'"
+                style="color:var(--text-muted);"
+                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
             >I verified — refresh</a>
         </div>
     </div>

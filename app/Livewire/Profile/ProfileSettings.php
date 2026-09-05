@@ -8,7 +8,7 @@ use App\Enums\MoodOption;
 use App\Models\Tag;
 use App\Rules\ValidGamertag;
 use App\Services\GamertagSuggestionService;
-use App\Services\SupporterService;
+use App\Services\GlassThemeService;
 use App\Services\TonePackService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -64,7 +64,6 @@ class ProfileSettings extends Component
 
     public string $profileStatus = '';
     public string $accentColor   = '';
-    public string $bannerStyle   = '';
 
     /** @var list<array{label: string, value: string}> */
     public array $comfortThings = [];
@@ -79,7 +78,6 @@ class ProfileSettings extends Component
     // Appearance section
     // -------------------------------------------------------------------------
 
-    public string $personalGradientTheme = '';
     public bool   $birthdayThemeEnabled  = true;
     public bool   $holidayThemesEnabled  = true;
 
@@ -89,6 +87,14 @@ class ProfileSettings extends Component
 
     public string  $tonePackKey     = 'default';
     public ?string $tonePackMessage = null;
+
+    // -------------------------------------------------------------------------
+    // Glass theme section
+    // -------------------------------------------------------------------------
+
+    public string  $siteTheme         = 'forest-default';
+    public bool    $glassBlurEnabled  = true;
+    public ?string $siteThemeMessage  = null;
 
     // -------------------------------------------------------------------------
     // Advanced comfort section
@@ -151,14 +157,14 @@ class ProfileSettings extends Component
         $this->currentlyWatching = $user->currently_watching ?? '';
         $this->profileStatus = $user->profile_status ?? '';
         $this->accentColor   = $user->accent_color ?? '';
-        $this->bannerStyle   = $user->banner_style ?? '';
         $this->comfortThings = $user->comfort_things ?? [];
         $this->socialStyles  = $user->social_styles ?? [];
         $this->openTo        = $user->open_to ?? [];
-        $this->personalGradientTheme     = $user->personal_gradient_theme ?? '';
         $this->birthdayThemeEnabled      = (bool) ($user->birthday_theme_enabled ?? true);
         $this->holidayThemesEnabled      = (bool) ($user->holiday_themes_enabled ?? true);
         $this->tonePackKey               = $user->tone_pack ?: 'default';
+        $this->siteTheme                 = $user->site_theme ?: 'forest-default';
+        $this->glassBlurEnabled          = (bool) ($user->glass_blur_enabled ?? true);
         $this->advancedComfortSettings   = $user->advanced_comfort_settings ?? [];
         $this->showConversationPrompts   = (bool) ($user->show_conversation_prompts ?? true);
         $this->enabledPromptPacks        = $user->enabled_prompt_packs ?? [];
@@ -184,7 +190,7 @@ class ProfileSettings extends Component
             'saveIdentity', 'saveBio', 'saveCurrently', 'saveExpression',
             'saveReadReceiptPref', 'saveDiscoveryPreferences', 'saveOfficialRoomsPref',
             'saveComfortPreferences', 'saveHideReactions', 'saveAdvancedComfort',
-            'savePromptPreferences', 'saveAppearance', 'saveTonePack',
+            'savePromptPreferences', 'saveAppearance', 'saveTonePack', 'saveSiteTheme',
         ];
 
         foreach ($sections as $method) {
@@ -201,17 +207,6 @@ class ProfileSettings extends Component
     // -------------------------------------------------------------------------
     // Computed
     // -------------------------------------------------------------------------
-
-    /**
-     * Gradient keys the current user cannot select (empty for supporters/admins).
-     *
-     * @return list<string>
-     */
-    #[Computed]
-    public function lockedGradientKeys(): array
-    {
-        return app(SupporterService::class)->lockedGradientKeys(Auth::user());
-    }
 
     #[Computed]
     public function userIsSupporter(): bool
@@ -254,6 +249,25 @@ class ProfileSettings extends Component
         }
 
         return $packs;
+    }
+
+    /**
+     * All glass theme definitions, each annotated with whether it is locked.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    #[Computed]
+    public function siteThemes(): array
+    {
+        $service = app(GlassThemeService::class);
+        $user    = Auth::user();
+        $themes  = $service->allThemes();
+
+        foreach ($themes as $key => &$theme) {
+            $theme['locked'] = $service->isLocked($user, $key);
+        }
+
+        return $themes;
     }
 
     /**
@@ -425,11 +439,6 @@ class ProfileSettings extends Component
     // Profile expression section
     // -------------------------------------------------------------------------
 
-    private const BANNER_STYLES = [
-        'night_rain', 'forest', 'cozy_room', 'pixel_sky', 'aquarium', 'snowfall',
-        'sunset_fog', 'moonlight', 'coffee_shop', 'soft_abstract', 'deep_blue', 'warm_lamp',
-    ];
-
     private const SOCIAL_STYLES = [
         'quiet_chatter', 'mostly_listening', 'slow_replies', 'deep_talks', 'late_night',
         'introvert_friendly', 'listener_first', 'casual_conversations', 'low_pressure',
@@ -491,7 +500,6 @@ class ProfileSettings extends Component
         $this->validate([
             'profileStatus'          => ['nullable', 'string', 'max:120'],
             'accentColor'            => ['nullable', 'string', 'in:green,blue,amber,purple,slate'],
-            'bannerStyle'            => ['nullable', 'string', 'in:' . implode(',', self::BANNER_STYLES)],
             'comfortThings'          => ['array', 'max:5'],
             'comfortThings.*.label'  => ['nullable', 'string', 'max:60'],
             'comfortThings.*.value'  => ['nullable', 'string', 'max:120'],
@@ -511,7 +519,6 @@ class ProfileSettings extends Component
         Auth::user()->update([
             'profile_status' => trim($this->profileStatus) ?: null,
             'accent_color'   => $this->accentColor ?: null,
-            'banner_style'   => $this->bannerStyle ?: null,
             'comfort_things' => ! empty($comfortFiltered) ? $comfortFiltered : null,
             'social_styles'  => ! empty($this->socialStyles) ? array_values($this->socialStyles) : null,
             'open_to'        => ! empty($this->openTo) ? array_values($this->openTo) : null,
@@ -570,21 +577,11 @@ class ProfileSettings extends Component
 
     public function saveAppearance(): void
     {
-        $this->validate([
-            'personalGradientTheme' => ['nullable', 'string', 'in:' . implode(',', array_keys(config('gradients')))],
-        ]);
-
-        // Silently clear a supporter-only gradient if the user no longer qualifies.
-        if ($this->personalGradientTheme !== '' && in_array($this->personalGradientTheme, $this->lockedGradientKeys, true)) {
-            $this->personalGradientTheme = '';
-        }
-
         $this->appearanceMessage = null;
 
         Auth::user()->update([
-            'personal_gradient_theme' => $this->personalGradientTheme ?: null,
-            'birthday_theme_enabled'  => $this->birthdayThemeEnabled,
-            'holiday_themes_enabled'  => $this->holidayThemesEnabled,
+            'birthday_theme_enabled' => $this->birthdayThemeEnabled,
+            'holiday_themes_enabled' => $this->holidayThemesEnabled,
         ]);
 
         $this->appearanceMessage = 'Appearance saved.';
@@ -612,6 +609,32 @@ class ProfileSettings extends Component
         ]);
 
         $this->tonePackMessage = 'Tone pack saved. Refresh to hear the new voice.';
+    }
+
+    // -------------------------------------------------------------------------
+    // Glass theme section
+    // -------------------------------------------------------------------------
+
+    public function saveSiteTheme(): void
+    {
+        $service   = app(GlassThemeService::class);
+        $validKeys = array_keys($service->allThemes());
+
+        if (! in_array($this->siteTheme, $validKeys, true)) {
+            return;
+        }
+
+        // Silently reset to the free default if the user selects a locked theme.
+        if ($service->isLocked(Auth::user(), $this->siteTheme)) {
+            $this->siteTheme = 'forest-default';
+        }
+
+        Auth::user()->update([
+            'site_theme'          => $this->siteTheme !== 'forest-default' ? $this->siteTheme : null,
+            'glass_blur_enabled'  => $this->glassBlurEnabled,
+        ]);
+
+        $this->siteThemeMessage = 'Theme saved.';
     }
 
     // -------------------------------------------------------------------------
@@ -753,6 +776,6 @@ class ProfileSettings extends Component
     public function render(): \Illuminate\View\View
     {
         return view('livewire.profile.profile-settings')
-            ->layout('layouts.app', ['title' => 'Profile Settings — CommonGrove']);
+            ->layout('layouts.app', ['title' => 'Profile Settings | CommonGrove']);
     }
 }

@@ -147,6 +147,6 @@ class ProblemReportForm extends Component
     public function render(): View
     {
         return view('livewire.reports.problem-report-form')
-            ->layout('layouts.app', ['title' => 'Report a problem — CommonGrove']);
+            ->layout('layouts.app', ['title' => 'Report a problem | CommonGrove']);
     }
 }

@@ -1,11 +1,11 @@
 <div>
     @if ($this->recentRooms->isNotEmpty())
-        <div class="rounded-2xl border p-4 space-y-3"
-            style="background:#161B22;border-color:#2D333B;box-shadow:0 1px 4px rgba(0,0,0,0.2);">
+        <div class="rounded-card border border-border p-4 space-y-3"
+            style="background:var(--surface);box-shadow:var(--card-shadow);">
 
-            <div class="pb-2 border-b" style="border-color:#21262D;">
-                <p class="text-sm font-medium" style="color:#8B949E;">Recent</p>
-                <p class="text-xs mt-0.5 leading-snug" style="color:#3d4451;">Rooms you visited</p>
+            <div class="pb-2 border-b" style="border-color:var(--surface-raised);">
+                <p class="font-display text-sm font-medium" style="color:var(--text-muted);">Recent</p>
+                <p class="text-xs mt-0.5 leading-snug" style="color:var(--text-faint);">Rooms you visited</p>
             </div>
 
             <div class="space-y-0.5">
@@ -19,8 +19,8 @@
                     >
                         <div class="flex-1 min-w-0">
                             <p class="text-xs truncate leading-snug"
-                                style="color:#8B949E;">{{ Str::limit($recent->conversation->name ?? 'Room', 22) }}</p>
-                            <span class="text-xs leading-none" style="color:#3d4451;">
+                                style="color:var(--text-muted);">{{ Str::limit($recent->conversation->name ?? 'Room', 22) }}</p>
+                            <span class="text-xs leading-none" style="color:var(--text-faint);">
                                 {{ $isPersistent ? 'Room' : 'Hangout' }}
                             </span>
                         </div>

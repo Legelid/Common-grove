@@ -70,6 +70,6 @@ class CollectDateOfBirth extends Component
     public function render(): View
     {
         return view('livewire.account.collect-date-of-birth')
-            ->layout('layouts.onboarding', ['title' => 'Date of birth — CommonGrove']);
+            ->layout('layouts.onboarding', ['title' => 'Date of birth | CommonGrove']);
     }
 }

@@ -2,15 +2,9 @@
 
 declare(strict_types=1);
 
-/**
- * Central definition of every supporter perk, limit, and pack.
- *
- * All supporter gating throughout the app should read from here rather than
- * hardcoding values inline. This makes it easy to adjust tiers in one place.
- */
 return [
 
-    // ── Limits ──────────────────────────────────────────────────────────────
+    // Limits
     'limits' => [
         'persistent_rooms' => [
             'free'      => 3,
@@ -22,61 +16,52 @@ return [
         ],
     ],
 
-    // ── Avatar packs ─────────────────────────────────────────────────────────
-    // Category keys from config/avatars.php that are supporter-only.
-    // Free users see all other categories in full.
+    // Avatar packs (category keys from config/avatars.php)
     'avatar_packs' => [
         'retro_digital',
         'seasonal',
     ],
 
-    // ── Gradient themes ──────────────────────────────────────────────────────
-    // Keys from config/gradients.php that are supporter-only.
-    // Free users get the remaining five gradients.
-    'gradient_packs' => [
-        'night_window',
-        'rainy_crt',
-        'lantern_glow',
-        'pixel_night',
-        'foggy_forest',
-        'coffee_shop',
-        'aquarium_glow',
-        'cassette_evening',
-        'snow_quiet',
-        'observatory',
-        'forest_cabin',
-        'deep_ocean',
-        'quiet_library',
-        'campfire_dusk',
-        'stormwatch',
-    ],
-
-    // ── Tone packs ───────────────────────────────────────────────────────────
-    // Supporter-only tone pack keys from config/tone_packs.php.
-    // Free users always have access to the 'default' pack.
-    'atmosphere_packs' => [
+    // Tone packs — supporter-only keys
+    // Free users get: commongrove, forest_path, cozy_rain
+    // Supporters get all
+    'tone_packs' => [
         'fantasy_tavern',
         'sci_fi_space',
         'retro_web',
-        'cozy_rain',
-        'quiet_library',
         'campfire',
         'observatory',
         'pixel_night',
-        'forest_path',
+        'quiet_library',
         'coffee_shop',
     ],
 
-    // ── Feature flags ────────────────────────────────────────────────────────
-    // Flip false to disable a supporter feature globally during rollout.
+    // Prompt packs — supporter-only keys
+    // Free users get: general
+    // Supporters get all
+    'prompt_packs' => [
+        'fantasy_dnd',
+        'cozy_gaming',
+        'books_stories',
+        'sci_fi',
+        'music_discovery',
+        'creative_projects',
+        'deep_talks',
+        'quiet_introvert',
+        'retro_internet',
+        'horror_cozy',
+    ],
+
+    // Feature flags
     'features' => [
         'supporter_icon'      => true,
         'extended_room_limit' => true,
         'extra_avatars'       => true,
-        'extra_gradients'     => true,
+        'tone_packs'          => true,
+        'prompt_packs'        => true,
         'room_collections'    => true,
-        'atmosphere_packs'    => true,
-        'advanced_comfort'    => false, // not yet built
+        'advanced_comfort'    => true,
+        'vibe_themes'         => false, // coming soon
     ],
 
 ];

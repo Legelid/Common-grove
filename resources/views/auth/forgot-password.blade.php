@@ -1,11 +1,11 @@
-<x-layouts.app title="Let's get you back in — CommonGrove">
-    <h1 class="text-2xl font-bold text-center mb-2" style="color:#E6EDF3;">Let's get you back in</h1>
-    <p class="text-sm text-center mb-6" style="color:#8B949E;">
+<x-layouts.app title="Let's get you back in | CommonGrove">
+    <h1 class="text-2xl font-bold text-center mb-2" style="color:var(--text);">Let's get you back in</h1>
+    <p class="text-sm text-center mb-6" style="color:var(--text-muted);">
         Enter your email and we'll send you a secure reset link.
     </p>
 
     @if (session('status'))
-        <p class="mb-4 text-sm text-center rounded-lg px-3 py-2" style="background:rgba(29,158,117,0.15);color:#1D9E75;">
+        <p class="mb-4 text-sm text-center rounded-lg px-3 py-2 bg-accent/15 text-accent">
             {{ session('status') }}
         </p>
     @endif
@@ -14,30 +14,24 @@
         @csrf
 
         <div>
-            <label for="email" class="block text-sm font-medium mb-1" style="color:#8B949E;">Email address</label>
-            <input
+            <label for="email" class="block text-sm font-medium mb-1" style="color:var(--text-muted);">Email address</label>
+            <x-input
                 id="email"
                 type="email"
                 name="email"
                 value="{{ old('email') }}"
                 required
                 autofocus
-                class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 @error('email') ring-1 @enderror"
-                style="background:#1C2333;border:1px solid {{ $errors->has('email') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'"
-                onblur="this.style.boxShadow=''"
-            >
-            @error('email')
-                <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p>
-            @enderror
+                :error="$errors->first('email')"
+            />
         </div>
 
-        <button type="submit" class="w-full py-2.5 px-4 text-sm font-semibold rounded-lg transition" style="background:#1D9E75;color:#fff;" onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'">
+        <x-button type="submit" variant="primary" class="w-full">
             Send reset link
-        </button>
+        </x-button>
     </form>
 
-    <p class="mt-6 text-center text-sm" style="color:#8B949E;">
-        <a href="{{ route('login') }}" class="underline transition" style="color:#1D9E75;">Back to sign in</a>
+    <p class="mt-6 text-center text-sm" style="color:var(--text-muted);">
+        <a href="{{ route('login') }}" class="underline transition text-accent">Back to sign in</a>
     </p>
 </x-layouts.app>

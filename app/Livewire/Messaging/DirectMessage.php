@@ -341,6 +341,6 @@ class DirectMessage extends Component
     public function render(): View
     {
         return view('livewire.messaging.direct-message')
-            ->layout('layouts.app', ['title' => 'Messages — CommonGrove']);
+            ->layout('layouts.app', ['title' => 'Messages | CommonGrove']);
     }
 }

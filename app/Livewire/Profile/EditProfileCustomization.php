@@ -335,6 +335,6 @@ class EditProfileCustomization extends Component
     public function render(): View
     {
         return view('livewire.profile.edit-profile-customization')
-            ->layout('layouts.app', ['title' => 'Edit Profile — CommonGrove']);
+            ->layout('layouts.app', ['title' => 'Edit Profile | CommonGrove']);
     }
 }

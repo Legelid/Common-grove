@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CommonGrove — A quiet place for introverts and gamers</title>
+    <title>CommonGrove | A quiet place for introverts and gamers</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="antialiased min-h-screen flex flex-col" style="background:#0D1117;color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">

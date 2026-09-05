@@ -29,9 +29,9 @@ class Login extends Component
         $throttleKey = 'login.' . Str::lower($this->login) . '.' . request()->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
+            $minutes = (int) ceil(RateLimiter::availableIn($throttleKey) / 60);
             Log::info('Login: rate limited', ['ip' => request()->ip()]);
-            $this->addError('login', "Too many login attempts. Please try again in {$seconds} seconds.");
+            $this->addError('login', "Too many login attempts. Please try again in {$minutes} " . Str::plural('minute', $minutes) . '.');
             return;
         }
 
@@ -41,7 +41,7 @@ class Login extends Component
 
         if ($user === null) {
             Log::info('Login: user not found', ['input' => $this->login]);
-            RateLimiter::hit($throttleKey, 60);
+            RateLimiter::hit($throttleKey, 900); // 15 minutes
             $this->password = '';
             $this->addError('login', 'These credentials do not match our records.');
             return;
@@ -56,7 +56,7 @@ class Login extends Component
         if ($isArgon2id) {
             if (! $passwordService->verify($this->password, $hash)) {
                 Log::info('Login: password incorrect', ['gamertag' => $user->gamertag]);
-                RateLimiter::hit($throttleKey, 60);
+                RateLimiter::hit($throttleKey, 900); // 15 minutes
                 $this->password = '';
                 $this->addError('login', 'These credentials do not match our records.');
                 return;
@@ -86,11 +86,7 @@ class Login extends Component
             app(FirstRootsService::class)->claimInvite((string) $betaToken, $user);
         }
 
-        Log::info('Login: success', [
-            'gamertag'          => $user->gamertag,
-            'session_id_prefix' => substr(session()->getId(), 0, 10),
-            'csrf_token_prefix' => substr(csrf_token(), 0, 10),
-        ]);
+        Log::info('Login: success', ['gamertag' => $user->gamertag]);
 
         if (! $user->hasVerifiedEmail()) {
             // If the user clicked the verification link while logged out, Laravel stored
@@ -132,12 +128,7 @@ class Login extends Component
 
     public function render(): \Illuminate\View\View
     {
-        Log::info('Login render', [
-            'session_id_prefix' => substr(session()->getId(), 0, 10),
-            'csrf_token_prefix' => substr(csrf_token(), 0, 10),
-        ]);
-
         return view('livewire.auth.login')
-            ->layout('layouts.app', ['title' => 'Sign in — CommonGrove']);
+            ->layout('layouts.app', ['title' => 'Sign in | CommonGrove']);
     }
 }

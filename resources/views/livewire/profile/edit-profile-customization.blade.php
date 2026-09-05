@@ -96,11 +96,12 @@
     @endphp
 
     {{-- Header --}}
-    <div>
-        <h1 class="text-2xl font-bold" style="color:#E6EDF3;">Edit your profile</h1>
-        <p class="mt-1 text-sm" style="color:#8B949E;">Make your profile feel a little more like you.</p>
-        <p class="mt-0.5 text-xs" style="color:#6B7790;">Everything here is optional.</p>
-    </div>
+    {{-- Glass UI: light tier — hero heading over the forest photo, matching Home/Explore. --}}
+    <x-glass-panel tier="light" style="border-radius:var(--radius-lg);padding:1.5rem 1.75rem;">
+        <h1 class="font-display" style="font-size:clamp(1.75rem, 4vw, 2.5rem);color:var(--text);font-weight:700;line-height:1.2;">Edit your profile</h1>
+        <p class="mt-2" style="font-family:var(--font-body);font-size:1rem;color:var(--text-muted);">Make your profile feel a little more like you.</p>
+        <p class="mt-0.5 text-xs" style="color:var(--text-muted);">Everything here is optional.</p>
+    </x-glass-panel>
 
     {{-- ── 0. Avatar ───────────────────────────────────────────── --}}
     @php
@@ -114,7 +115,7 @@
                  search: '',
                  get isSearching() { return this.search.length >= 1 }
              }">
-        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:#8B949E;border-color:#30363D;">Profile photo</h2>
+        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:var(--text-muted);border-color:var(--border);">Profile photo</h2>
 
         {{-- Current avatar + reset --}}
         <div class="flex items-center gap-4">
@@ -122,26 +123,22 @@
             @if ($hasAvatar)
                 <button type="button" wire:click="resetAvatar"
                         class="text-xs transition"
-                        style="color:#8B949E;"
-                        @if (!$lowStim) onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='#8B949E'" @endif
+                        style="color:var(--text-muted);"
+                        @if (!$lowStim) onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" @endif
                 >Reset to default</button>
             @endif
         </div>
 
         {{-- Choose an avatar --}}
         <div>
-            <p class="text-xs mb-2" style="color:#8B949E;">Choose an avatar</p>
+            <p class="text-xs mb-2" style="color:var(--text-muted);">Choose an avatar</p>
 
             {{-- Search --}}
             <div class="relative mb-3">
-                <input type="text" x-model="search"
-                       placeholder="Search avatars…"
-                       class="w-full rounded-lg px-4 py-2 text-sm focus:outline-none"
-                       style="background:#1C2333;border:1px solid #30363D;color:#E6EDF3;"
-                       onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''">
+                <x-input type="text" x-model="search" placeholder="Search avatars…" class="!pr-8" />
                 <button type="button" x-show="isSearching" @click="search = ''"
                         class="absolute right-3 top-1/2 -translate-y-1/2 text-xs"
-                        style="color:#6B7790;"
+                        style="color:var(--text-muted);"
                 >✕</button>
             </div>
 
@@ -152,8 +149,8 @@
                             @click="tab = @js($catKey)"
                             class="px-3 py-1.5 rounded-full text-xs transition"
                             :style="tab === @js($catKey)
-                                ? 'background:rgba(29,158,117,0.12);color:#1D9E75;border:1px solid rgba(29,158,117,0.35);'
-                                : 'background:#1C2333;color:#8B949E;border:1px solid #30363D;'"
+                                ? 'background:rgba(var(--accent-rgb),0.12);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.35);'
+                                : 'background:var(--surface);color:var(--text-muted);border:1px solid var(--border);'"
                     >{{ $catAvatars->first()->category_label }}</button>
                 @endforeach
             </div>
@@ -176,8 +173,8 @@
                             <img src="{{ asset($avatar->image_path) }}"
                                  alt="{{ $avatar->name }}"
                                  class="w-14 h-14 rounded-full object-cover"
-                                 style="background:#1C2333;outline:{{ $selectedAvatarId === $avatar->id ? '2px solid #1D9E75' : '2px solid transparent' }};outline-offset:2px;">
-                            <span class="leading-tight text-center" style="color:{{ $selectedAvatarId === $avatar->id ? '#1D9E75' : '#6B7790' }};font-size:0.6rem;">{{ $avatar->name }}</span>
+                                 style="background:var(--surface);outline:{{ $selectedAvatarId === $avatar->id ? '2px solid var(--accent)' : '2px solid transparent' }};outline-offset:2px;">
+                            <span class="leading-tight text-center" style="color:{{ $selectedAvatarId === $avatar->id ? 'var(--accent)' : 'var(--text-muted)' }};font-size:0.6rem;">{{ $avatar->name }}</span>
                         </button>
                     @endforeach
                 @endforeach
@@ -201,8 +198,8 @@
                             <img src="{{ asset($avatar->image_path) }}"
                                  alt="{{ $avatar->name }}"
                                  class="w-14 h-14 rounded-full object-cover"
-                                 style="background:#1C2333;outline:{{ $selectedAvatarId === $avatar->id ? '2px solid #1D9E75' : '2px solid transparent' }};outline-offset:2px;">
-                            <span class="leading-tight text-center" style="color:{{ $selectedAvatarId === $avatar->id ? '#1D9E75' : '#6B7790' }};font-size:0.6rem;">{{ $avatar->name }}</span>
+                                 style="background:var(--surface);outline:{{ $selectedAvatarId === $avatar->id ? '2px solid var(--accent)' : '2px solid transparent' }};outline-offset:2px;">
+                            <span class="leading-tight text-center" style="color:{{ $selectedAvatarId === $avatar->id ? 'var(--accent)' : 'var(--text-muted)' }};font-size:0.6rem;">{{ $avatar->name }}</span>
                         </button>
                     @endforeach
                 </div>
@@ -213,39 +210,36 @@
     {{-- ── 1. Tagline / status ─────────────────────────────────── --}}
     <section class="space-y-3" x-data="{ showSuggestions: false }">
         <div>
-            <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b mb-3" style="color:#8B949E;border-color:#30363D;">Your tagline</h2>
-            <p class="text-xs mb-3" style="color:#8B949E;">A short line that appears under your name — quiet, personal, no pressure.</p>
+            <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b mb-3" style="color:var(--text-muted);border-color:var(--border);">Your tagline</h2>
+            <p class="text-xs mb-3" style="color:var(--text-muted);">A short line that appears under your name — quiet, personal, no pressure.</p>
         </div>
 
         <div>
             <div class="flex items-center justify-between mb-1">
-                <label for="profileStatus" class="text-sm" style="color:#8B949E;">Tagline</label>
+                <label for="profileStatus" class="text-sm" style="color:var(--text-muted);">Tagline</label>
                 <div class="flex items-center gap-3">
-                    <span class="text-xs" style="color:{{ strlen($profileStatus) >= 100 ? '#D29922' : '#8B949E' }};">{{ strlen($profileStatus) }}/120</span>
+                    <span class="text-xs" style="color:{{ strlen($profileStatus) >= 100 ? '#D29922' : 'var(--text-muted)' }};">{{ strlen($profileStatus) }}/120</span>
                     <button type="button" @click="showSuggestions = !showSuggestions"
                         class="text-xs transition"
-                        style="color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
+                        style="color:var(--text-muted);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
                         x-text="showSuggestions ? 'Hide suggestions' : 'Browse suggestions'"
                     ></button>
                 </div>
             </div>
-            <input id="profileStatus" type="text" wire:model.live="profileStatus" maxlength="120"
+            <x-input id="profileStatus" type="text" wire:model.live="profileStatus" maxlength="120"
                 placeholder="e.g. mostly lurking, occasionally brave"
-                class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
-                style="background:#1C2333;border:1px solid {{ $errors->has('profileStatus') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-            >
-            @error('profileStatus') <p class="mt-1 text-xs" style="color:#E24B4A;">{{ $message }}</p> @enderror
+                :error="$errors->first('profileStatus')"
+            />
 
-            <div x-show="showSuggestions" x-transition.opacity class="mt-2 rounded-lg border p-3" style="background:#161B22;border-color:#30363D;">
-                <p class="text-xs mb-2" style="color:#8B949E;">Click to use:</p>
+            <div x-show="showSuggestions" x-transition.opacity class="mt-2 rounded-lg border p-3" style="background:var(--surface);border-color:var(--border);">
+                <p class="text-xs mb-2" style="color:var(--text-muted);">Click to use:</p>
                 <div class="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1">
                     @foreach ($statusSuggestions as $s)
                         <button type="button"
                             @click="$wire.set('profileStatus', @js($s)); showSuggestions = false"
                             class="px-2.5 py-1 rounded-full text-xs transition"
-                            style="background:#1C2333;color:#8B949E;border:1px solid #30363D;"
-                            onmouseover="this.style.color='#E6EDF3';this.style.borderColor='#4B5563'" onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
+                            style="background:var(--surface);color:var(--text-muted);border:1px solid var(--border);"
+                            onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--text-faint)'" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)'"
                         >{{ $s }}</button>
                     @endforeach
                 </div>
@@ -255,8 +249,8 @@
 
     {{-- ── 2. Atmosphere ──────────────────────────────────────── --}}
     <section class="space-y-3">
-        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:#8B949E;border-color:#30363D;">Atmosphere</h2>
-        <p class="text-xs" style="color:#8B949E;">A soft tint that appears behind your profile — subtle and calm.</p>
+        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:var(--text-muted);border-color:var(--border);">Atmosphere</h2>
+        <p class="text-xs" style="color:var(--text-muted);">A soft tint that appears behind your profile — subtle and calm.</p>
 
         <div class="grid grid-cols-4 gap-2">
             @foreach ($bannerOptions as $key => $option)
@@ -264,8 +258,8 @@
                     class="flex flex-col items-center gap-1 pb-1 rounded-lg transition"
                     title="{{ $option['label'] }}"
                 >
-                    <span class="block w-full rounded-lg" style="height:32px;background:{{ $option['g'] }};outline:{{ $bannerStyle === $key ? '2px solid #E6EDF3' : '2px solid #30363D' }};outline-offset:-1px;"></span>
-                    <span class="text-center leading-tight" style="color:{{ $bannerStyle === $key ? '#E6EDF3' : '#8B949E' }};font-size:0.65rem;">{{ $option['label'] }}</span>
+                    <span class="block w-full rounded-lg" style="height:32px;background:{{ $option['g'] }};outline:{{ $bannerStyle === $key ? '2px solid var(--text)' : '2px solid var(--border)' }};outline-offset:-1px;"></span>
+                    <span class="text-center leading-tight" style="color:{{ $bannerStyle === $key ? 'var(--text)' : 'var(--text-muted)' }};font-size:0.65rem;">{{ $option['label'] }}</span>
                 </button>
             @endforeach
         </div>
@@ -273,36 +267,20 @@
         @if ($bannerStyle)
             <button type="button" wire:click="$set('bannerStyle', '')"
                 class="text-xs transition"
-                style="color:#8B949E;" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='#8B949E'"
+                style="color:var(--text-muted);" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'"
             >Remove atmosphere</button>
         @endif
     </section>
 
-    {{-- ── 3. Accent colour ───────────────────────────────────── --}}
-    <section class="space-y-3">
-        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:#8B949E;border-color:#30363D;">Accent colour</h2>
-        <p class="text-xs" style="color:#8B949E;">A subtle colour used on your profile avatar outline and accents.</p>
-
-        <div class="flex items-center gap-3 flex-wrap">
-            @foreach (['green' => '#1D9E75', 'blue' => '#4A8BB5', 'amber' => '#D29922', 'purple' => '#8B5CF6', 'slate' => '#8B949E'] as $key => $color)
-                <button type="button" wire:click="$set('accentColor', '{{ $accentColor === $key ? '' : $key }}')"
-                    class="w-9 h-9 rounded-full transition"
-                    style="background:{{ $color }};outline:{{ $accentColor === $key ? '2px solid #E6EDF3' : '2px solid transparent' }};outline-offset:2px;"
-                    title="{{ ucfirst($key) }}"
-                ></button>
-            @endforeach
-        </div>
-    </section>
-
-    {{-- ── 4. Interests ───────────────────────────────────────── --}}
+    {{-- ── 3. Interests ───────────────────────────────────────── --}}
     <section class="space-y-3">
         <div class="flex items-start justify-between">
             <div>
-                <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:#8B949E;border-color:#30363D;">Interests</h2>
-                <p class="text-xs mt-1" style="color:#8B949E;">
+                <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:var(--text-muted);border-color:var(--border);">Interests</h2>
+                <p class="text-xs mt-1" style="color:var(--text-muted);">
                     Your top interests — up to 8 are shown on your profile.
                     @if ($this->selectedTags->count() > 0)
-                        <span style="color:#6B7790;">({{ $this->selectedTags->count() }} selected)</span>
+                        <span style="color:var(--text-muted);">({{ $this->selectedTags->count() }} selected)</span>
                     @endif
                 </p>
             </div>
@@ -312,11 +290,11 @@
         @if ($this->selectedTags->isNotEmpty())
             <div class="flex flex-wrap gap-2">
                 @foreach ($this->selectedTags as $tag)
-                    <span class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs" style="background:rgba(29,158,117,0.1);color:#1D9E75;border:1px solid rgba(29,158,117,0.3);">
+                    <span class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs" style="background:rgba(var(--accent-rgb),0.1);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.3);">
                         {{ $tag->name }}
                         <button type="button" wire:click="removeTag('{{ $tag->id }}')"
                             class="leading-none transition"
-                            style="color:rgba(29,158,117,0.6);" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='rgba(29,158,117,0.6)'"
+                            style="color:rgba(var(--accent-rgb),0.6);" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='rgba(var(--accent-rgb),0.6)'"
                             aria-label="Remove {{ $tag->name }}"
                         >×</button>
                     </span>
@@ -326,12 +304,7 @@
 
         {{-- Search to add --}}
         <div>
-            <input type="text" wire:model.live.debounce.300ms="tagSearch"
-                placeholder="Search for an interest to add…"
-                class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
-                style="background:#1C2333;border:1px solid #30363D;color:#E6EDF3;"
-                onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-            >
+            <x-input type="text" wire:model.live.debounce.300ms="tagSearch" placeholder="Search for an interest to add…" />
         </div>
 
         @if ($this->tagSearchResults->isNotEmpty())
@@ -339,20 +312,20 @@
                 @foreach ($this->tagSearchResults as $tag)
                     <button type="button" wire:click="addTag('{{ $tag->id }}')"
                         class="px-3 py-1 rounded-full text-xs transition"
-                        style="background:#1C2333;color:#8B949E;border:1px solid #30363D;"
-                        onmouseover="this.style.color='#1D9E75';this.style.borderColor='rgba(29,158,117,0.4)'" onmouseout="this.style.color='#8B949E';this.style.borderColor='#30363D'"
+                        style="background:var(--surface);color:var(--text-muted);border:1px solid var(--border);"
+                        onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(var(--accent-rgb),0.4)'" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)'"
                     >+ {{ $tag->name }}</button>
                 @endforeach
             </div>
         @elseif (strlen($tagSearch) >= 2)
-            <p class="text-xs" style="color:#8B949E;">No matching interests found.</p>
+            <p class="text-xs" style="color:var(--text-muted);">No matching interests found.</p>
         @endif
     </section>
 
-    {{-- ── 5. Comfort things ──────────────────────────────────── --}}
+    {{-- ── 4. Comfort things ──────────────────────────────────── --}}
     <section class="space-y-3">
-        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:#8B949E;border-color:#30363D;">Comfort things</h2>
-        <p class="text-xs" style="color:#8B949E;">Small conversation starters — what you love, what you reach for, what you could talk about forever. Up to 5.</p>
+        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:var(--text-muted);border-color:var(--border);">Comfort things</h2>
+        <p class="text-xs" style="color:var(--text-muted);">Small conversation starters — what you love, what you reach for, what you could talk about forever. Up to 5.</p>
 
         <div class="space-y-2">
             @foreach ($comfortThings as $i => $thing)
@@ -365,13 +338,10 @@
                              @click.outside="open = false"
                              @keydown.escape.window="open = false"
                         >
-                            <input type="text" wire:model="comfortThings.{{ $i }}.label"
+                            <x-input type="text" wire:model="comfortThings.{{ $i }}.label"
                                 maxlength="60" placeholder="What kind of thing…"
-                                class="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
-                                style="background:#1C2333;border:1px solid #30363D;color:#E6EDF3;"
-                                onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
                                 @focus="open = true"
-                            >
+                            />
 
                             {{-- Prompt picker popover --}}
                             <div x-show="open"
@@ -382,32 +352,30 @@
                                  x-transition:leave-start="opacity-100 translate-y-0"
                                  x-transition:leave-end="opacity-0 translate-y-0.5"
                                  class="absolute z-20 left-0 top-full mt-1 w-72 rounded-lg border shadow-xl overflow-hidden"
-                                 style="background:#161B22;border-color:#30363D;"
+                                 style="background:var(--surface);border-color:var(--border);"
                             >
                                 {{-- Search --}}
-                                <div class="p-2 border-b" style="border-color:#30363D;">
-                                    <input type="text" x-model="search" x-ref="searchInput"
+                                <div class="p-2 border-b" style="border-color:var(--border);">
+                                    <x-input type="text" x-model="search" x-ref="searchInput"
                                         x-effect="if(open) $nextTick(() => $refs.searchInput && $refs.searchInput.focus())"
                                         placeholder="Search prompts…"
-                                        class="w-full rounded px-2.5 py-1.5 text-xs focus:outline-none"
-                                        style="background:#1C2333;border:1px solid #30363D;color:#E6EDF3;"
-                                        @focus="$el.style.boxShadow='0 0 0 2px #1D9E75'" @blur="$el.style.boxShadow=''"
+                                        class="!rounded !px-2.5 !py-1.5 !text-xs"
                                         @keydown.escape="open = false"
-                                    >
+                                    />
                                 </div>
 
                                 {{-- Grouped prompts --}}
                                 <div class="max-h-52 overflow-y-auto p-2 space-y-3">
                                     @foreach ($promptGroups as $group => $prompts)
                                         <div x-show="@js(array_map('strtolower', $prompts)).some(p => p.includes(search.toLowerCase()))">
-                                            <p class="text-xs font-semibold uppercase tracking-wider px-1.5 mb-1" style="color:#4B5563;">{{ $group }}</p>
+                                            <p class="text-xs font-semibold uppercase tracking-wider px-1.5 mb-1" style="color:var(--text-faint);">{{ $group }}</p>
                                             @foreach ($prompts as $prompt)
                                                 <button type="button"
                                                     x-show="@js(strtolower($prompt)).includes(search.toLowerCase())"
                                                     @click="$wire.set('comfortThings.{{ $i }}.label', @js($prompt)); open = false; search = ''"
                                                     class="w-full text-left px-2 py-1.5 rounded text-xs transition"
-                                                    style="color:#C9D1D9;"
-                                                    onmouseover="this.style.background='#1C2333';this.style.color='#E6EDF3'" onmouseout="this.style.background='transparent';this.style.color='#C9D1D9'"
+                                                    style="color:var(--text);"
+                                                    onmouseover="this.style.background='var(--surface)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text)'"
                                                 >{{ $prompt }}</button>
                                             @endforeach
                                         </div>
@@ -415,23 +383,21 @@
                                 </div>
 
                                 {{-- Footer --}}
-                                <div class="px-3 py-2 border-t" style="border-color:#30363D;">
-                                    <p class="text-xs" style="color:#6B7790;">Or just type your own label above</p>
+                                <div class="px-3 py-2 border-t" style="border-color:var(--border);">
+                                    <p class="text-xs" style="color:var(--text-muted);">Or just type your own label above</p>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Value input --}}
-                        <input type="text" wire:model="comfortThings.{{ $i }}.value"
+                        <x-input type="text" wire:model="comfortThings.{{ $i }}.value"
                             maxlength="120" placeholder="Your answer…"
-                            class="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none"
-                            style="background:#1C2333;border:1px solid #30363D;color:#E6EDF3;"
-                            onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-                        >
+                            class="flex-1"
+                        />
                     </div>
                     <button type="button" wire:click="removeComfortThing({{ $i }})"
                         class="text-xs mt-2.5 transition flex-none"
-                        style="color:#8B949E;" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='#8B949E'"
+                        style="color:var(--text-muted);" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'"
                     >Remove</button>
                 </div>
             @endforeach
@@ -440,21 +406,21 @@
         @if (count($comfortThings) < 5)
             <button type="button" wire:click="addComfortThing"
                 class="text-xs transition"
-                style="color:#8B949E;" onmouseover="this.style.color='#1D9E75'" onmouseout="this.style.color='#8B949E'"
+                style="color:var(--text-muted);" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'"
             >+ Add a comfort thing</button>
         @endif
     </section>
 
-    {{-- ── 6. Social style ─────────────────────────────────────── --}}
+    {{-- ── 5. Social style ─────────────────────────────────────── --}}
     <section class="space-y-3">
-        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:#8B949E;border-color:#30363D;">Social style</h2>
-        <p class="text-xs" style="color:#8B949E;">How you like to connect — choose up to 5.</p>
+        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:var(--text-muted);border-color:var(--border);">Social style</h2>
+        <p class="text-xs" style="color:var(--text-muted);">How you like to connect — choose up to 5.</p>
 
         <div class="flex flex-wrap gap-1.5">
             @foreach ($socialStyleMap as $key => $label)
                 <button type="button" wire:click="toggleSocialStyle('{{ $key }}')"
                     class="px-3 py-1.5 rounded-full text-xs transition"
-                    style="{{ in_array($key, $socialStyles) ? 'background:rgba(29,158,117,0.12);color:#1D9E75;border:1px solid rgba(29,158,117,0.35);' : 'background:#1C2333;color:#8B949E;border:1px solid #30363D;' }}"
+                    style="{{ in_array($key, $socialStyles) ? 'background:rgba(var(--accent-rgb),0.12);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.35);' : 'background:var(--surface);color:var(--text-muted);border:1px solid var(--border);' }}"
                 >{{ $label }}</button>
             @endforeach
         </div>
@@ -464,30 +430,30 @@
         @endif
     </section>
 
-    {{-- ── 7. Open to ──────────────────────────────────────────── --}}
+    {{-- ── 6. Open to ──────────────────────────────────────────── --}}
     <section class="space-y-3">
-        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:#8B949E;border-color:#30363D;">Open to…</h2>
-        <p class="text-xs" style="color:#8B949E;">Helps people know how approachable you feel.</p>
+        <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:var(--text-muted);border-color:var(--border);">Open to…</h2>
+        <p class="text-xs" style="color:var(--text-muted);">Helps people know how approachable you feel.</p>
 
         <div class="flex flex-wrap gap-1.5">
             @foreach ($openToMap as $key => $label)
                 <button type="button" wire:click="toggleOpenTo('{{ $key }}')"
                     class="px-3 py-1.5 rounded-full text-xs transition"
-                    style="{{ in_array($key, $openTo) ? 'background:rgba(74,139,181,0.12);color:#4A8BB5;border:1px solid rgba(74,139,181,0.35);' : 'background:#1C2333;color:#8B949E;border:1px solid #30363D;' }}"
+                    style="{{ in_array($key, $openTo) ? 'background:rgba(74,139,181,0.12);color:#4A8BB5;border:1px solid rgba(74,139,181,0.35);' : 'background:var(--surface);color:var(--text-muted);border:1px solid var(--border);' }}"
                 >{{ $label }}</button>
             @endforeach
         </div>
     </section>
 
-    {{-- ── 8. Usually found in (read-only) ────────────────────── --}}
+    {{-- ── 7. Usually found in (read-only) ────────────────────── --}}
     @if ($this->usualRooms->isNotEmpty())
         <section class="space-y-3">
-            <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:#8B949E;border-color:#30363D;">Usually found in</h2>
-            <p class="text-xs" style="color:#8B949E;">Rooms you've created — shown automatically on your profile.</p>
+            <h2 class="text-xs font-semibold uppercase tracking-wider pb-2 border-b" style="color:var(--text-muted);border-color:var(--border);">Usually found in</h2>
+            <p class="text-xs" style="color:var(--text-muted);">Rooms you've created — shown automatically on your profile.</p>
             <ul class="space-y-1.5">
                 @foreach ($this->usualRooms as $room)
-                    <li class="flex items-center gap-2 text-sm" style="color:#C9D1D9;">
-                        <span style="color:#8B949E;">·</span>
+                    <li class="flex items-center gap-2 text-sm" style="color:var(--text);">
+                        <span style="color:var(--text-muted);">·</span>
                         {{ $room->title }}
                     </li>
                 @endforeach
@@ -498,17 +464,14 @@
     {{-- ── Save ────────────────────────────────────────────────── --}}
     <div class="pt-2 space-y-3">
         <div class="flex items-center gap-4">
-            <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
-                class="px-6 py-2.5 text-sm font-semibold rounded-lg transition disabled:opacity-50"
-                style="background:#1D9E75;color:#fff;" onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'"
-            >
+            <x-button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save" variant="primary" class="!px-6">
                 <span wire:loading.remove wire:target="save">Save profile</span>
                 <span wire:loading wire:target="save">Saving…</span>
-            </button>
+            </x-button>
 
             <a href="{{ route('profile.show', auth()->user()->gamertag) }}" wire:navigate
                 class="text-sm transition"
-                style="color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
+                style="color:var(--text-muted);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
             >View your profile</a>
         </div>
     </div>

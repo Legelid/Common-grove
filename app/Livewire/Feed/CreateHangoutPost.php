@@ -285,7 +285,7 @@ class CreateHangoutPost extends Component
 
         $post->tags()->attach($allTagIds);
 
-        $this->redirect(route('feed'), navigate: true);
+        $this->redirect(route('explore'), navigate: true);
     }
 
     /**
@@ -320,6 +320,6 @@ class CreateHangoutPost extends Component
     public function render(): View
     {
         return view('livewire.feed.create-hangout-post')
-            ->layout('layouts.app', ['title' => 'Open a Hangout or Room — CommonGrove']);
+            ->layout('layouts.app', ['title' => 'Open a Hangout or Room | CommonGrove']);
     }
 }

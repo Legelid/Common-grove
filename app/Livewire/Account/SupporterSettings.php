@@ -82,6 +82,6 @@ class SupporterSettings extends Component
 
         return view('livewire.account.supporter-settings', [
             'subscription' => $subscription,
-        ])->layout('layouts.app', ['title' => 'Supporter — CommonGrove']);
+        ])->layout('layouts.app', ['title' => 'Supporter | CommonGrove']);
     }
 }

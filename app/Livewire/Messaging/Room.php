@@ -7,18 +7,23 @@ namespace App\Livewire\Messaging;
 use App\Events\MessageSent;
 use App\Events\UserTyping;
 use App\Models\Conversation;
+use App\Models\HangoutPost;
 use App\Models\Message;
 use App\Models\MessageReaction;
 use App\Models\PinnedRoom;
 use App\Models\RecentRoom;
+use App\Models\User;
 use App\Livewire\Rooms\PinnedRoomsSidebar;
 use App\Services\BlockService;
 use App\Services\CrisisDetectionService;
+use App\Services\FriendshipService;
+use App\Services\InterestPrivacyService;
 use App\Services\MessageLimitService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -53,6 +58,15 @@ class Room extends Component
     // Room gradient
     public string $roomGradientTheme  = '';
     public bool   $showGradientPicker = false;
+
+    // Participant preview card (Phase 6, Part D)
+    public ?string $previewUserId = null;
+
+    // "Similar rooms" side panel — opened from an interest tag in the
+    // settings menu, shows other rooms sharing that one tag.
+    public bool   $showSimilarRoomsPanel = false;
+    public ?string $similarRoomsTagId    = null;
+    public ?string $similarRoomsTagName  = null;
 
     public function mount(string $conversationId): void
     {
@@ -186,6 +200,15 @@ class Room extends Component
             $this->addError('messageContent', 'You cannot send messages in this conversation.');
             return;
         }
+
+        // General flood guard — 30 messages/minute/user, independent of the
+        // new-account cap below.
+        $floodKey = 'send-message.' . Auth::id();
+        if (RateLimiter::tooManyAttempts($floodKey, 30)) {
+            $this->addError('messageContent', 'You\'re sending messages too quickly. Please slow down.');
+            return;
+        }
+        RateLimiter::hit($floodKey, 60);
 
         /** @var MessageLimitService $limiter */
         $limiter = app(MessageLimitService::class);
@@ -570,6 +593,130 @@ class Room extends Component
     }
 
     // -------------------------------------------------------------------------
+    // "Similar rooms" side panel
+    // -------------------------------------------------------------------------
+
+    /**
+     * Up to 5 other active rooms that share the tag currently open in the
+     * panel, excluding this room. Random order so hitting Refresh surfaces
+     * a different slice when more than 5 rooms match.
+     *
+     * @return Collection<int, HangoutPost>
+     */
+    #[Computed]
+    public function similarRooms(): Collection
+    {
+        if ($this->similarRoomsTagId === null) {
+            return collect();
+        }
+
+        $currentPostId = $this->conversation->hangoutPost?->id;
+
+        return HangoutPost::active()
+            ->whereHas('tags', fn ($q) => $q->where('tags.id', $this->similarRoomsTagId))
+            ->whereHas('conversation')
+            ->when($currentPostId, fn ($q) => $q->where('id', '!=', $currentPostId))
+            ->with(['tags', 'conversation'])
+            ->inRandomOrder()
+            ->limit(5)
+            ->get();
+    }
+
+    public function openSimilarRoomsPanel(string $tagId, string $tagName): void
+    {
+        $this->similarRoomsTagId     = $tagId;
+        $this->similarRoomsTagName   = $tagName;
+        $this->showSimilarRoomsPanel = true;
+    }
+
+    public function closeSimilarRoomsPanel(): void
+    {
+        $this->showSimilarRoomsPanel = false;
+    }
+
+    /** Re-runs the similar-rooms query against the database. */
+    public function refreshSimilarRooms(): void
+    {
+        unset($this->similarRooms);
+    }
+
+    // -------------------------------------------------------------------------
+    // Participant preview card (Phase 6, Part D)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Privacy-safe preview data for the participant currently being
+     * previewed, or null when no preview is open. All privacy rules
+     * (sensitive/private interests, no exact join dates, no hidden profile
+     * data) are enforced here, not in the view.
+     *
+     * @return array{user: User, tenureLabel: string, sharedInterests: Collection<int, string>}|null
+     */
+    #[Computed]
+    public function previewParticipant(): ?array
+    {
+        if ($this->previewUserId === null || ! Auth::check()) {
+            return null;
+        }
+
+        $participant = $this->conversation->participants->firstWhere('id', $this->previewUserId);
+
+        if ($participant === null) {
+            return null;
+        }
+
+        $sharedInterests = app(InterestPrivacyService::class)
+            ->safeSharedTags(Auth::user(), $participant, 3)
+            ->pluck('name');
+
+        return [
+            'user'            => $participant,
+            'tenureLabel'     => $this->tenureLabel($participant),
+            'sharedInterests' => $sharedInterests,
+        ];
+    }
+
+    /**
+     * Approximate tenure only — created_at is never exposed directly.
+     */
+    private function tenureLabel(User $user): string
+    {
+        $days = (int) $user->created_at->diffInDays(now());
+
+        return match (true) {
+            $days <= 30  => 'New here',
+            $days <= 180 => 'Around for a few months',
+            $days <= 365 => 'Here for about a year',
+            default      => 'A long-time member',
+        };
+    }
+
+    /**
+     * "Stay connected" from the participant preview card.
+     */
+    public function sendFriendRequestFromPreview(string $userId): void
+    {
+        if (! Auth::check()) {
+            $this->redirect(route('register'), navigate: true);
+            return;
+        }
+
+        $target = User::findOrFail($userId);
+
+        if (app(BlockService::class)->isBlocked(Auth::user(), $target)) {
+            return;
+        }
+
+        try {
+            app(FriendshipService::class)->sendRequest(Auth::user(), $target);
+        } catch (\InvalidArgumentException) {
+            // Already friends, blocked, or duplicate — silently skip
+        }
+
+        $this->previewUserId = null;
+    }
+
+    // -------------------------------------------------------------------------
     // Echo listeners
     // -------------------------------------------------------------------------
 
@@ -600,6 +747,6 @@ class Room extends Component
     public function render(): View
     {
         return view('livewire.messaging.room')
-            ->layout('layouts.app', ['title' => ($this->conversation->name ?? 'Room') . ' — CommonGrove']);
+            ->layout('layouts.app', ['title' => ($this->conversation->name ?? 'Room') . ' | CommonGrove']);
     }
 }

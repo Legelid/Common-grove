@@ -11,7 +11,30 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['"Source Sans 3"', ...defaultTheme.fontFamily.sans],
+                display: ['"Playfair Display"', 'Georgia', 'serif'],
+                mono: ['"JetBrains Mono"', ...defaultTheme.fontFamily.mono],
+            },
+            colors: {
+                bg: 'var(--bg)',
+                surface: 'var(--surface)',
+                'surface-raised': 'var(--surface-raised)',
+                border: 'var(--border)',
+                accent: 'rgb(var(--accent-rgb) / <alpha-value>)',
+                'accent-hover': 'var(--accent-hover)',
+                text: 'var(--text)',
+                'text-muted': 'var(--text-muted)',
+                'text-faint': 'var(--text-faint)',
+                danger: 'rgb(var(--danger-rgb) / <alpha-value>)',
+                'on-accent': 'var(--on-accent)',
+                'on-danger': 'var(--on-danger)',
+            },
+            borderRadius: {
+                card: '14px',
+                btn: '10px',
+            },
+            boxShadow: {
+                card: 'var(--card-shadow)',
             },
         },
     },

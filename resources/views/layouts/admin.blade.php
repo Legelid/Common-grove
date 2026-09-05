@@ -9,17 +9,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'Admin' }} — CommonGrove</title>
+    <title>{{ $title ?? 'Admin' }} | CommonGrove</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-icon2.png') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+    @include('partials.fonts')
+    @include('partials.theme-init')
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body
     class="h-full flex antialiased"
-    style="{{ $bodyBg }}color:#E6EDF3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;"
+    style="{{ $bodyBg }}color:var(--text);font-family:'Source Sans 3',system-ui,sans-serif;"
     x-data="{ navOpen: false }"
 >
 
@@ -45,13 +44,13 @@
                transition-transform duration-200 ease-in-out
                md:relative md:translate-x-0"
         :class="navOpen ? 'translate-x-0' : '-translate-x-full'"
-        style="background:#161B22;border-color:#30363D;"
+        style="background:var(--surface);border-color:var(--border);"
     >
         {{-- Sidebar header --}}
-        <div class="px-4 py-5 border-b flex-none" style="border-color:#30363D;">
+        <div class="px-4 py-5 border-b flex-none" style="border-color:var(--border);">
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
-                    <span class="tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;">Common<span style="font-weight:700;-webkit-text-stroke:0.6px #E6EDF3;">Grove</span></span>
+                    <span class="tracking-tight font-display" style="color:var(--text);font-size:1.5rem;font-weight:400;">Common<span style="font-weight:700;-webkit-text-stroke:0.6px var(--text);">Grove</span></span>
                     <img src="{{ asset('images/logo-icon.png') }}" alt="" class="h-9 w-auto -ml-6">
                 </div>
                 {{-- Close button — mobile only --}}
@@ -59,17 +58,21 @@
                     type="button"
                     @click="navOpen = false"
                     class="md:hidden p-1 rounded transition"
-                    style="color:#8B949E;"
-                    onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
+                    style="color:var(--text-muted);"
+                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                     </svg>
                 </button>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
-                <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(210,153,34,0.2);color:#D29922;">ADMIN</span>
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs px-1.5 py-0.5 rounded font-semibold bg-accent/15 text-accent">BETA</span>
+                    <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(210,153,34,0.2);color:#D29922;">ADMIN</span>
+                </div>
+                {{-- Light/dark toggle hidden pending a different feature — logic left intact in partials.theme-toggle. --}}
+                {{-- @include('partials.theme-toggle') --}}
             </div>
         </div>
 
@@ -88,31 +91,20 @@
                 ];
             @endphp
             @foreach ($links as $link)
-                <a
-                    href="{{ route($link['route']) }}"
-                    wire:navigate
-                    @click="navOpen = false"
-                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition"
-                    @style([
-                        'background:#21262D;color:#E6EDF3;' => request()->routeIs($link['route']),
-                        'color:#8B949E;'                    => ! request()->routeIs($link['route']),
-                    ])
-                    onmouseover="if(!this.classList.contains('active-nav'))this.style.background='#21262D'"
-                    onmouseout="if(!{{ request()->routeIs($link['route']) ? 'true' : 'false' }})this.style.background=''"
-                >
+                <x-nav-link :href="route($link['route'])" :active="request()->routeIs($link['route'])" @click="navOpen = false">
                     <span>{{ $link['icon'] }}</span> {{ $link['label'] }}
-                </a>
+                </x-nav-link>
             @endforeach
         </div>
 
-        <div class="px-4 py-4 border-t flex-none" style="border-color:#30363D;">
+        <div class="px-4 py-4 border-t flex-none" style="border-color:var(--border);">
             <a
                 href="{{ route('feed') }}"
                 wire:navigate
                 @click="navOpen = false"
                 class="text-xs transition"
-                style="color:#8B949E;"
-                onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
+                style="color:var(--text-muted);"
+                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
             >← Back to app</a>
         </div>
     </nav>
@@ -121,13 +113,13 @@
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {{-- Mobile top bar — hidden on desktop --}}
-        <div class="md:hidden flex items-center gap-3 px-4 py-3 border-b flex-none" style="background:#161B22;border-color:#30363D;">
+        <div class="md:hidden flex items-center gap-3 px-4 py-3 border-b flex-none" style="background:var(--surface);border-color:var(--border);">
             <button
                 type="button"
                 @click="navOpen = true"
                 class="p-1.5 rounded-lg transition flex-none"
-                style="color:#8B949E;"
-                onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
+                style="color:var(--text-muted);"
+                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
                 aria-label="Open navigation"
             >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -137,11 +129,11 @@
                 </svg>
             </button>
             <div class="flex items-center gap-1">
-                <span class="tracking-tight" style="color:#E6EDF3;font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;">Common<span style="font-weight:700;-webkit-text-stroke:0.5px #E6EDF3;">Grove</span></span>
+                <span class="tracking-tight font-display" style="color:var(--text);font-size:1.25rem;font-weight:400;">Common<span style="font-weight:700;-webkit-text-stroke:0.5px var(--text);">Grove</span></span>
                 <img src="{{ asset('images/logo-icon.png') }}" alt="" class="h-7 w-auto -ml-4">
             </div>
             <div class="ml-auto flex items-center gap-1.5">
-                <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">BETA</span>
+                <span class="text-xs px-1.5 py-0.5 rounded font-semibold bg-accent/15 text-accent">BETA</span>
                 <span class="text-xs px-1.5 py-0.5 rounded font-semibold" style="background:rgba(210,153,34,0.2);color:#D29922;">ADMIN</span>
             </div>
         </div>

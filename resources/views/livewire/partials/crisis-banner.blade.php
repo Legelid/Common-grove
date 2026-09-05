@@ -3,7 +3,7 @@
         <div class="flex items-start justify-between gap-3">
             <p class="font-semibold" style="color:#D29922;">If you're going through a difficult time, support is available:</p>
             <button wire:click="dismissCrisisBanner" class="flex-none text-lg leading-none mt-0.5 transition" style="color:#D29922;" aria-label="Dismiss"
-                onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#D29922'">&times;</button>
+                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='#D29922'">&times;</button>
         </div>
         <ul class="space-y-1 text-sm" style="color:rgba(210,153,34,0.85);">
             @foreach (app(\App\Services\CrisisDetectionService::class)->getResources() as $resource)

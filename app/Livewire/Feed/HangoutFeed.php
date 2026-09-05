@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace App\Livewire\Feed;
 
-use App\Livewire\Rooms\PinnedRoomsSidebar;
-use App\Models\Category;
 use App\Models\Conversation;
-use App\Models\HangoutPost;
-use App\Models\PinnedRoom;
-use App\Models\Subcategory;
-use App\Models\Tag;
-use App\Services\BlockService;
+use App\Models\Message;
+use App\Models\RecentRoom;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
@@ -24,378 +22,168 @@ use Livewire\Component;
 #[Poll(60000)]
 class HangoutFeed extends Component
 {
-    /** @var list<string> Tag IDs currently selected in the filter panel. */
-    public array $selectedFilterTagIds = [];
+    /**
+     * Resolved once in mount() and never recomputed — this component polls
+     * every 60s, and a #[Computed] greeting would silently change mid-session
+     * (e.g. "morning" flipping to "afternoon" while the tab sits open).
+     *
+     * @var array{heading: string, subtext: string}
+     */
+    public array $greeting = [];
 
-    /** Category drill-down navigation (panel UI state only, not part of the feed query). */
-    public ?int $filterCategoryId = null;
+    /** Set when a query in this component fails, so the view can show a calm error state instead of crashing. */
+    public bool $hasError = false;
 
-    /** Subcategory filter within the selected category. */
-    public ?int $filterSubcategoryId = null;
-
-    /** Free-text search query inside the filter panel. */
-    public string $filterSearch = '';
-
-    public ?string $joinMessage = null;
-
-    public ?string $pinToast = null;
-
-    // ── Filter panel — categories & tags ─────────────────────────────────────
-
-    /** @return Collection<int, Category> */
-    #[Computed]
-    public function filterCategories(): Collection
+    public function mount(): void
     {
-        return Category::where('is_active', true)->orderBy('sort_order')->get();
-    }
-
-    /** @return Collection<int, Subcategory> */
-    #[Computed]
-    public function filterSubcategories(): Collection
-    {
-        if ($this->filterCategoryId === null) {
-            return collect();
+        if (! Auth::check()) {
+            $this->redirect(route('home'), navigate: true);
+            return;
         }
 
-        return Subcategory::where('category_id', $this->filterCategoryId)
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get();
+        $this->greeting = $this->resolveGreeting();
+    }
+
+    /** @return array{heading: string, subtext: string} */
+    protected function resolveGreeting(): array
+    {
+        $user = Auth::user();
+
+        if (! $user) {
+            return [
+                'heading' => 'Find your people.',
+                'subtext' => 'CommonGrove is a calm place to make real friends. Take your time looking around.',
+            ];
+        }
+
+        $isNewUser = ! $user->onboarding_completed
+            || ! RecentRoom::where('user_id', $user->id)->exists();
+
+        if ($isNewUser) {
+            return [
+                'heading' => 'Welcome to CommonGrove.',
+                'subtext' => "You don't have to know what to say yet. Have a look around — there's no pressure to jump in.",
+            ];
+        }
+
+        $hasJoinedRooms = DB::table('conversation_participants')->where('user_id', $user->id)->exists();
+
+        $subtext = $hasJoinedRooms
+            ? 'A few conversations continued while you were away.'
+            : 'Where would you like to spend some time today?';
+
+        $name   = $this->resolveGreetingName($user);
+        $suffix = $name ? ", {$name}" : '';
+        $hour   = now()->hour;
+
+        $heading = match (true) {
+            $hour >= 5 && $hour < 11  => "Good morning{$suffix}.",
+            $hour >= 11 && $hour < 17 => "Good afternoon{$suffix}.",
+            $hour >= 17 && $hour < 22 => "Good evening{$suffix}.",
+            default                   => "It's late{$suffix}. Glad you're here.",
+        };
+
+        return ['heading' => $heading, 'subtext' => $subtext];
     }
 
     /**
-     * Tags to display in the panel.
-     * — Non-empty search  → global search results (≤ 24 tags)
-     * — Subcategory set   → that subcategory's tags
-     * — Category set      → top tags for that category (≤ 40)
-     * — Nothing set       → empty (category list is shown instead)
+     * Self-facing name for the greeting only. Deliberately NOT
+     * $user->display_name (getDisplayNameAttribute()) — that accessor
+     * intentionally returns gamertag-only for identity_mode 2, because mode 2
+     * hides the display name from OTHER users. The greeting is shown only to
+     * this user, so honoring their chosen name here is correct, not a bug.
+     */
+    protected function resolveGreetingName(User $user): ?string
+    {
+        $name = match ($user->identity_mode) {
+            2       => $user->preferred_name,
+            3       => $user->getAttribute('display_name') ?: null,
+            default => null,
+        };
+
+        return $name ?: ($user->gamertag ?: null);
+    }
+
+    /**
+     * "Continue where you left off" — rooms the user currently has an
+     * active seat in (conversation_participants, left_at IS NULL), most
+     * recently active first. Real joined-room data only, no invented
+     * suggestions and no pinned/DM mix — just what you're actually in.
      *
-     * Sorted: currently-selected first, then user's profile interests, then usage desc, then alpha.
-     *
-     * @return Collection<int, Tag>
+     * @return Collection<int, array{
+     *     id: string, name: string, stateLabel: string,
+     * }>
      */
     #[Computed]
-    public function filterTags(): Collection
+    public function continuePaths(): Collection
     {
-        if (strlen($this->filterSearch) < 2 && $this->filterCategoryId === null) {
+        if (! Auth::check()) {
             return collect();
         }
 
-        $userTagIds = Auth::check() ? Auth::user()->tags()->pluck('tag_id')->flip()->all() : [];
+        try {
+            $userId = Auth::id();
 
-        if (strlen($this->filterSearch) >= 2) {
-            $tags = Tag::approved()
-                ->where('name', 'like', '%' . $this->filterSearch . '%')
-                ->orderByDesc('usage_count')
-                ->orderBy('name')
-                ->limit(24)
+            $conversations = Conversation::where('type', 'room')
+                ->where('is_active', true)
+                ->whereHas('participants', function (Builder $q) use ($userId): void {
+                    $q->where('conversation_participants.user_id', $userId)
+                        ->whereNull('conversation_participants.left_at');
+                })
+                ->with('hangoutPost')
+                ->orderByDesc('updated_at')
+                ->limit(4)
                 ->get();
-        } elseif ($this->filterSubcategoryId !== null) {
-            $tags = Tag::approved()
-                ->where('subcategory_id', $this->filterSubcategoryId)
-                ->orderByDesc('usage_count')
-                ->orderBy('name')
-                ->get();
-        } else {
-            $tags = Tag::approved()
-                ->where('category_id', $this->filterCategoryId)
-                ->orderByDesc('usage_count')
-                ->orderBy('name')
-                ->limit(40)
-                ->get();
-        }
 
-        return $tags->sortBy(fn (Tag $tag): array => [
-            in_array($tag->id, $this->selectedFilterTagIds, true) ? 0 : (isset($userTagIds[$tag->id]) ? 1 : 2),
-            -$tag->usage_count,
-            $tag->name,
-        ])->values();
-    }
+            return $conversations->map(function (Conversation $conversation) use ($userId) {
+                $pivot = $conversation->participants()
+                    ->where('conversation_participants.user_id', $userId)
+                    ->first()
+                    ?->pivot;
 
-    /**
-     * Tags currently active as feed filters — used to display and remove them.
-     *
-     * @return Collection<int, Tag>
-     */
-    #[Computed]
-    public function activeFilterTags(): Collection
-    {
-        if (empty($this->selectedFilterTagIds)) {
+                $lastReadAt = $pivot?->last_read_at;
+
+                $unreadCount = Message::where('conversation_id', $conversation->id)
+                    ->when($lastReadAt, fn ($q) => $q->where('created_at', '>', $lastReadAt))
+                    ->count();
+
+                $participantCount = DB::table('conversation_participants')
+                    ->where('conversation_id', $conversation->id)
+                    ->whereNull('left_at')
+                    ->count();
+                $otherCount = max(0, $participantCount - 1);
+
+                $hangoutPost = $conversation->hangoutPost;
+                $expiresSoon = $hangoutPost
+                    && ! $hangoutPost->is_persistent
+                    && $hangoutPost->expires_at
+                    && $hangoutPost->expires_at->isFuture()
+                    && $hangoutPost->expires_at->diffInHours(now()) <= 2;
+
+                $stateLabel = match (true) {
+                    $unreadCount > 0 => $unreadCount . ' ' . Str::plural('message', $unreadCount) . ' waiting',
+                    $expiresSoon     => 'Expiring soon',
+                    $otherCount === 0 => 'Quiet now',
+                    $otherCount === 1 => '1 person here',
+                    default          => $otherCount . ' people here',
+                };
+
+                return [
+                    'id'         => $conversation->id,
+                    'name'       => $conversation->name ?? 'Hangout Room',
+                    'stateLabel' => $stateLabel,
+                ];
+            })->values();
+        } catch (\Throwable $e) {
+            Log::error('HangoutFeed::continuePaths failed', ['exception' => $e]);
+            $this->hasError = true;
             return collect();
         }
-
-        return Tag::whereIn('id', $this->selectedFilterTagIds)->orderBy('name')->get();
-    }
-
-    // ── Feed ──────────────────────────────────────────────────────────────────
-
-    /**
-     * Official CommonGrove starter rooms, shown when the user hasn't opted out.
-     *
-     * @return Collection<int, HangoutPost>
-     */
-    #[Computed]
-    public function officialRooms(): Collection
-    {
-        if (Auth::check() && ! (Auth::user()->show_official_rooms ?? true)) {
-            return collect();
-        }
-
-        return HangoutPost::where('is_official', true)
-            ->where('is_active', true)
-            ->where('is_persistent', true)
-            ->whereNotNull('title')
-            ->with(['tags', 'conversation'])
-            ->orderBy('created_at')
-            ->limit(4)
-            ->get();
-    }
-
-    /**
-     * Posts scored and sorted by how many selected filter tags they match.
-     * Falls back to the user's interest-filtered feed when no filters are active.
-     *
-     * @return Collection<int, HangoutPost>
-     */
-    #[Computed]
-    public function posts(): Collection
-    {
-        // User-created rooms are hidden from guests; they see only the 4 official starter rooms.
-        if (! Auth::check()) {
-            return collect();
-        }
-
-        $isAdmin = Auth::user()->is_admin;
-
-        if (empty($this->selectedFilterTagIds)) {
-            $query = HangoutPost::active()
-                ->where('is_official', false)
-                ->with(['user', 'tags', 'conversation'])
-                ->latest()
-                ->limit(30);
-
-            if (! $isAdmin) {
-                $query->forUser(Auth::user());
-            }
-
-            return $query->get();
-        }
-
-        $scoreSubquery = DB::table('hangout_post_tags')
-            ->selectRaw('hangout_post_id, COUNT(*) as match_score')
-            ->whereIn('tag_id', $this->selectedFilterTagIds)
-            ->groupBy('hangout_post_id');
-
-        $posts = HangoutPost::active()
-            ->where('is_official', false)
-            ->with(['user', 'tags', 'conversation'])
-            ->joinSub($scoreSubquery, 'scores', 'hangout_posts.id', '=', 'scores.hangout_post_id')
-            ->select('hangout_posts.*', 'scores.match_score')
-            ->orderByDesc('scores.match_score')
-            ->orderByDesc('hangout_posts.created_at')
-            ->limit(40)
-            ->get();
-
-        if ($isAdmin) {
-            return $posts;
-        }
-
-        $blocked = collect(
-            DB::table('blocks')
-                ->where('blocker_id', Auth::id())
-                ->pluck('blocked_id')
-        )->merge(
-            DB::table('blocks')
-                ->where('blocked_id', Auth::id())
-                ->pluck('blocker_id')
-        )->unique();
-
-        return $posts->reject(fn ($p) => $blocked->contains($p->user_id))->values();
-    }
-
-    /** @return list<string> */
-    #[Computed]
-    public function pinnedConversationIds(): array
-    {
-        if (! Auth::check()) {
-            return [];
-        }
-
-        return PinnedRoom::where('user_id', Auth::id())
-            ->pluck('conversation_id')
-            ->all();
-    }
-
-    #[Computed]
-    public function showingFallback(): bool
-    {
-        return ! empty($this->selectedFilterTagIds) && $this->posts->isEmpty();
-    }
-
-    #[Computed]
-    public function filtersActive(): bool
-    {
-        return ! empty($this->selectedFilterTagIds);
-    }
-
-    // ── Filter panel actions ──────────────────────────────────────────────────
-
-    public function setFilterCategory(int $categoryId): void
-    {
-        $this->filterCategoryId    = $this->filterCategoryId === $categoryId ? null : $categoryId;
-        $this->filterSubcategoryId = null;
-        $this->filterSearch        = '';
-    }
-
-    public function setFilterSubcategory(int $subcategoryId): void
-    {
-        $this->filterSubcategoryId = $this->filterSubcategoryId === $subcategoryId ? null : $subcategoryId;
-    }
-
-    public function clearFilterNav(): void
-    {
-        $this->filterCategoryId    = null;
-        $this->filterSubcategoryId = null;
-        $this->filterSearch        = '';
-    }
-
-    public function toggleFilter(string $tagId): void
-    {
-        if (in_array($tagId, $this->selectedFilterTagIds, true)) {
-            $this->selectedFilterTagIds = array_values(
-                array_diff($this->selectedFilterTagIds, [$tagId])
-            );
-        } else {
-            $this->selectedFilterTagIds[] = $tagId;
-        }
-    }
-
-    public function clearFilters(): void
-    {
-        $this->selectedFilterTagIds = [];
-    }
-
-    // ── Room actions ──────────────────────────────────────────────────────────
-
-    public function joinHangout(string $postId): void
-    {
-        $post = HangoutPost::active()->find($postId);
-
-        if ($post === null) {
-            $this->joinMessage = 'That hangout has already expired.';
-            return;
-        }
-
-        if (! Auth::check()) {
-            // Official starter rooms are previewable by guests — route them in directly.
-            if ($post->is_official) {
-                $conversation = Conversation::where('hangout_post_id', $post->id)->first();
-                if ($conversation) {
-                    $this->redirect(route('room.show', $conversation->id), navigate: true);
-                    return;
-                }
-            }
-            $this->redirect(route('register'), navigate: true);
-            return;
-        }
-
-        if (! Auth::user()->hasVerifiedEmail()) {
-            $this->joinMessage = 'Please verify your email before joining hangouts.';
-            return;
-        }
-
-        if (app(BlockService::class)->isBlocked(Auth::user(), $post->user)) {
-            $this->joinMessage = 'You cannot join this hangout.';
-            return;
-        }
-
-        $conversation = Conversation::firstOrCreate(
-            ['hangout_post_id' => $post->id],
-            [
-                'type'       => 'room',
-                'name'       => Str::limit($post->content, 80),
-                'created_by' => $post->user_id,
-                'is_active'  => true,
-            ]
-        );
-
-        if (! $conversation->participants()->where('user_id', Auth::id())->exists()) {
-            $conversation->participants()->attach(Auth::id(), ['joined_at' => now()]);
-            $post->increment('joined_count');
-        }
-
-        $this->redirect(route('room.show', $conversation->id), navigate: true);
-    }
-
-    public function toggleCardPin(string $postId): void
-    {
-        if (! Auth::check()) {
-            $this->redirect(route('register'), navigate: true);
-            return;
-        }
-
-        $this->pinToast = null;
-
-        $post = HangoutPost::active()->find($postId);
-
-        if ($post === null) {
-            return;
-        }
-
-        if (app(BlockService::class)->isBlocked(Auth::user(), $post->user)) {
-            return;
-        }
-
-        $conversation = Conversation::firstOrCreate(
-            ['hangout_post_id' => $post->id],
-            [
-                'type'       => 'room',
-                'name'       => Str::limit($post->content, 80),
-                'created_by' => $post->user_id,
-                'is_active'  => true,
-            ]
-        );
-
-        $isParticipant = $conversation->participants()
-            ->where('conversation_participants.user_id', Auth::id())
-            ->exists();
-
-        if (! $isParticipant) {
-            $conversation->participants()->attach(Auth::id(), ['joined_at' => now()]);
-        } else {
-            $conversation->participants()->updateExistingPivot(Auth::id(), ['left_at' => null]);
-        }
-
-        $existing = PinnedRoom::where('user_id', Auth::id())
-            ->where('conversation_id', $conversation->id)
-            ->first();
-
-        if ($existing) {
-            $existing->delete();
-            $this->pinToast = 'Removed from Your Rooms';
-        } else {
-            $count = PinnedRoom::where('user_id', Auth::id())->count();
-
-            if ($count >= PinnedRoomsSidebar::MAX_PINS) {
-                $this->pinToast = 'You can save up to ' . PinnedRoomsSidebar::MAX_PINS . ' rooms.';
-                return;
-            }
-
-            PinnedRoom::create([
-                'user_id'         => Auth::id(),
-                'conversation_id' => $conversation->id,
-            ]);
-
-            $this->pinToast = 'Saved to Your Rooms';
-        }
-
-        unset($this->pinnedConversationIds, $this->posts);
-        $this->dispatch('room-pin-updated');
     }
 
     public function render(): View
     {
         return view('livewire.feed.hangout-feed')
-            ->layout('layouts.app', ['title' => 'Hangout Feed — CommonGrove']);
+            ->layout('layouts.app', ['title' => 'Home | CommonGrove']);
     }
 }

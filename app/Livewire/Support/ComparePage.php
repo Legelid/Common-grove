@@ -11,6 +11,6 @@ class ComparePage extends Component
     public function render(): \Illuminate\View\View
     {
         return view('livewire.support.compare-page')
-            ->layout('layouts.app', ['title' => 'Free vs Supporter — CommonGrove']);
+            ->layout('layouts.app', ['title' => 'Free vs Supporter | CommonGrove']);
     }
 }

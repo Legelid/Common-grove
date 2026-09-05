@@ -69,11 +69,12 @@ class User extends Authenticatable implements MustVerifyEmail
         'birthday_theme_enabled',
         'holiday_themes_enabled',
         'tone_pack',
+        'site_theme',
+        'glass_blur_enabled',
         // Profile expression
         'profile_status',
         'accent_color',
         'banner_style',
-        'personal_gradient_theme',
         'comfort_things',
         'open_to',
         'social_styles',
@@ -118,6 +119,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'birthday_theme_enabled'     => 'boolean',
             'holiday_themes_enabled'     => 'boolean',
             'tone_pack'                  => 'string',
+            'site_theme'                 => 'string',
+            'glass_blur_enabled'         => 'boolean',
             'show_conversation_prompts'   => 'boolean',
             'enabled_prompt_packs'        => 'array',
             'advanced_comfort_settings'   => 'array',
@@ -305,7 +308,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function conversations(): BelongsToMany
     {
         return $this->belongsToMany(Conversation::class, 'conversation_participants')
-            ->withPivot(['joined_at', 'last_read_at', 'is_muted', 'left_at']);
+            ->withPivot(['joined_at', 'last_read_at', 'is_muted', 'left_at', 'archived_at']);
     }
 
     /**

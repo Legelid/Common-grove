@@ -24,6 +24,7 @@ use App\Livewire\Auth\Register;
 use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Reports\ProblemReportForm;
 use App\Livewire\Feed\CreateHangoutPost;
+use App\Livewire\Feed\ExploreRooms;
 use App\Livewire\Feed\HangoutFeed;
 use App\Livewire\Friends\FriendsList;
 use App\Livewire\Messaging\ConversationList;
@@ -38,41 +39,6 @@ use App\Livewire\Onboarding\OnboardingFlow;
 use App\Livewire\Tags\TagSelector;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| Local-only debug routes — REMOVE BEFORE PRODUCTION
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/dev-login', function () {
-    if (!app()->isLocal()) abort(404);
-    $user = App\Models\User::where('is_admin', true)->first();
-    if (!$user) return 'No admin user found';
-    Auth::login($user);
-    session()->regenerate();
-    return redirect()->route('feed');
-})->name('dev.login');
-
-Route::get('/dev-session', function () {
-    if (!app()->isLocal()) abort(404);
-    $sid   = session()->getId();
-    $token = session()->token();
-    session()->put('dev_ping', time());
-    $rowBefore = \Illuminate\Support\Facades\DB::table('sessions')->where('id', $sid)->exists();
-    session()->save();
-    $rowAfter = \Illuminate\Support\Facades\DB::table('sessions')->where('id', $sid)->exists();
-    return response()->json([
-        'session_driver'   => config('session.driver'),
-        'session_id'       => $sid,
-        'csrf_token'       => $token,
-        'cookie_name'      => config('session.cookie'),
-        'row_before_save'  => $rowBefore,
-        'row_after_save'   => $rowAfter,
-        'total_db_rows'    => \Illuminate\Support\Facades\DB::table('sessions')->count(),
-        'session_encrypt'  => config('session.encrypt'),
-    ]);
-});
 
 /*
 |--------------------------------------------------------------------------
@@ -187,6 +153,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Guest-browseable routes — no auth required, but onboarding check still fires for logged-in users
 Route::middleware(['onboarded'])->group(function () {
     Route::get('/feed', HangoutFeed::class)->name('feed');
+    Route::get('/explore', ExploreRooms::class)->name('explore');
     Route::get('/room/{conversationId}', Room::class)->name('room.show');
 });
 
@@ -273,3 +240,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
     })->name('admin.problem-reports.screenshot');
 
 });
+
+// Dev-only — glass UI theme system, Phase 2 isolation test. Not linked from
+// navigation. Guarded by isLocal() so it never exists outside local dev
+// (see the earlier /dev-login / /dev-session removal for why this matters).
+if (app()->isLocal()) {
+    Route::view('/dev/glass-test', 'dev.glass-test')->name('dev.glass-test');
+}

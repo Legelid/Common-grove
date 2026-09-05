@@ -1,46 +1,39 @@
 <div>
-    <h1 class="text-2xl font-bold text-center mb-8" style="color:#E6EDF3;">Create your account</h1>
+    <h1 class="text-2xl font-bold text-center mb-8" style="color:var(--text);">Create your account</h1>
 
     <form wire:submit="register" class="space-y-5">
 
         {{-- Gamertag --}}
         <div>
-            <label for="gamertag" class="block text-sm font-medium mb-1" style="color:#8B949E;">Gamertag</label>
+            <label for="gamertag" class="block text-sm font-medium mb-1" style="color:var(--text-muted);">Gamertag</label>
             <div class="relative">
-                <input
+                <x-input
                     id="gamertag"
                     type="text"
                     wire:model.live.debounce.400ms="gamertag"
                     autocomplete="username"
                     maxlength="20"
                     placeholder="YourGamertag"
-                    class="w-full rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none"
-                    style="background:#1C2333;border:1px solid {{ $errors->has('gamertag') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                    onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-                >
+                    class="pr-10"
+                    :error="$errors->first('gamertag')"
+                />
                 @if ($gamertagStatus === 'available')
-                    <span class="absolute inset-y-0 right-3 flex items-center text-sm font-bold" style="color:#1D9E75;">✓</span>
+                    <span class="absolute inset-y-0 right-3 flex items-center text-sm font-bold text-accent">✓</span>
                 @elseif ($gamertagStatus === 'taken')
-                    <span class="absolute inset-y-0 right-3 flex items-center text-sm font-bold" style="color:#E24B4A;">✗</span>
+                    <span class="absolute inset-y-0 right-3 flex items-center text-sm font-bold" style="color:var(--danger);">✗</span>
                 @endif
             </div>
-            @error('gamertag')
-                <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p>
-            @enderror
-            <p class="mt-1 text-xs" style="color:#8B949E;">3–20 characters · starts with a letter · letters, numbers, _ and - only</p>
+            <p class="mt-1 text-xs" style="color:var(--text-muted);">3–20 characters · starts with a letter · letters, numbers, _ and - only</p>
 
             @if ($gamertagStatus === 'taken')
                 <div class="mt-2">
-                    <p class="text-sm mb-1" style="color:#E24B4A;">That gamertag is taken. Try one of these:</p>
+                    <p class="text-sm mb-1" style="color:var(--danger);">That gamertag is taken. Try one of these:</p>
                     <div class="flex flex-wrap gap-2">
                         @foreach ($suggestions as $suggestion)
                             <button
                                 type="button"
                                 wire:click="useSuggestion('{{ $suggestion }}')"
-                                class="px-3 py-1 text-sm rounded-full transition"
-                                style="background:#21262D;color:#1D9E75;"
-                                onmouseover="this.style.background='#1D9E75';this.style.color='#fff'"
-                                onmouseout="this.style.background='#21262D';this.style.color='#1D9E75'"
+                                class="px-3 py-1 text-sm rounded-full transition bg-surface-raised text-accent hover:bg-accent hover:text-on-accent"
                             >{{ $suggestion }}</button>
                         @endforeach
                     </div>
@@ -50,62 +43,54 @@
 
         {{-- Email --}}
         <div>
-            <label for="email" class="block text-sm font-medium mb-1" style="color:#8B949E;">
+            <label for="email" class="block text-sm font-medium mb-1" style="color:var(--text-muted);">
                 Email address
-                <span class="font-normal" style="color:#8B949E;opacity:0.7;">(for account recovery only — never shown)</span>
+                <span class="font-normal" style="color:var(--text-muted);opacity:0.7;">(for account recovery only — never shown)</span>
             </label>
-            <input
+            <x-input
                 id="email"
                 type="email"
                 wire:model="email"
                 autocomplete="email"
-                class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
-                style="background:#1C2333;border:1px solid {{ $errors->has('email') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-            >
-            @error('email')
-                <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p>
-            @enderror
+                :error="$errors->first('email')"
+            />
         </div>
 
         {{-- Password --}}
         <div>
-            <label for="password" class="block text-sm font-medium mb-1" style="color:#8B949E;">Password</label>
+            <label for="password" class="block text-sm font-medium mb-1" style="color:var(--text-muted);">Password</label>
             <div class="relative" x-data="{ show: false }">
                 <input
                     id="password"
                     :type="show ? 'text' : 'password'"
                     wire:model="password"
                     autocomplete="new-password"
-                    class="w-full rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none"
-                    style="background:#1C2333;border:1px solid {{ $errors->has('password') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                    onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+                    class="w-full rounded-btn px-4 py-2.5 pr-10 text-sm bg-surface text-text border focus:outline-none focus:ring-2 focus:ring-accent"
+                    style="border-color:{{ $errors->has('password') ? 'var(--danger)' : 'var(--border)' }};"
                 >
-                <button type="button" @click="show = !show" tabindex="-1" :aria-label="show ? 'Hide password' : 'Show password'" class="absolute inset-y-0 right-3 flex items-center transition" style="color:#8B949E;" onmouseover="this.style.color='#C9D1D9'" onmouseout="this.style.color='#8B949E'">
+                <button type="button" @click="show = !show" tabindex="-1" :aria-label="show ? 'Hide password' : 'Show password'" class="absolute inset-y-0 right-3 flex items-center transition" style="color:var(--text-muted);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">
                     <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     <svg x-show="show" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                 </button>
             </div>
             @error('password')
-                <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p>
+                <p class="mt-1 text-sm" style="color:var(--danger);">{{ $message }}</p>
             @enderror
-            <p class="mt-1 text-xs" style="color:#8B949E;">Minimum 10 characters. Checked against known breaches.</p>
+            <p class="mt-1 text-xs" style="color:var(--text-muted);">Minimum 10 characters. Checked against known breaches.</p>
         </div>
 
         {{-- Confirm password --}}
         <div>
-            <label for="password_confirmation" class="block text-sm font-medium mb-1" style="color:#8B949E;">Confirm password</label>
+            <label for="password_confirmation" class="block text-sm font-medium mb-1" style="color:var(--text-muted);">Confirm password</label>
             <div class="relative" x-data="{ show: false }">
                 <input
                     id="password_confirmation"
                     :type="show ? 'text' : 'password'"
                     wire:model="password_confirmation"
                     autocomplete="new-password"
-                    class="w-full rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none"
-                    style="background:#1C2333;border:1px solid #30363D;color:#E6EDF3;"
-                    onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+                    class="w-full rounded-btn px-4 py-2.5 pr-10 text-sm bg-surface text-text border border-border focus:outline-none focus:ring-2 focus:ring-accent"
                 >
-                <button type="button" @click="show = !show" tabindex="-1" :aria-label="show ? 'Hide password' : 'Show password'" class="absolute inset-y-0 right-3 flex items-center transition" style="color:#8B949E;" onmouseover="this.style.color='#C9D1D9'" onmouseout="this.style.color='#8B949E'">
+                <button type="button" @click="show = !show" tabindex="-1" :aria-label="show ? 'Hide password' : 'Show password'" class="absolute inset-y-0 right-3 flex items-center transition" style="color:var(--text-muted);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">
                     <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     <svg x-show="show" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                 </button>
@@ -114,69 +99,60 @@
 
         {{-- Date of birth --}}
         <div>
-            <label class="block text-sm font-medium mb-1" style="color:#8B949E;">Date of birth</label>
-            <p class="text-xs mb-2" style="color:#3d4451;">
+            <label class="block text-sm font-medium mb-1" style="color:var(--text-muted);">Date of birth</label>
+            <p class="text-xs mb-2" style="color:var(--text-faint);">
                 We use your date of birth for age eligibility. You must be 18 or older to use CommonGrove.
             </p>
             <div class="grid grid-cols-3 gap-2">
                 <div>
                     <select wire:model="birthMonth"
-                        class="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:#1C2333;border:1px solid {{ $errors->has('birthMonth') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                        onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+                        class="w-full rounded-btn px-3 py-2.5 text-sm bg-surface text-text border focus:outline-none focus:ring-2 focus:ring-accent"
+                        style="border-color:{{ $errors->has('birthMonth') ? 'var(--danger)' : 'var(--border)' }};"
                     >
                         <option value="">Month</option>
                         @foreach ([1=>'Jan',2=>'Feb',3=>'Mar',4=>'Apr',5=>'May',6=>'Jun',7=>'Jul',8=>'Aug',9=>'Sep',10=>'Oct',11=>'Nov',12=>'Dec'] as $num => $abbr)
                             <option value="{{ $num }}">{{ $abbr }}</option>
                         @endforeach
                     </select>
-                    @error('birthMonth') <p class="mt-1 text-xs" style="color:#E24B4A;">{{ $message }}</p> @enderror
+                    @error('birthMonth') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <select wire:model="birthDay"
-                        class="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:#1C2333;border:1px solid {{ $errors->has('birthDay') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                        onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+                        class="w-full rounded-btn px-3 py-2.5 text-sm bg-surface text-text border focus:outline-none focus:ring-2 focus:ring-accent"
+                        style="border-color:{{ $errors->has('birthDay') ? 'var(--danger)' : 'var(--border)' }};"
                     >
                         <option value="">Day</option>
                         @for ($d = 1; $d <= 31; $d++)
                             <option value="{{ $d }}">{{ $d }}</option>
                         @endfor
                     </select>
-                    @error('birthDay') <p class="mt-1 text-xs" style="color:#E24B4A;">{{ $message }}</p> @enderror
+                    @error('birthDay') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <select wire:model="birthYear"
-                        class="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:#1C2333;border:1px solid {{ $errors->has('birthYear') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                        onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+                        class="w-full rounded-btn px-3 py-2.5 text-sm bg-surface text-text border focus:outline-none focus:ring-2 focus:ring-accent"
+                        style="border-color:{{ $errors->has('birthYear') ? 'var(--danger)' : 'var(--border)' }};"
                     >
                         <option value="">Year</option>
                         @for ($y = now()->year; $y >= now()->year - 120; $y--)
                             <option value="{{ $y }}">{{ $y }}</option>
                         @endfor
                     </select>
-                    @error('birthYear') <p class="mt-1 text-xs" style="color:#E24B4A;">{{ $message }}</p> @enderror
+                    @error('birthYear') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
                 </div>
             </div>
         </div>
 
         {{-- Submit --}}
-        <button
-            type="submit"
-            wire:loading.attr="disabled"
-            class="w-full py-2.5 px-4 text-sm font-semibold rounded-lg transition disabled:opacity-50"
-            style="background:#1D9E75;color:#fff;"
-            onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'"
-        >
+        <x-button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled">
             <span wire:loading.remove>Create account</span>
             <span wire:loading>Creating account…</span>
-        </button>
+        </x-button>
 
     </form>
 
-    <p class="mt-6 text-center text-sm" style="color:#8B949E;">
+    <p class="mt-6 text-center text-sm" style="color:var(--text-muted);">
         Already have an account?
-        <a href="{{ route('login') }}" class="underline transition" style="color:#1D9E75;" wire:navigate>Sign in</a>
+        <a href="{{ route('login') }}" class="underline transition text-accent" wire:navigate>Sign in</a>
     </p>
 </div>

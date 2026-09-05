@@ -2,6 +2,156 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design tokens — Cozy Coffee Shop palette ─────────────────────────────── */
+:root {
+    --bg: #161B18;
+    --surface: #202723;
+    --surface-raised: #2A342E;
+    --border: #36433B;
+    --accent: #7DA38E;
+    --accent-rgb: 125 163 142;
+    --accent-hover: #8DB39E;
+    --text: #ECE7DF;
+    --text-muted: #98A39C;
+    --text-faint: #6B6259;
+    --danger: #C17B6F;
+    --danger-rgb: 193 123 111;
+    /* Accent (#7AAB8A) and danger (#C17B6F) are both mid-lightness in this
+       theme — a light on-accent/on-danger fails WCAG AA against either
+       (2.29:1 / 2.90:1). A near-black passes both (7.19:1 / 5.67:1). */
+    --on-accent: #14110D;
+    --on-danger: #14110D;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+    --border-strong: #4A4038;
+    --accent-amber: #C4962A;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'Source Sans 3', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-pill: 999px;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-card-section: 0 4px 16px rgba(0, 0, 0, 0.18), 0 1px 4px rgba(0, 0, 0, 0.12);
+    --shadow-card-intent: 0 4px 12px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.10);
+}
+
+html[data-theme="light"] {
+    --bg: #DCDDD3;
+    --surface: #FDFAF4;
+    --surface-raised: #F0EAD8;
+    --border: #DDD5C4;
+    --accent: #5A8A6A;
+    --accent-rgb: 90 138 106;
+    --accent-hover: #4A7A5A;
+    --text: #2C2420;
+    --text-muted: #6B5E52;
+    --text-faint: #9A8F7E;
+    --danger: #A05A50;
+    --danger-rgb: 160 90 80;
+    /* Accent (#5A8A6A) is darker here than dark-theme's accent, so a
+       near-black on-accent still passes AA (4.73:1). Danger (#A05A50) is
+       darker still and needs the light value instead (4.51:1) — the two
+       backgrounds no longer share one safe foreground colour, hence the
+       separate --on-danger token. */
+    --on-accent: #14110D;
+    --on-danger: #F5EFE4;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    --border-strong: #C8BCA8;
+    /* #A07820 failed WCAG AA as text on --bg/--surface (3.56:1); darkened
+       to pass comfortably (5.13:1+). Never used as a background, so this
+       has no other pairing to check. */
+    --accent-amber: #80601A;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+    --shadow-card-section: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.05);
+    --shadow-card-intent: 0 4px 12px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* ── Glass UI theme tokens ─────────────────────────────────────────────────
+   Shared by every [data-glass-theme] value on :root, so all themes render
+   with the same tint/blur/contrast and only the background photo differs
+   (per Andrew: same colors across themes until he asks to tune contrast
+   per-theme). To override just one theme's tokens later, add a
+   [data-glass-theme="<key>"] block below redefining only what changes —
+   it wins over :root by specificity. */
+:root {
+    --glass-scrim: rgba(24, 22, 18, 0.55);      /* dark overlay, tune later against real photo */
+    --glass-blur-light: 8px;                     /* nav, hero cards, decorative elements */
+    --glass-blur-heavy: 16px;                    /* dense text areas, lists */
+    --glass-border: rgba(48, 56, 40, 0.4);        /* subtle border, matches existing --border token */
+    --bg-photo-blur: 9px;                         /* background photo layer only — not glass-panel blur */
+    --bg-photo-brightness: 0.7;                   /* darkens the blurred photo itself, not just the scrim on top */
+}
+
+/* Settings > Vibe > Theme "blur" toggle — re-declares the same tokens at a
+   more specific selector so it wins over :root without touching any
+   per-theme override block added later. Photo/scrim/tint stay identical,
+   only the blur amount drops to 0. */
+body.cg-no-glass-blur {
+    --glass-blur-light: 0px;
+    --glass-blur-heavy: 0px;
+    --bg-photo-blur: 0px;
+}
+
+/* ── Glass panel component styles (Phase 3 of 6) ──────────────────────────
+   Base rule is the fallback for browsers without backdrop-filter support:
+   solid --surface-raised, no transparency, no blur, but still fully
+   readable. The @supports block below is the only place backdrop-filter
+   (and the scrim it requires) is declared — supporting browsers get the
+   glass look, everyone else just gets a plain readable panel. */
+.cg-glass-panel {
+    background: var(--surface-raised);
+    border: 1px solid var(--glass-border);
+}
+
+@supports (backdrop-filter: blur(1px)) {
+    .cg-glass-panel {
+        background: var(--glass-scrim);
+    }
+    .cg-glass-panel--light {
+        backdrop-filter: blur(var(--glass-blur-light));
+        -webkit-backdrop-filter: blur(var(--glass-blur-light));
+    }
+    .cg-glass-panel--heavy {
+        backdrop-filter: blur(var(--glass-blur-heavy));
+        -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+    }
+}
+
+@layer base {
+    body {
+        font-family: var(--font-body);
+    }
+    h1, h2, h3, .font-display {
+        font-family: var(--font-display);
+    }
+}
+
+/* ── Kill whole-page rubber-band scrolling ────────────────────────────────── */
+/* html/body never actually overflow — the app shell is a fixed h-full column
+   with its own internal overflow-y:auto regions (main, .cg-chat-messages,
+   dropdown/panel scroll areas). But on macOS trackpads, Chrome/Safari apply
+   an elastic overscroll "bounce" on gesture scroll even when there's nothing
+   to scroll, which read as the whole page sliding and leaving gaps at the
+   top/bottom. overscroll-behavior:none on html/body only stops that outer
+   bounce — it's not inherited, so every inner overflow-y:auto region keeps
+   scrolling exactly as before. */
+html, body {
+    overscroll-behavior: none;
+}
+
+/* Establishes a stacking context for all app content. */
+.cg-app-shell {
+    position: relative;
+    z-index: 1;
+}
+
 /* ── Low-stimulation mode: kill all motion ────────────────────────────────── */
 .low-stimulation *,
 .low-stimulation *::before,
@@ -23,6 +173,142 @@
 
 /* ── Account dropdown ─────────────────────────────────────────────────────── */
 .account-dropdown {
-    background-color: #161B22;
+    background: var(--surface-raised);
     opacity: 1;
 }
+
+/* ── Mobile nav pills — wallet cascade reveal ─────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+    @keyframes cg-pill-drop {
+        from {
+            opacity: 0;
+            transform: translateY(-12px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    .cg-mobile-pill-item {
+        animation: cg-pill-drop 200ms ease forwards;
+        opacity: 0;
+    }
+    .cg-mobile-pill-item:nth-child(1) { animation-delay: 0ms; }
+    .cg-mobile-pill-item:nth-child(2) { animation-delay: 60ms; }
+    .cg-mobile-pill-item:nth-child(3) { animation-delay: 120ms; }
+    .cg-mobile-pill-item:nth-child(4) { animation-delay: 180ms; }
+    .cg-mobile-pill-item:nth-child(5) { animation-delay: 240ms; }
+}
+
+/* ── Home feed loading indicator — calm pulsing dot, not a spinner ────────── */
+/* Rest state (no @keyframes applied) is a plain solid dot — reduced-motion
+   users still see a clear, static loading indicator via the global
+   `animation: none !important` override already defined above. */
+@keyframes cg-pulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.85); }
+    50%      { opacity: 1; transform: scale(1); }
+}
+.cg-pulse-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: cg-pulse 1.2s ease-in-out infinite;
+}
+
+/* ── Room entry — gentle fade on the main content area ────────────────────── */
+/* Never applied to messages appearing, unread counts, or safety/error
+   copy — those must stay instant, not animated. */
+@media (prefers-reduced-motion: no-preference) {
+    /* No `forwards` fill-mode: once the 300ms animation ends, the browser
+       reverts transform/opacity to their normal cascaded values (transform:
+       none, opacity:1 — the same visual result) rather than permanently
+       retaining the animation engine's matrix representation of the final
+       keyframe. That retained matrix — even though numerically identical to
+       "no transform" — still counts as a computed transform value other than
+       `none` for stacking-context purposes, which silently creates a new
+       stacking context AND containing block for fixed/absolute descendants.
+       That trapped any z-index fix applied to something inside .cg-room-entry
+       (e.g. a page's compose bar) so it could never compete against a
+       viewport-fixed sibling elsewhere in the layout, like the active-room
+       dock — no matter how high the z-index was set. */
+    .cg-room-entry {
+        animation: cg-fade-in 300ms ease;
+    }
+    @keyframes cg-fade-in {
+        from { opacity: 0; transform: translateY(4px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+}
+
+/* ── Spin — Refresh icon feedback on the "similar rooms" panel ────────────── */
+.cg-spin { animation: cg-spin 700ms linear infinite; }
+@keyframes cg-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ── "Similar rooms" panel — same slide-in recipe as the landing page's
+   sign-in panel (.cg-auth-panel in landing.blade.php): fixed position,
+   transform + opacity driven purely by an .is-open class, no JS style
+   manipulation. Deliberately NOT toggled via Alpine's x-show/:style — an
+   Alpine :style bound to a plain string replaces the element's entire
+   cssText (wiping out position/z-index/display, not just the bound
+   properties), which is exactly the bug that broke this the first time. ── */
+.cg-similar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 60;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 300ms ease;
+}
+.cg-similar-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+.cg-similar-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 340px;
+    max-width: 88vw;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 24px rgba(0,0,0,0.35);
+    z-index: 61;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.cg-similar-panel.is-open {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Chat card shift — "gets out of the way" of the open panel. Same
+   class-toggle approach, kept on the untransformed .relative wrapper's
+   child (see room.blade.php) so it never becomes a containing block for
+   the panel's position:fixed. */
+.cg-room-shift {
+    transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.cg-room-shift.is-shifted {
+    transform: translateX(-90px);
+}
+
+/* ── Theme toggle icon — driven by [data-theme] directly, not Alpine state ── */
+/* wire:navigate replaces <body> on every navigation, so Alpine's x-data
+   snapshot (read once at init) can go stale before the theme attribute is
+   restored. Keeping icon visibility pure-CSS means it's always correct
+   the instant data-theme changes, with no JS state to fall out of sync. */
+.cg-theme-icon-sun { display: none; }
+html[data-theme="light"] .cg-theme-icon-moon { display: none; }
+html[data-theme="light"] .cg-theme-icon-sun { display: block; }

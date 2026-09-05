@@ -1,8 +1,8 @@
 <div class="px-6 py-10 max-w-2xl mx-auto space-y-8">
 
     <div>
-        <h1 class="text-2xl font-bold" style="color:#E6EDF3;">Report a problem</h1>
-        <p class="mt-2 text-sm leading-relaxed" style="color:#8B949E;">
+        <h1 class="text-2xl font-bold" style="color:var(--text);">Report a problem</h1>
+        <p class="mt-2 text-sm leading-relaxed" style="color:var(--text-muted);">
             If something is broken, confusing, or unsafe, let me know.
             I need to know what's wrong to fix it.
         </p>
@@ -11,9 +11,9 @@
     @if ($submitted)
 
         {{-- ── Success state ─────────────────────────────────────────────── --}}
-        <div class="rounded-xl border px-8 py-10 text-center space-y-3" style="background:#161B22;border-color:#30363D;">
-            <p class="text-lg font-semibold" style="color:#E6EDF3;">Thanks — I'll take a look as soon as I can.</p>
-            <p class="text-sm" style="color:#8B949E;">
+        <x-card padding="px-8 py-10" class="text-center space-y-3">
+            <p class="text-lg font-semibold" style="color:var(--text);">Thanks — I'll take a look as soon as I can.</p>
+            <p class="text-sm" style="color:var(--text-muted);">
                 Your report has been received.
                 @if ($contactEmail)
                     If I need to follow up, I'll reach out to {{ $contactEmail }}.
@@ -23,11 +23,11 @@
                 <a
                     href="{{ route('feed') }}"
                     class="text-sm underline transition"
-                    style="color:#1D9E75;"
+                    style="color:var(--accent);"
                     wire:navigate
                 >Back to the feed</a>
             </p>
-        </div>
+        </x-card>
 
     @else
 
@@ -62,16 +62,14 @@
 
             {{-- Report type --}}
             <div>
-                <label for="reportType" class="block text-sm font-medium mb-1.5" style="color:#8B949E;">
-                    What kind of problem is this? <span style="color:#E24B4A;">*</span>
+                <label for="reportType" class="block text-sm font-medium mb-1.5" style="color:var(--text-muted);">
+                    What kind of problem is this? <span style="color:var(--danger);">*</span>
                 </label>
                 <select
                     id="reportType"
                     wire:model="reportType"
                     @change="type = $event.target.value"
-                    class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
-                    style="background:#1C2333;border:1px solid {{ $errors->has('reportType') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                    onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
+                    class="w-full rounded-btn px-4 py-2.5 text-sm bg-surface text-text border transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent {{ $errors->has('reportType') ? 'border-danger' : 'border-border focus:border-accent' }}"
                 >
                     <option value="">Choose a type…</option>
                     @foreach (\App\Models\ProblemReport::TYPES as $value => $label)
@@ -79,87 +77,72 @@
                     @endforeach
                 </select>
                 @error('reportType')
-                    <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p>
+                    <p class="mt-1 text-sm" style="color:var(--danger);">{{ $message }}</p>
                 @enderror
 
                 {{-- Type-specific helper text --}}
                 <template x-if="type !== ''">
-                    <p class="mt-2 text-xs leading-relaxed" style="color:#6B737C;" x-text="helpers[type]"></p>
+                    <p class="mt-2 text-xs leading-relaxed" style="color:var(--text-faint);" x-text="helpers[type]"></p>
                 </template>
             </div>
 
             {{-- Subject --}}
             <div>
-                <label for="subject" class="block text-sm font-medium mb-1.5" style="color:#8B949E;">
-                    Subject <span style="color:#E24B4A;">*</span>
+                <label for="subject" class="block text-sm font-medium mb-1.5" style="color:var(--text-muted);">
+                    Subject <span style="color:var(--danger);">*</span>
                 </label>
-                <input
+                <x-input
                     id="subject"
                     type="text"
                     wire:model="subject"
                     maxlength="120"
-                    class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
-                    style="background:#1C2333;border:1px solid {{ $errors->has('subject') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                    :placeholder="type ? subjects[type] : 'Brief summary…'"
-                    onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-                >
-                @error('subject')
-                    <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p>
-                @enderror
+                    x-bind:placeholder="type ? subjects[type] : 'Brief summary…'"
+                    :error="$errors->first('subject')"
+                />
             </div>
 
             {{-- Description --}}
             <div>
-                <label for="description" class="block text-sm font-medium mb-1.5" style="color:#8B949E;">
-                    Description <span style="color:#E24B4A;">*</span>
+                <label for="description" class="block text-sm font-medium mb-1.5" style="color:var(--text-muted);">
+                    Description <span style="color:var(--danger);">*</span>
                 </label>
-                <textarea
+                <x-textarea
                     id="description"
                     wire:model="description"
                     maxlength="3000"
                     rows="6"
                     placeholder="The more detail the better — what happened, what you expected, and any steps to reproduce."
-                    class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none resize-y"
-                    style="background:#1C2333;border:1px solid {{ $errors->has('description') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;min-height:120px;"
-                    onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-                ></textarea>
-                <div class="flex justify-between mt-1">
-                    @error('description')
-                        <p class="text-sm" style="color:#E24B4A;">{{ $message }}</p>
-                    @else
-                        <span></span>
-                    @enderror
-                    <span class="text-xs" style="color:#3d4451;">{{ strlen($description) }}/3000</span>
+                    class="!resize-y"
+                    style="min-height:120px;"
+                    :error="$errors->first('description')"
+                />
+                <div class="flex justify-end mt-1">
+                    <span class="text-xs" style="color:var(--text-faint);">{{ strlen($description) }}/3000</span>
                 </div>
             </div>
 
             {{-- Optional fields --}}
             <div class="space-y-5 pt-1">
-                <p class="text-xs font-semibold uppercase tracking-wider" style="color:#3d4451;">Optional details</p>
+                <p class="text-xs font-semibold uppercase tracking-wider" style="color:var(--text-faint);">Optional details</p>
 
                 {{-- Page URL --}}
                 <div>
-                    <label for="pageUrl" class="block text-sm font-medium mb-1.5" style="color:#8B949E;">
+                    <label for="pageUrl" class="block text-sm font-medium mb-1.5" style="color:var(--text-muted);">
                         Page URL
                     </label>
-                    <input
+                    <x-input
                         id="pageUrl"
                         type="url"
                         wire:model="pageUrl"
                         maxlength="500"
                         placeholder="https://…"
-                        class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:#1C2333;border:1px solid {{ $errors->has('pageUrl') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                        onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-                    >
-                    @error('pageUrl')
-                        <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p>
-                    @enderror
+                        :error="$errors->first('pageUrl')"
+                    />
                 </div>
 
                 {{-- Screenshot --}}
                 <div>
-                    <label for="screenshot" class="block text-sm font-medium mb-1.5" style="color:#8B949E;">
+                    <label for="screenshot" class="block text-sm font-medium mb-1.5" style="color:var(--text-muted);">
                         Screenshot <span class="font-normal opacity-70">(PNG or JPEG, max 5 MB)</span>
                     </label>
                     <input
@@ -167,78 +150,64 @@
                         type="file"
                         wire:model="screenshot"
                         accept="image/jpeg,image/png"
-                        class="w-full text-sm focus:outline-none"
-                        style="color:#8B949E;"
+                        class="w-full text-sm"
+                        style="color:var(--text-muted);outline:none;"
+                        onfocus="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='2px'"
+                        onblur="this.style.outline='none'"
                     >
-                    <div wire:loading wire:target="screenshot" class="mt-1 text-xs" style="color:#8B949E;">Uploading…</div>
+                    <div wire:loading wire:target="screenshot" class="mt-1 text-xs" style="color:var(--text-muted);">Uploading…</div>
                     @error('screenshot')
-                        <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p>
+                        <p class="mt-1 text-sm" style="color:var(--danger);">{{ $message }}</p>
                     @enderror
                     @if ($screenshot && ! $errors->has('screenshot'))
-                        <p class="mt-1 text-xs" style="color:#1D9E75;">Screenshot attached.</p>
+                        <p class="mt-1 text-xs" style="color:var(--accent);">Screenshot attached.</p>
                     @endif
                 </div>
 
                 {{-- Related user --}}
                 <div x-show="['safety', 'user-report'].includes(type)" style="display:none;">
-                    <label for="relatedUser" class="block text-sm font-medium mb-1.5" style="color:#8B949E;">
+                    <label for="relatedUser" class="block text-sm font-medium mb-1.5" style="color:var(--text-muted);">
                         Related user <span class="font-normal opacity-70">(gamertag)</span>
                     </label>
-                    <input
+                    <x-input
                         id="relatedUser"
                         type="text"
                         wire:model="relatedUser"
                         maxlength="100"
                         placeholder="Their gamertag…"
-                        class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:#1C2333;border:1px solid {{ $errors->has('relatedUser') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                        onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-                    >
-                    @error('relatedUser')
-                        <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p>
-                    @enderror
+                        :error="$errors->first('relatedUser')"
+                    />
                 </div>
 
                 {{-- Contact email --}}
                 <div>
-                    <label for="contactEmail" class="block text-sm font-medium mb-1.5" style="color:#8B949E;">
+                    <label for="contactEmail" class="block text-sm font-medium mb-1.5" style="color:var(--text-muted);">
                         Contact email <span class="font-normal opacity-70">(optional — for follow-up only)</span>
                     </label>
-                    <input
+                    <x-input
                         id="contactEmail"
                         type="email"
                         wire:model="contactEmail"
                         maxlength="255"
                         placeholder="your@email.com"
-                        class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:#1C2333;border:1px solid {{ $errors->has('contactEmail') ? '#E24B4A' : '#30363D' }};color:#E6EDF3;"
-                        onfocus="this.style.boxShadow='0 0 0 2px #1D9E75'" onblur="this.style.boxShadow=''"
-                    >
-                    <p class="mt-1 text-xs" style="color:#3d4451;">Only used if I need to follow up. Never shared.</p>
-                    @error('contactEmail')
-                        <p class="mt-1 text-sm" style="color:#E24B4A;">{{ $message }}</p>
-                    @enderror
+                        :error="$errors->first('contactEmail')"
+                    />
+                    <p class="mt-1 text-xs" style="color:var(--text-faint);">Only used if I need to follow up. Never shared.</p>
                 </div>
             </div>
 
             {{-- Error --}}
             @if ($submitError)
-                <p class="text-sm" style="color:#E24B4A;">{{ $submitError }}</p>
+                <p class="text-sm" style="color:var(--danger);">{{ $submitError }}</p>
             @endif
 
             {{-- Submit --}}
             <div class="flex items-center gap-4 pt-2">
-                <button
-                    type="submit"
-                    wire:loading.attr="disabled"
-                    class="px-6 py-2.5 rounded-xl font-semibold text-sm transition disabled:opacity-50"
-                    style="background:#1D9E75;color:#fff;"
-                    onmouseover="this.style.background='#1a9068'" onmouseout="this.style.background='#1D9E75'"
-                >
+                <x-button type="submit" wire:loading.attr="disabled" variant="primary" class="!px-6">
                     <span wire:loading.remove>Send report</span>
                     <span wire:loading>Sending…</span>
-                </button>
-                <p class="text-xs" style="color:#3d4451;">This goes directly to the site owner.</p>
+                </x-button>
+                <p class="text-xs" style="color:var(--text-faint);">This goes directly to the site owner.</p>
             </div>
 
         </form>

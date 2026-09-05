@@ -42,6 +42,6 @@ class ForcePasswordReset extends Component
     public function render(): \Illuminate\View\View
     {
         return view('livewire.auth.force-password-reset')
-            ->layout('layouts.app', ['title' => 'Set a new password — CommonGrove']);
+            ->layout('layouts.app', ['title' => 'Set a new password | CommonGrove']);
     }
 }

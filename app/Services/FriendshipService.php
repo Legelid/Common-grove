@@ -10,12 +10,13 @@ use App\Notifications\FriendRequestAccepted;
 use App\Notifications\FriendRequestSent;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\RateLimiter;
 
 class FriendshipService
 {
     /**
      * Send a friend request from $from to $to.
-     * Throws if blocked or a friendship record already exists.
+     * Throws if blocked, rate limited, or a friendship record already exists.
      */
     public function sendRequest(User $from, User $to): Friendship
     {
@@ -27,6 +28,11 @@ class FriendshipService
             throw new \InvalidArgumentException('Cannot send a friend request to a blocked user.');
         }
 
+        $throttleKey = 'friend-request.' . $from->id;
+        if (RateLimiter::tooManyAttempts($throttleKey, 20)) {
+            throw new \InvalidArgumentException('You\'ve sent a lot of requests recently. Please try again later.');
+        }
+
         $existing = Friendship::where(function ($q) use ($from, $to): void {
             $q->where('requester_id', $from->id)->where('recipient_id', $to->id);
         })->orWhere(function ($q) use ($from, $to): void {
@@ -36,6 +42,11 @@ class FriendshipService
         if ($existing) {
             throw new \InvalidArgumentException('A friendship or pending request already exists.');
         }
+
+        // Only a genuinely new request consumes the hourly budget — a
+        // duplicate click on an already-sent/accepted request shouldn't
+        // count against the user.
+        RateLimiter::hit($throttleKey, 3600);
 
         $friendship = Friendship::create([
             'requester_id' => $from->id,

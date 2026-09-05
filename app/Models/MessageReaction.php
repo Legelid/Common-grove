@@ -15,10 +15,16 @@ class MessageReaction extends Model
     public $timestamps = false;
 
     /** Full curated set — validated server-side. */
-    public const ALLOWED = ['👋', '💛', '☕', '🌙', '🤔', '😂', '🫂', '🎧', '✨', '👍', '😭'];
+    public const ALLOWED = [
+        '💚', '👋', '🤗', '😂', '🫂',
+        '☕', '🌙', '🤔', '✨', '😭',
+        '🎧', '👍', '💛', '❤️', '🙏',
+        '😊', '🥹', '😔', '🫶', '💙',
+        '🌿', '🍃', '🌱', '⭐', '🌸',
+    ];
 
     /** Quick-tray subset shown on hover/tap before opening the full picker. */
-    public const TRAY = ['👋', '💛', '☕', '🌙', '🤔', '😂', '🫂'];
+    public const TRAY = ['💚', '👋', '🤗', '😂', '🫂'];
 
     /**
      * Curated picker sections.
@@ -26,9 +32,10 @@ class MessageReaction extends Model
      * @var array<string, list<string>>
      */
     public const PICKER_GROUPS = [
-        'Common'     => ['👋', '👍', '💛', '😂'],
-        'Cozy'       => ['☕', '🌙', '🫂', '🎧'],
-        'Thoughtful' => ['🤔', '✨', '😭'],
+        'Warm'       => ['💚', '🫂', '🤗', '🫶', '🙏', '❤️'],
+        'Friendly'   => ['👋', '😊', '😂', '🥹', '👍', '💛'],
+        'Cozy'       => ['☕', '🌙', '🎧', '✨', '🌸', '⭐'],
+        'Thoughtful' => ['🤔', '😔', '😭', '💙', '🌿', '🍃'],
     ];
 
     protected $fillable = [

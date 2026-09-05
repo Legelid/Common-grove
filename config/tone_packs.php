@@ -114,7 +114,7 @@ return [
     'cozy_rain' => [
         'label'          => 'Cozy Rain',
         'description'    => 'Warm inside, rain on the window.',
-        'supporter_only' => true,
+        'supporter_only' => false,
         'phrases'        => [
             'The rain can wait outside',
             'Stay awhile',
@@ -219,7 +219,7 @@ return [
     'forest_path' => [
         'label'          => 'Forest Path',
         'description'    => 'No destination required.',
-        'supporter_only' => true,
+        'supporter_only' => false,
         'phrases'        => [
             'The path continues at your pace',
             'No trail to follow — just walk',

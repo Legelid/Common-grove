@@ -2,160 +2,96 @@
 
     {{-- Flash --}}
     @if ($flash)
-        <div class="mb-4 px-3 py-2.5 rounded-lg text-sm border" style="background:rgba(29,158,117,0.1);border-color:rgba(29,158,117,0.4);color:#1D9E75;">
+        <div class="mb-4 px-3 py-2.5 rounded-lg text-sm border" style="background:rgba(var(--accent-rgb),0.1);border-color:rgba(var(--accent-rgb),0.4);color:var(--accent);">
             {{ $flash }}
         </div>
     @endif
 
-    {{-- Tabs --}}
-    <div class="flex gap-1 mb-6 border-b" style="border-color:#30363D;">
-        <button wire:click="switchTab('friends')"
-            class="pb-2 text-sm font-medium -mb-px border-b-2 transition"
-            style="{{ $activeTab === 'friends' ? 'border-color:#1D9E75;color:#1D9E75;' : 'border-color:transparent;color:#8B949E;' }}"
-        >
-            Friends
-            @if ($this->onlineFriends->count() + $this->offlineFriends->count() > 0)
-                <span class="ml-1 text-xs" style="color:#8B949E;">({{ $this->onlineFriends->count() + $this->offlineFriends->count() }})</span>
-            @endif
-        </button>
-        <button wire:click="switchTab('requests')"
-            class="pb-2 text-sm font-medium -mb-px border-b-2 transition"
-            style="{{ $activeTab === 'requests' ? 'border-color:#1D9E75;color:#1D9E75;' : 'border-color:transparent;color:#8B949E;' }}"
-        >
-            Requests
-            @if ($this->pendingRequests->count() > 0)
-                <span class="ml-1 text-xs px-1.5 py-0.5 rounded-full font-semibold" style="background:rgba(29,158,117,0.15);color:#1D9E75;">{{ $this->pendingRequests->count() }}</span>
-            @endif
-        </button>
-    </div>
+    @if (! $this->hasAnyContent)
 
-    {{-- Friends tab --}}
-    @if ($activeTab === 'friends')
+        {{-- Part E — whole-page empty state: an invitation, not an error --}}
+        <div class="flex flex-col items-center justify-center text-center gap-3" style="min-height:50vh;">
+            <h1 class="font-display" style="font-size:clamp(1.5rem,4vw,2rem);color:var(--text);font-weight:700;">You haven't crossed paths with anyone yet.</h1>
+            <p class="text-sm max-w-sm" style="color:var(--text-muted);">Step into a room and say hello — that's how it starts.</p>
+            <x-button :href="route('explore')" wire:navigate variant="primary" class="mt-2" aria-label="Find a room"><x-arrow-icon label="Find a room" /></x-button>
+        </div>
 
-        {{-- Weekly match suggestion (Group 11) --}}
-        @if ($this->weeklyMatch)
-            @php
-                $match = $this->weeklyMatch;
-                $sharedCount = $match->matchedUser->tags->pluck('id')->intersect(auth()->user()->tags()->pluck('tags.id'))->count();
-            @endphp
-            <div class="cg-suggestion-preview mb-6 p-4 rounded-xl border" style="background:rgba(29,158,117,0.08);border-color:rgba(29,158,117,0.3);">
-                <p class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:#1D9E75;">Suggested this week</p>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="font-medium text-sm" style="color:#E6EDF3;">{{ $match->matchedUser->gamertag }}</p>
-                        @if ($sharedCount > 0)
-                            <p class="text-xs" style="color:#8B949E;">{{ $sharedCount }} {{ Str::plural('interest', $sharedCount) }} in common</p>
-                        @endif
-                    </div>
-                    <button wire:click="sendFriendRequestToMatch"
-                        class="text-sm font-semibold px-3 py-1.5 rounded-lg transition"
-                        style="background:#1D9E75;color:#fff;" onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'"
-                    >Send friend request</button>
+    @else
+
+        {{-- Part A — page header --}}
+        {{-- Glass UI: light tier — hero heading over the forest photo, matching Home/Explore. --}}
+        <x-glass-panel tier="light" style="border-radius:var(--radius-lg);padding:1.5rem 1.75rem;margin-bottom:2rem;">
+            <h1 class="font-display" style="font-size:clamp(1.75rem,4vw,2.5rem);color:var(--text);font-weight:700;line-height:1.2;">People</h1>
+            <p class="mt-2" style="font-family:var(--font-body);font-size:1rem;color:var(--text-muted);">People you've crossed paths with, and those you might get along with.</p>
+        </x-glass-panel>
+
+        {{-- Section 1 — Familiar faces --}}
+        @if ($this->familiarFaces->isNotEmpty())
+            <section class="mb-8">
+                <h2 style="font-family:var(--font-body);font-size:1.5rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.75rem;">Familiar faces</h2>
+                <div class="space-y-2">
+                    @foreach ($this->familiarFaces as $row)
+                        <x-person-card
+                            :user="$row['user']"
+                            action="Say hello again"
+                            :href="route('messages.show', $row['conversationId'])"
+                        />
+                    @endforeach
                 </div>
-            </div>
+            </section>
         @endif
 
-        @if ($this->onlineFriends->isEmpty() && $this->offlineFriends->isEmpty())
-            <div class="space-y-1 py-2">
-                <p class="text-sm" style="color:#8B949E;">@tone('empty_friends', 'No friends yet.')</p>
-                <p class="text-sm" style="color:#3d4451;">That's okay — these things take time.</p>
-            </div>
-        @else
-            {{-- Online friends --}}
-            @foreach ($this->onlineFriends as $friend)
-                <div class="flex items-center justify-between py-3 border-b" style="border-color:#30363D;">
-                    <div class="flex items-center gap-3">
-                        <div class="relative">
-                            <x-avatar :user="$friend" size="md" />
-                            <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2" style="background:#1D9E75;border-color:#0D1117;" title="Online"></span>
-                        </div>
-                        <div>
-                            <p class="font-medium text-sm" style="color:#E6EDF3;">{{ $this->visibleName($friend) }}</p>
-                            @if ($friend->hasActiveStatus())
-                                <p class="text-xs" style="color:#8B949E;">
-                                    @if ($friend->status_mood)<span class="capitalize">{{ $friend->status_mood }}</span>@if ($friend->status_text) · @endif@endif
-                                    {{ $friend->status_text }}
-                                </p>
-                            @else
-                                <p class="text-xs" style="color:#1D9E75;">Online now</p>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <a href="{{ route('profile.show', $friend->gamertag) }}" class="text-xs underline transition" style="color:#1D9E75;">View profile</a>
-                        <button wire:click="unfriend('{{ $friend->id }}')" wire:confirm="Remove {{ $friend->gamertag }} from your friends?"
-                            class="text-xs transition" style="color:#8B949E;" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='#8B949E'"
-                        >Unfriend</button>
-                    </div>
+        {{-- Section 2 — People you've met recently --}}
+        @if ($this->recentlyMet->isNotEmpty())
+            <section class="mb-8">
+                <h2 style="font-family:var(--font-body);font-size:1.5rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.75rem;">People you've met recently</h2>
+                <div class="space-y-2">
+                    @foreach ($this->recentlyMet as $person)
+                        <x-person-card
+                            :user="$person"
+                            action="Stay connected"
+                            wireClick="sendRequest('{{ $person->id }}')"
+                        />
+                    @endforeach
                 </div>
-            @endforeach
-
-            {{-- Offline friends --}}
-            @foreach ($this->offlineFriends as $friend)
-                <div class="flex items-center justify-between py-3 border-b" style="border-color:#30363D;">
-                    <div class="flex items-center gap-3">
-                        <div class="relative">
-                            <x-avatar :user="$friend" size="md" />
-                            <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2" style="background:#30363D;border-color:#0D1117;" title="Offline"></span>
-                        </div>
-                        <div>
-                            <p class="font-medium text-sm inline-flex items-center gap-1" style="color:#E6EDF3;">
-                                <span>{{ $this->visibleName($friend) }}</span>
-                                @if ($friend->is_supporter && ($friend->show_supporter_icon ?? true))<x-supporter-icon />@endif
-                            </p>
-                            @if ($friend->hasActiveStatus())
-                                <p class="text-xs" style="color:#8B949E;">
-                                    @if ($friend->status_mood)<span class="capitalize">{{ $friend->status_mood }}</span>@if ($friend->status_text) · @endif@endif
-                                    {{ $friend->status_text }}
-                                </p>
-                            @elseif ($friend->last_seen_at)
-                                <p class="text-xs" style="color:#8B949E;">Last seen {{ $friend->last_seen_at->diffForHumans() }}</p>
-                            @else
-                                <p class="text-xs" style="color:#8B949E;">Offline</p>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <a href="{{ route('profile.show', $friend->gamertag) }}" class="text-xs underline transition" style="color:#1D9E75;">View profile</a>
-                        <button wire:click="unfriend('{{ $friend->id }}')" wire:confirm="Remove {{ $friend->gamertag }} from your friends?"
-                            class="text-xs transition" style="color:#8B949E;" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='#8B949E'"
-                        >Unfriend</button>
-                    </div>
-                </div>
-            @endforeach
+            </section>
         @endif
-    @endif
 
-    {{-- Requests tab --}}
-    @if ($activeTab === 'requests')
-        @if ($this->pendingRequests->isEmpty())
-            <div class="space-y-1 py-2">
-                <p class="text-sm" style="color:#8B949E;">No requests right now.</p>
-                <p class="text-sm" style="color:#3d4451;">Nothing needs your attention.</p>
-            </div>
-        @else
-            @foreach ($this->pendingRequests as $friendship)
-                <div class="flex items-center justify-between py-3 border-b" style="border-color:#30363D;">
-                    <div class="flex items-center gap-3">
-                        <x-avatar :user="$friendship->requester" size="md" />
-                        <div>
-                            <p class="font-medium text-sm" style="color:#E6EDF3;">{{ $friendship->requester->gamertag }}</p>
-                            <p class="text-xs" style="color:#8B949E;">Sent {{ $friendship->created_at->diffForHumans() }}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button wire:click="accept('{{ $friendship->id }}')"
-                            class="text-sm font-semibold px-3 py-1.5 rounded-lg transition"
-                            style="background:#1D9E75;color:#fff;" onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'"
-                        >Accept</button>
-                        <button wire:click="decline('{{ $friendship->id }}')"
-                            class="text-sm font-semibold px-3 py-1.5 rounded-lg border transition"
-                            style="border-color:#30363D;color:#8B949E;" onmouseover="this.style.color='#E6EDF3'" onmouseout="this.style.color='#8B949E'"
-                        >Decline</button>
-                    </div>
+        {{-- Section 3 — People you may get along with --}}
+        @if ($this->suggestedPeople->isNotEmpty())
+            <section class="mb-8">
+                <h2 style="font-family:var(--font-body);font-size:1.5rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.75rem;">People you may get along with</h2>
+                <div class="space-y-2">
+                    @foreach ($this->suggestedPeople as $row)
+                        <x-person-card
+                            :user="$row['user']"
+                            :explanation="$row['explanation']"
+                            action="Stay connected"
+                            wireClick="sendRequest('{{ $row['user']->id }}')"
+                        />
+                    @endforeach
                 </div>
-            @endforeach
+            </section>
         @endif
+
+        {{-- Section 4 — Connection requests --}}
+        @if ($this->pendingRequests->isNotEmpty())
+            <section class="mb-8">
+                <h2 style="font-family:var(--font-body);font-size:1.5rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.75rem;">Connection requests</h2>
+                <div class="space-y-2">
+                    @foreach ($this->pendingRequests as $friendship)
+                        <x-person-card
+                            :user="$friendship->requester"
+                            action="Accept"
+                            wireClick="accept('{{ $friendship->id }}')"
+                            secondAction="Decline"
+                            secondWireClick="decline('{{ $friendship->id }}')"
+                        />
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
     @endif
 
 </div>

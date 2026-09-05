@@ -17,11 +17,13 @@ class Subcategory extends Model
         'description',
         'sort_order',
         'is_active',
+        'is_sensitive',
     ];
 
     protected $casts = [
-        'is_active'  => 'boolean',
-        'sort_order' => 'integer',
+        'is_active'    => 'boolean',
+        'is_sensitive' => 'boolean',
+        'sort_order'   => 'integer',
     ];
 
     public function category(): BelongsTo

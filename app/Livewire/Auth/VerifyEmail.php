@@ -59,6 +59,6 @@ class VerifyEmail extends Component
     public function render(): \Illuminate\View\View
     {
         return view('livewire.auth.verify-email')
-            ->layout('layouts.app', ['title' => 'Check your email — CommonGrove']);
+            ->layout('layouts.app', ['title' => 'Check your email | CommonGrove']);
     }
 }

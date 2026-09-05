@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class HangoutPost extends Model
 {
@@ -78,8 +79,17 @@ class HangoutPost extends Model
     }
 
     /**
-     * Scope: posts that share at least one tag with the given user's interests.
-     * Returns all active posts if the user has no tags selected.
+     * Scope: posts matched to the given user's interests via three-tier
+     * scoring (Phase 5) — exact tag = 3, same subcategory = 2, same
+     * category = 1, summed across every tag the post carries. Only posts
+     * scoring above zero at any tier are returned, ordered by score desc
+     * then activity (updated_at desc). Returns all active posts, untouched
+     * and unordered by this scope, if the user has no tags selected —
+     * never an empty result just because interests aren't set.
+     *
+     * Deliberately calls reorder() before applying its own ordering, so
+     * this scope's score-first ordering wins regardless of whether a
+     * caller chained .latest() before or after calling this scope.
      */
     public function scopeForUser(Builder $query, User $user): Builder
     {
@@ -102,9 +112,31 @@ class HangoutPost extends Model
             return $query;
         }
 
-        return $query->whereHas('tags', function (Builder $q) use ($userTagIds): void {
-            $q->whereIn('tags.id', $userTagIds);
-        });
+        $userSubcategoryIds = Tag::whereIn('id', $userTagIds)->whereNotNull('subcategory_id')->pluck('subcategory_id')->unique()->values();
+        $userCategoryIds    = Tag::whereIn('id', $userTagIds)->whereNotNull('category_id')->pluck('category_id')->unique()->values();
+
+        [$caseSql, $bindings] = Tag::tierScoreExpression(
+            $userTagIds,
+            $userSubcategoryIds,
+            $userCategoryIds,
+            'hpt.tag_id',
+            't.subcategory_id',
+            't.category_id',
+        );
+
+        $scoreSubquery = DB::table('hangout_post_tags as hpt')
+            ->join('tags as t', 't.id', '=', 'hpt.tag_id')
+            ->selectRaw("hpt.hangout_post_id, SUM({$caseSql}) as interest_match_score", $bindings)
+            ->groupBy('hpt.hangout_post_id')
+            ->havingRaw('interest_match_score > 0');
+
+        $query->joinSub($scoreSubquery, 'interest_scores', 'hangout_posts.id', '=', 'interest_scores.hangout_post_id')
+            ->addSelect('hangout_posts.*', 'interest_scores.interest_match_score')
+            ->reorder()
+            ->orderByDesc('interest_scores.interest_match_score')
+            ->orderByDesc('hangout_posts.updated_at');
+
+        return $query;
     }
 
     /**

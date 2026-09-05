@@ -1,13 +1,13 @@
-<x-layouts.app title="Dashboard — CommonGrove">
+<x-layouts.app title="Dashboard | CommonGrove">
     <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <h1 class="text-3xl font-bold mb-2" style="color:#E6EDF3;">
+        <h1 class="text-3xl font-bold mb-2" style="color:var(--text);">
             Welcome, {{ Auth::user()->gamertag }}
         </h1>
-        <p class="mb-8" style="color:#8B949E;">
+        <p class="mb-8" style="color:var(--text-muted);">
             You're in. Head to the feed to get started.
         </p>
-        <a href="{{ route('feed') }}" class="text-sm font-semibold px-6 py-3 rounded-xl transition" style="background:#1D9E75;color:#fff;" onmouseover="this.style.background='#22B88A'" onmouseout="this.style.background='#1D9E75'">
-            Go to feed →
-        </a>
+        <x-button :href="route('feed')" variant="primary" class="!px-6 !py-3" aria-label="Go to feed">
+            <x-arrow-icon label="Go to feed" />
+        </x-button>
     </div>
 </x-layouts.app>
