@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\PayPal\SubscriptionController;
@@ -18,6 +19,7 @@ use App\Livewire\Admin\AllRooms;
 use App\Livewire\Admin\UserManagement;
 use App\Livewire\Beta\ClaimFirstRoots;
 use App\Livewire\Account\CollectDateOfBirth;
+use App\Livewire\Account\CollectGamertag;
 use App\Livewire\Auth\ForcePasswordReset;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -69,6 +71,14 @@ Route::get('/register', Register::class)->name('register');
 // Login
 Route::get('/login', Login::class)->name('login');
 
+// "Continue with Google" — sign in or create an account
+Route::get('/auth/google/redirect', [GoogleController::class, 'redirect'])
+    ->middleware('throttle:30,1')
+    ->name('auth.google.redirect');
+Route::get('/auth/google/callback', [GoogleController::class, 'callback'])
+    ->middleware('throttle:30,1')
+    ->name('auth.google.callback');
+
 // Password reset — request link
 Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
@@ -108,6 +118,9 @@ Route::middleware('auth')->group(function () {
 
     // Date of birth collection (for existing users prompted after login)
     Route::get('/account/birthday', CollectDateOfBirth::class)->name('account.birthday');
+
+    // Gamertag collection — for accounts created via "Continue with Google"
+    Route::get('/account/gamertag', CollectGamertag::class)->name('account.gamertag');
 
     // Email verification notice (Livewire — handles resend with rate limiting)
     Route::get('/email/verify', VerifyEmail::class)->name('verification.notice');

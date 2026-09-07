@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Middleware\CheckSuspended;
 use App\Http\Middleware\RequirePasswordReset;
+use App\Http\Middleware\RequireGamertagSetup;
 use App\Http\Middleware\EnsureDateOfBirth;
 use App\Http\Middleware\EnsureOnboardingComplete;
 use App\Http\Middleware\RequireAdmin;
@@ -32,7 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         $middleware->append(SecurityHeaders::class);
-        $middleware->web(append: [UpdateLastSeen::class, CheckSuspended::class, RequirePasswordReset::class, EnsureDateOfBirth::class]);
+        $middleware->web(append: [UpdateLastSeen::class, CheckSuspended::class, RequirePasswordReset::class, RequireGamertagSetup::class, EnsureDateOfBirth::class]);
         $middleware->alias([
             'admin'      => RequireAdmin::class,
             'onboarded'  => EnsureOnboardingComplete::class,

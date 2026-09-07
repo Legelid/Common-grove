@@ -8,5 +8,9 @@
 <input type="{{ $type }}" {{ $attributes->merge(['class' => $classes]) }}>
 
 @if ($error)
-    <p class="mt-1.5 text-xs text-danger">{{ $error }}</p>
+    <p
+        role="alert"
+        class="mt-1.5 text-xs font-semibold text-danger flex items-center gap-1.5"
+        style="background:rgb(var(--danger-rgb) / 0.12);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:0.375rem 0.625rem;"
+    ><span aria-hidden="true">⚠</span> {{ $error }}</p>
 @endif

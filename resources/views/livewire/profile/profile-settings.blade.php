@@ -757,6 +757,28 @@
     <div x-show="tab === 'account'" x-cloak>
         <h2 class="font-display" style="font-size:1.5rem;color:var(--text);margin-bottom:1.25rem;">Account</h2>
 
+        {{-- PASSWORD --}}
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.25rem;">
+            <p style="font-family:var(--font-body);font-size:0.6875rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem;">Password</p>
+            <p class="text-xs mb-3" style="color:var(--text-muted);">
+                We'll email you a link to set a new password.
+            </p>
+
+            <x-button type="button" wire:click="sendPasswordResetLink" wire:loading.attr="disabled" wire:target="sendPasswordResetLink"
+                data-no-dirty
+                variant="secondary" class="!px-5 !py-2"
+            >
+                <span wire:loading.remove wire:target="sendPasswordResetLink">Change password</span>
+                <span wire:loading wire:target="sendPasswordResetLink">Sending…</span>
+            </x-button>
+
+            @if ($passwordResetMessage)
+                <p class="text-sm mt-3" style="color:{{ str_starts_with($passwordResetMessage, 'Check your email') ? 'var(--accent)' : 'var(--danger)' }};">
+                    {{ $passwordResetMessage }}
+                </p>
+            @endif
+        </div>
+
         {{-- READ RECEIPTS --}}
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.25rem;">
             <p style="font-family:var(--font-body);font-size:0.6875rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;">Read Receipts</p>

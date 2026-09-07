@@ -12,6 +12,7 @@ use App\Services\GlassThemeService;
 use App\Services\TonePackService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -142,6 +143,7 @@ class ProfileSettings extends Component
     public ?string $officialRoomsMessage = null;
     public ?string $comfortMessage       = null;
     public ?string $appearanceMessage    = null;
+    public ?string $passwordResetMessage = null;
 
     public function mount(): void
     {
@@ -539,6 +541,34 @@ class ProfileSettings extends Component
         Auth::user()->update(['show_read_receipts' => $this->showReadReceipts]);
 
         $this->readReceiptsMessage = 'Read receipt preference saved.';
+    }
+
+    /**
+     * Email the current user a password reset link — the only way to change
+     * a password today, since there is no "type your current password"
+     * in-session change form. Reuses the same forgot-password flow a
+     * logged-out user would go through.
+     */
+    public function sendPasswordResetLink(): void
+    {
+        $this->passwordResetMessage = null;
+
+        $user = Auth::user();
+        $key  = 'settings-password-reset.' . $user->id;
+
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            $minutes = (int) ceil(RateLimiter::availableIn($key) / 60);
+            $this->passwordResetMessage = 'Please wait ' . $minutes . ' ' . ($minutes === 1 ? 'minute' : 'minutes') . ' before requesting another link.';
+            return;
+        }
+
+        RateLimiter::hit($key, 600); // 3 attempts per 10 minutes
+
+        $status = Password::sendResetLink(['email' => $user->email]);
+
+        $this->passwordResetMessage = $status === Password::RESET_LINK_SENT
+            ? 'Check your email for a link to set a new password.'
+            : 'Please wait a moment before requesting another link.';
     }
 
     // -------------------------------------------------------------------------

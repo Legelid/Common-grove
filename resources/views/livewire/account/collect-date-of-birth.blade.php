@@ -25,7 +25,7 @@
                         <option value="{{ $num }}">{{ $name }}</option>
                     @endforeach
                 </select>
-                @error('birthMonth') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
+                @error('birthMonth') <p role="alert" class="mt-1.5 text-xs font-semibold flex items-center gap-1.5" style="color:var(--danger);background:rgb(var(--danger-rgb) / 0.12);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:0.375rem 0.625rem;"><span aria-hidden="true">⚠</span> {{ $message }}</p> @enderror
             </div>
 
             {{-- Day --}}
@@ -41,7 +41,7 @@
                         <option value="{{ $d }}">{{ $d }}</option>
                     @endfor
                 </select>
-                @error('birthDay') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
+                @error('birthDay') <p role="alert" class="mt-1.5 text-xs font-semibold flex items-center gap-1.5" style="color:var(--danger);background:rgb(var(--danger-rgb) / 0.12);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:0.375rem 0.625rem;"><span aria-hidden="true">⚠</span> {{ $message }}</p> @enderror
             </div>
 
             {{-- Year --}}
@@ -57,7 +57,7 @@
                         <option value="{{ $y }}">{{ $y }}</option>
                     @endfor
                 </select>
-                @error('birthYear') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
+                @error('birthYear') <p role="alert" class="mt-1.5 text-xs font-semibold flex items-center gap-1.5" style="color:var(--danger);background:rgb(var(--danger-rgb) / 0.12);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:0.375rem 0.625rem;"><span aria-hidden="true">⚠</span> {{ $message }}</p> @enderror
             </div>
         </div>
     </div>

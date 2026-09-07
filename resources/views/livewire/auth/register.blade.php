@@ -1,6 +1,18 @@
 <div>
     <h1 class="text-2xl font-bold text-center mb-8" style="color:var(--text);">Create your account</h1>
 
+    <a
+        href="{{ route('auth.google.redirect') }}"
+        class="w-full inline-flex items-center justify-center gap-2 rounded-btn text-sm font-medium transition-all duration-150 ease-out px-4 py-2.5 hover:scale-[1.02] active:scale-100 mb-5"
+        style="background:var(--surface);border:1px solid var(--border);color:var(--text);"
+    ><x-google-icon /> Continue with Google</a>
+
+    <div class="flex items-center gap-3 mb-5">
+        <div class="flex-1 h-px" style="background:var(--border);"></div>
+        <span class="text-xs" style="color:var(--text-faint);">or create with email</span>
+        <div class="flex-1 h-px" style="background:var(--border);"></div>
+    </div>
+
     <form wire:submit="register" class="space-y-5">
 
         {{-- Gamertag --}}
@@ -74,7 +86,7 @@
                 </button>
             </div>
             @error('password')
-                <p class="mt-1 text-sm" style="color:var(--danger);">{{ $message }}</p>
+                <p role="alert" class="mt-1.5 text-xs font-semibold flex items-center gap-1.5" style="color:var(--danger);background:rgb(var(--danger-rgb) / 0.12);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:0.375rem 0.625rem;"><span aria-hidden="true">⚠</span> {{ $message }}</p>
             @enderror
             <p class="mt-1 text-xs" style="color:var(--text-muted);">Minimum 10 characters. Checked against known breaches.</p>
         </div>
@@ -114,7 +126,7 @@
                             <option value="{{ $num }}">{{ $abbr }}</option>
                         @endforeach
                     </select>
-                    @error('birthMonth') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
+                    @error('birthMonth') <p role="alert" class="mt-1.5 text-xs font-semibold flex items-center gap-1.5" style="color:var(--danger);background:rgb(var(--danger-rgb) / 0.12);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:0.375rem 0.625rem;"><span aria-hidden="true">⚠</span> {{ $message }}</p> @enderror
                 </div>
                 <div>
                     <select wire:model="birthDay"
@@ -126,7 +138,7 @@
                             <option value="{{ $d }}">{{ $d }}</option>
                         @endfor
                     </select>
-                    @error('birthDay') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
+                    @error('birthDay') <p role="alert" class="mt-1.5 text-xs font-semibold flex items-center gap-1.5" style="color:var(--danger);background:rgb(var(--danger-rgb) / 0.12);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:0.375rem 0.625rem;"><span aria-hidden="true">⚠</span> {{ $message }}</p> @enderror
                 </div>
                 <div>
                     <select wire:model="birthYear"
@@ -138,7 +150,7 @@
                             <option value="{{ $y }}">{{ $y }}</option>
                         @endfor
                     </select>
-                    @error('birthYear') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
+                    @error('birthYear') <p role="alert" class="mt-1.5 text-xs font-semibold flex items-center gap-1.5" style="color:var(--danger);background:rgb(var(--danger-rgb) / 0.12);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:0.375rem 0.625rem;"><span aria-hidden="true">⚠</span> {{ $message }}</p> @enderror
                 </div>
             </div>
         </div>
