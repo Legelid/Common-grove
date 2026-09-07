@@ -1,5 +1,5 @@
 @php
-    $isAuthPage = request()->routeIs('login', 'register', 'password.*', 'verification.*', 'home');
+    $isAuthPage = request()->routeIs('login', 'register', 'password.*', 'verification.*', 'home', 'auth.google.*');
     $isLowStim  = auth()->check() && auth()->user()->low_stimulation_mode;
 
     // Advanced comfort settings (supporter-only)

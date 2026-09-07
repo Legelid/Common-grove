@@ -8,13 +8,14 @@ use App\Models\User;
 use App\Services\FirstRootsService;
 use App\Services\PasswordService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
-use Laravel\Socialite\Two\User as SocialiteUser;
 
 /**
  * Handles "Continue with Google" sign-in/sign-up.
@@ -30,6 +31,8 @@ use Laravel\Socialite\Two\User as SocialiteUser;
  */
 class GoogleController extends Controller
 {
+    private const PENDING_SESSION_KEY = 'pending_google_signup';
+
     public function redirect(): RedirectResponse
     {
         return Socialite::driver('google')->redirect();
@@ -63,7 +66,25 @@ class GoogleController extends Controller
         $user = User::where('google_id', $googleUser->getId())->first();
 
         if ($user === null) {
-            $user = $this->findOrCreateByEmail($googleUser, $email);
+            $existing        = User::where('email', $email)->first();
+            $googleVerified  = (bool) ($googleUser->getRaw()['verified_email'] ?? false);
+
+            if ($existing !== null && $existing->hasVerifiedEmail() && $googleVerified) {
+                $existing->update(['google_id' => $googleUser->getId()]);
+                Log::info('Google OAuth: linked to existing verified account', ['gamertag' => $existing->gamertag]);
+
+                $user = $existing;
+            } else {
+                session([self::PENDING_SESSION_KEY => [
+                    'google_id' => $googleUser->getId(),
+                    'email'     => $email,
+                    'name'      => $googleUser->getName(),
+                ]]);
+
+                Log::info('Google OAuth: no verified match, routing to confirm', ['google_id' => $googleUser->getId()]);
+
+                return redirect()->route('auth.google.confirm');
+            }
         }
 
         if ($user->isSuspended()) {
@@ -87,31 +108,69 @@ class GoogleController extends Controller
     }
 
     /**
-     * Link an existing account by verified email match, or create a new one.
-     *
-     * Per product decision: a Google account proves control of that email
-     * address, which we treat as equivalent to the trust an email-verified
-     * CommonGrove account already has — so we link rather than block. An
-     * unverified existing account is left alone (its owner never proved
-     * they control that inbox) and a brand-new account is created instead,
-     * to avoid a narrow window where an attacker registers a look-alike
-     * email first and waits for the real owner to "link" into it.
+     * Placeholder confirmation screen — shown only when the Google callback
+     * found no matching account at all. Real styling is a later phase.
      */
-    private function findOrCreateByEmail(SocialiteUser $googleUser, string $email): User
+    public function confirmShow(): View|RedirectResponse
     {
-        $existing = User::where('email', $email)->first();
+        $pending = session(self::PENDING_SESSION_KEY);
 
-        if ($existing !== null && $existing->hasVerifiedEmail()) {
-            $existing->update(['google_id' => $googleUser->getId()]);
-            Log::info('Google OAuth: linked to existing account', ['gamertag' => $existing->gamertag]);
-
-            return $existing;
+        if (! $this->pendingIsValid($pending)) {
+            return redirect()->route('login')
+                ->withErrors(['login' => 'That sign-up link expired. Please try "Continue with Google" again.']);
         }
 
-        return $this->createUser($googleUser, $email);
+        return view('auth.google-confirm', [
+            'email' => $pending['email'],
+            'name'  => $pending['name'],
+        ]);
     }
 
-    private function createUser(SocialiteUser $googleUser, string $email): User
+    /**
+     * Only here — not in the callback — does a new account actually get
+     * created, and only on an explicit submit.
+     */
+    public function confirmStore(Request $request): RedirectResponse
+    {
+        $pending = session(self::PENDING_SESSION_KEY);
+
+        if (! $this->pendingIsValid($pending)) {
+            return redirect()->route('login')
+                ->withErrors(['login' => 'That sign-up link expired. Please try "Continue with Google" again.']);
+        }
+
+        // Race guard: a matching account may have appeared since confirmShow()
+        // rendered (e.g. a double submit, or the same Google account signing
+        // in from a second tab) — check again rather than letting a unique
+        // constraint violation surface as a raw 500.
+        if (
+            User::where('google_id', $pending['google_id'])->exists()
+            || User::where('email', $pending['email'])->exists()
+        ) {
+            session()->forget(self::PENDING_SESSION_KEY);
+            Log::info('Google OAuth: confirm race — account appeared before submit', ['email' => $pending['email']]);
+
+            return redirect()->route('login')
+                ->withErrors(['login' => 'An account with that email already exists. Please sign in instead.']);
+        }
+
+        $user = $this->createUser($pending['google_id'], $pending['email']);
+        session()->forget(self::PENDING_SESSION_KEY);
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        $betaToken = session()->pull('beta_invite_token');
+        if ($betaToken) {
+            app(FirstRootsService::class)->claimInvite((string) $betaToken, $user);
+        }
+
+        Log::info('Google OAuth: account created via confirm', ['gamertag' => $user->gamertag]);
+
+        return redirect($this->destinationFor($user));
+    }
+
+    private function createUser(string $googleId, string $email): User
     {
         /** @var PasswordService $passwordService */
         $passwordService = app(PasswordService::class);
@@ -121,7 +180,7 @@ class GoogleController extends Controller
             'gamertag_setup_required' => true,
             'email'                   => $email,
             'password'                => $passwordService->hash(Str::random(40)),
-            'google_id'               => $googleUser->getId(),
+            'google_id'               => $googleId,
         ]);
 
         // email_verified_at is deliberately not mass-assignable (see User::$fillable) —
@@ -147,6 +206,13 @@ class GoogleController extends Controller
         } while (User::withTrashed()->whereRaw('LOWER(gamertag) = ?', [strtolower($candidate)])->exists());
 
         return $candidate;
+    }
+
+    private function pendingIsValid(mixed $pending): bool
+    {
+        return is_array($pending)
+            && ! empty($pending['google_id'])
+            && ! empty($pending['email']);
     }
 
     private function destinationFor(User $user): string

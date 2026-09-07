@@ -1,6 +1,18 @@
 <div>
     <h1 class="text-2xl font-bold text-center mb-8" style="color:var(--text);">Create your account</h1>
 
+    <a
+        href="{{ route('auth.google') }}"
+        class="w-full inline-flex items-center justify-center gap-2 rounded-btn text-sm font-medium transition-all duration-150 ease-out px-4 py-2.5 hover:scale-[1.02] active:scale-100 mb-5"
+        style="background:var(--surface);border:1px solid var(--border);color:var(--text);"
+    ><x-google-icon /> Continue with Google</a>
+
+    <div class="flex items-center gap-3 mb-5">
+        <div class="flex-1 h-px" style="background:var(--border);"></div>
+        <span class="text-xs" style="color:var(--text-faint);">or create with email</span>
+        <div class="flex-1 h-px" style="background:var(--border);"></div>
+    </div>
+
     <form wire:submit="register" class="space-y-5">
 
         {{-- Gamertag --}}

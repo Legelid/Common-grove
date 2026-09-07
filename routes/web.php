@@ -72,12 +72,23 @@ Route::get('/register', Register::class)->name('register');
 Route::get('/login', Login::class)->name('login');
 
 // "Continue with Google" — sign in or create an account
-Route::get('/auth/google/redirect', [GoogleController::class, 'redirect'])
+Route::get('/auth/google', [GoogleController::class, 'redirect'])
     ->middleware('throttle:30,1')
-    ->name('auth.google.redirect');
+    ->name('auth.google');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])
     ->middleware('throttle:30,1')
     ->name('auth.google.callback');
+
+// Google sign-up confirmation — reached only when no existing account
+// matched in the callback (see GoogleController::callback). Guest-reachable
+// but gated on pending session data, not middleware — nobody is
+// authenticated yet at this point.
+Route::get('/auth/google/confirm', [GoogleController::class, 'confirmShow'])
+    ->middleware('throttle:30,1')
+    ->name('auth.google.confirm');
+Route::post('/auth/google/confirm', [GoogleController::class, 'confirmStore'])
+    ->middleware('throttle:10,1')
+    ->name('auth.google.confirm.store');
 
 // Password reset — request link
 Route::get('/forgot-password', function () {
