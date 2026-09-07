@@ -190,8 +190,14 @@ return [
     |--------------------------------------------------------------------------
     |
     | This option determines how your cookies behave when cross-site requests
-    | take place, and can be used to mitigate CSRF attacks. By default, we
-    | will set this value to "lax" to permit secure cross-site requests.
+    | take place, and can be used to mitigate CSRF attacks. We use "lax"
+    | (Laravel's own default) rather than "strict" — Strict withholds the
+    | cookie on top-level cross-site GET navigations, which breaks signed,
+    | auth-gated links opened from an external context (e.g. clicking the
+    | email verification link from a webmail client or the Mail app), since
+    | the request arrives with no session cookie and the `auth` middleware
+    | sees a guest. Lax still blocks the cookie on cross-site POSTs/forms/
+    | embeds, which is the actual CSRF threat model this setting exists for.
     |
     | See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#samesitesamesite-value
     |
@@ -199,7 +205,7 @@ return [
     |
     */
 
-    'same_site' => env('SESSION_SAME_SITE', 'strict'),
+    'same_site' => env('SESSION_SAME_SITE', 'lax'),
 
     /*
     |--------------------------------------------------------------------------

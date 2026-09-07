@@ -99,7 +99,7 @@ These must never be violated:
 6. **Laravel Policies** for all resource authorisation (Message, HangoutPost, UserProfile, Room, Report)
 7. **File uploads** — PNG/JPEG only, max 2 MB, EXIF stripped via Intervention Image, stored in Backblaze B2 (never `public/`)
 8. **Rate limits** — Login: 5/15 min per IP · Signup: 10/hr per IP · Gamertag check: 60/min per IP · Reports: 10/hr per user
-9. **Session config** — `secure=true`, `http_only=true`, `same_site=strict` (verify in `config/session.php`)
+9. **Session config** — `secure=true`, `http_only=true`, `same_site=lax` (verify in `config/session.php`). Not `strict`: it withholds the session cookie on top-level cross-site GET navigations, which breaks auth-gated signed links (e.g. email verification) opened from an external mail client — the request arrives cookie-less and `auth` middleware sees a guest. `lax` still blocks the cookie on cross-site POSTs/forms/embeds, which is the actual CSRF threat model this setting exists for.
 10. **`declare(strict_types=1)`** at the top of every PHP file
 
 ### Gamertag Rules (enforced by `App\Rules\ValidGamertag`)
