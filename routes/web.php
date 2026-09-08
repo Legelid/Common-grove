@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Auth\DiscordController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\EmailUnsubscribeController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\PayPal\SubscriptionController;
 use App\Http\Controllers\PayPal\WebhookController as PayPalWebhookController;
 use App\Livewire\Account\SupporterSettings;
+use App\Livewire\Admin\Announcements;
 use App\Livewire\Admin\BetaInvites;
 use App\Livewire\Admin\CrisisLog;
 use App\Livewire\Admin\Dashboard as AdminDashboard;
@@ -58,6 +60,12 @@ Route::get('/', function () {
 Route::view('/privacy', 'privacy')->name('privacy');
 Route::view('/terms', 'terms')->name('terms');
 Route::view('/guidelines', 'guidelines')->name('guidelines');
+
+// One-click unsubscribe from marketing/win-back email — signed URL, no login.
+Route::get('/email/unsubscribe/{user}', EmailUnsubscribeController::class)
+    ->middleware('signed')
+    ->name('email.unsubscribe');
+
 Route::get('/report', ProblemReportForm::class)->name('report');
 Route::get('/beta/claim/{token}', ClaimFirstRoots::class)->name('beta.claim');
 Route::get('/support', SupportPage::class)->name('support');
@@ -264,6 +272,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
     Route::get('/stats', PlatformStats::class)->name('admin.stats');
     Route::get('/crisis', CrisisLog::class)->name('admin.crisis');
     Route::get('/beta-invites', BetaInvites::class)->name('admin.beta-invites');
+    Route::get('/announcements', Announcements::class)->name('admin.announcements');
 
     Route::get('/problem-reports/{id}/screenshot', function (string $id) {
         $report = \App\Models\ProblemReport::findOrFail($id);
@@ -285,4 +294,24 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
 // (see the earlier /dev-login / /dev-session removal for why this matters).
 if (app()->isLocal()) {
     Route::view('/dev/glass-test', 'dev.glass-test')->name('dev.glass-test');
+
+    // Renders a Mailable directly to HTML in the browser — Laravel's router
+    // detects a returned Mailable instance and calls its own render logic,
+    // no actual sending involved. Nothing sends, nothing touches the DB.
+    Route::get('/dev/preview-email/{type?}', function (string $type = 'winback') {
+        $previewUser = new \App\Models\User(['gamertag' => 'PreviewUser', 'email' => 'preview@example.test']);
+        $previewUser->id = (string) \Illuminate\Support\Str::uuid();
+
+        return match ($type) {
+            'winback'        => new \App\Mail\WinbackMail($previewUser),
+            'announcement'   => new \App\Mail\AnnouncementMail(
+                'A cozy update from CommonGrove',
+                "Hey there,\n\nJust a quick note to say we've been busy adding new features.\n\nCome say hi sometime.",
+                $previewUser,
+            ),
+            'verify'         => new \App\Mail\VerifyEmailMail('https://example.com/email/verify/preview'),
+            'password-reset' => new \App\Mail\ResetPasswordMail('https://example.com/reset-password/preview'),
+            default          => abort(404, "Unknown preview type \"{$type}\". Try: winback, announcement, verify, password-reset."),
+        };
+    })->name('dev.preview-email');
 }

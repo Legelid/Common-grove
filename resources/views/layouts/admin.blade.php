@@ -88,6 +88,8 @@
                     ['route' => 'admin.tags',             'icon' => '🏷️', 'label' => 'Tag Moderation'],
                     ['route' => 'admin.stats',            'icon' => '📈', 'label' => 'Platform Stats'],
                     ['route' => 'admin.crisis',           'icon' => '🆘', 'label' => 'Crisis Log'],
+                    ['route' => 'admin.beta-invites',     'icon' => '🌱', 'label' => 'Beta Invites'],
+                    ['route' => 'admin.announcements',    'icon' => '📣', 'label' => 'Announcements'],
                 ];
             @endphp
             @foreach ($links as $link)
