@@ -1,6 +1,6 @@
 @extends('emails.layout')
 
-@section('title', 'Report received — CommonGrove')
+@section('title', 'CommonGrove: Report received')
 @section('preheader', 'Your report has been received. We take this seriously.')
 
 @section('body')
@@ -13,7 +13,7 @@
     @endif
 
     <p class="cg-p" style="margin:0 0 16px;font-size:15px;color:#4b5563;line-height:1.75;">
-        We review reports personally — not with an automated filter. We won't be able to share details of what action is taken, but every report is read and considered.
+        We review reports personally, not with an automated filter. We won't be able to share details of what action is taken, but every report is read and considered.
     </p>
 
     <p class="cg-p" style="margin:0 0 0;font-size:15px;color:#4b5563;line-height:1.75;">

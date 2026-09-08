@@ -1,66 +1,106 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/images/logo-full.png" width="320" alt="CommonGrove">
 </p>
 
-## About Laravel
+<p align="center">
+  A closed, judgment free, strictly platonic friendship platform for introverts and gamers.
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  <a href="https://common-grove.com">Website</a> &middot;
+  <a href="https://common-grove.com/terms">Terms of Service</a> &middot;
+  <a href="https://common-grove.com/privacy">Privacy Policy</a> &middot;
+  <a href="https://common-grove.com/guidelines">Community Guidelines</a>
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## About CommonGrove
 
-## Learning Laravel
+CommonGrove is a private social platform built for people who find most social apps exhausting. There are no ads, no bots, and no fake activity anywhere on the platform. Nothing inside is visible to unauthenticated visitors, and the entire experience is designed around calm, low pressure connection rather than engagement metrics.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Sponsorship
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+CommonGrove is sponsored by GlitchCast & Affiliates.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## About This Repository
 
-## Laravel Sponsors
+This repository contains the proprietary source code for CommonGrove. It is not an open source project. No license is granted for reuse, redistribution, or modification of any part of this codebase outside of work explicitly authorized by Coldev Enterprises. Full terms are available in the [LICENSE](LICENSE) file.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Access to this repository is limited to authorized contributors. If you have been given access for a specific purpose, please keep its contents confidential.
 
-### Premium Partners
+## Technology Stack
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+- [Laravel 11](https://laravel.com)
+- [Livewire 3](https://livewire.laravel.com)
+- [Alpine.js](https://alpinejs.dev)
+- [Tailwind CSS v3](https://tailwindcss.com) (TALL stack)
+- MySQL 8
+- Redis
+- [Laravel Reverb](https://laravel.com/docs/reverb) for real time WebSockets
 
-## Contributing
+## Local Development
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+**Prerequisites:** PHP 8.2 or later, Composer, Node.js, MySQL, and Redis.
 
-## Code of Conduct
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Start the full development stack (server, queue worker, log viewer, and Vite hot reload) in a single command:
 
-## Security Vulnerabilities
+```bash
+composer dev
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Or run each process individually:
 
-## License
+```bash
+php artisan serve
+php artisan reverb:start --debug
+php artisan queue:listen --tries=1
+npm run dev
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Build frontend assets for production:
+
+```bash
+npm run build
+```
+
+## Testing
+
+```bash
+php artisan test
+php artisan test --filter=TestClassName
+```
+
+## Code Style
+
+This project follows PSR-12 and is enforced with Laravel Pint.
+
+```bash
+./vendor/bin/pint
+```
+
+## Security
+
+The safety and privacy of our users is a top priority. If you discover a security vulnerability anywhere in this codebase or on the platform, please do not open a public issue. Instead, report it privately to **security@common-grove.com** so it can be investigated and addressed before any public disclosure. We take every report seriously and will respond as promptly as possible.
+
+## Legal
+
+CommonGrove operates under the following policies, each of which governs use of the platform:
+
+- [Terms of Service](https://common-grove.com/terms)
+- [Privacy Policy](https://common-grove.com/privacy)
+- [Community Guidelines](https://common-grove.com/guidelines)
+
+## Ownership
+
+CommonGrove is developed and maintained by Coldev Enterprises. All rights reserved. Unauthorized copying, distribution, or use of this software, in whole or in part, is strictly prohibited without prior written permission. See [LICENSE](LICENSE) for complete terms.
+
+Copyright &copy; 2026 Coldev Enterprises. All rights reserved.

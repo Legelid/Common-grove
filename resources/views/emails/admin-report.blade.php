@@ -10,8 +10,8 @@
             'App\\Models\\HangoutPost' => 'Hangout post',
             'App\\Models\\User'        => 'User profile',
         ];
-        $reportableLabel = $typeMap[$report->reportable_type] ?? ($report->reportable_type ?? '—');
-        $reasonLabel     = ucwords(str_replace('_', ' ', $report->reason ?? '—'));
+        $reportableLabel = $typeMap[$report->reportable_type] ?? ($report->reportable_type ?? 'N/A');
+        $reasonLabel     = ucwords(str_replace('_', ' ', $report->reason ?? 'N/A'));
         $reporter        = $report->reporter;
         $reported        = $report->reportedUser;
     @endphp
@@ -26,7 +26,7 @@
         <tr>
             <td class="cg-muted" style="padding:11px 0;border-bottom:1px solid #f9fafb;width:120px;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;vertical-align:top;">Reporter</td>
             <td class="cg-p" style="padding:11px 0 11px 12px;border-bottom:1px solid #f9fafb;font-size:14px;color:#374151;">
-                {{ $reporter?->gamertag ?? '—' }}
+                {{ $reporter?->gamertag ?? 'N/A' }}
                 @if ($reporter?->email)
                     <span class="cg-muted" style="color:#9ca3af;">&nbsp;&lt;{{ $reporter->email }}&gt;</span>
                 @endif
@@ -35,7 +35,7 @@
 
         <tr>
             <td class="cg-muted" style="padding:11px 0;border-bottom:1px solid #f9fafb;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;vertical-align:top;">Reported</td>
-            <td class="cg-p" style="padding:11px 0 11px 12px;border-bottom:1px solid #f9fafb;font-size:14px;color:#374151;">{{ $reported?->gamertag ?? '—' }}</td>
+            <td class="cg-p" style="padding:11px 0 11px 12px;border-bottom:1px solid #f9fafb;font-size:14px;color:#374151;">{{ $reported?->gamertag ?? 'N/A' }}</td>
         </tr>
 
         <tr>

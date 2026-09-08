@@ -1,7 +1,7 @@
 @extends('emails.layout')
 
 @section('title', 'We miss you at CommonGrove')
-@section('preheader', 'It has been a while — your grove is still here.')
+@section('preheader', 'It has been a while; your grove is still here.')
 
 @section('body')
     <h1 class="cg-h1" style="margin:0 0 8px;font-size:20px;font-weight:600;color:#111827;line-height:1.3;">{{-- PLACEHOLDER: headline --}}We miss you.</h1>

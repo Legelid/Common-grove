@@ -1,6 +1,6 @@
 @extends('emails.layout')
 
-@section('title', 'You\'re a CommonGrove Supporter — thank you')
+@section('title', 'Thank you for being a CommonGrove Supporter')
 @section('preheader', 'Your subscription is active. Supporter features are now available.')
 
 @section('body')
@@ -17,7 +17,7 @@
     </p>
 
     <p class="cg-p" style="margin:0 0 28px;font-size:15px;color:#4b5563;line-height:1.75;">
-        Supporters are what keep CommonGrove ad-free and independent. That genuinely matters — thank you.
+        Supporters are what keep CommonGrove ad-free and independent. That genuinely matters. Thank you.
     </p>
 
     <table cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:28px;">
@@ -30,7 +30,7 @@
     </table>
 
     <p class="cg-muted" style="margin:0;font-size:13px;color:#6b7280;line-height:1.7;">
-        You can cancel any time through PayPal — no questions asked.
+        You can cancel any time through PayPal, no questions asked.
     </p>
 @endsection
 

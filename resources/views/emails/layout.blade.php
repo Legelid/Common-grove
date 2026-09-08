@@ -74,7 +74,7 @@
                     <tr>
                         <td class="cg-footer" style="background:#f9fafb;padding:16px 32px 20px;border-radius:0 0 12px 12px;border-top:1px solid #e5e7eb;">
                             <p class="cg-muted" style="margin:0;font-size:11px;color:#9ca3af;line-height:1.7;">
-                                &copy; {{ date('Y') }} CommonGrove &mdash; A quieter corner of the internet.<br>
+                                &copy; {{ date('Y') }} CommonGrove --- A quieter corner of the internet.<br>
                                 @yield('footer_extra')
                             </p>
                         </td>

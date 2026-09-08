@@ -1,6 +1,6 @@
 @extends('emails.layout')
 
-@section('title', 'We\'ve received your message — CommonGrove')
+@section('title', 'CommonGrove: We\'ve received your message')
 @section('preheader', 'We\'ll take a look.')
 
 @section('body')
@@ -13,7 +13,7 @@
     @endif
 
     <p class="cg-p" style="margin:0 0 16px;font-size:15px;color:#4b5563;line-height:1.75;">
-        Your <strong style="font-weight:600;color:#374151;">{{ $typeLabel }}</strong> has been received. We read everything ourselves — no ticket queues, no bots.
+        Your <strong style="font-weight:600;color:#374151;">{{ $typeLabel }}</strong> has been received. We read everything ourselves: no ticket queues, no bots.
     </p>
 
     <p class="cg-p" style="margin:0;font-size:15px;color:#4b5563;line-height:1.75;">
