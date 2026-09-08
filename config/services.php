@@ -41,6 +41,12 @@ return [
         'redirect'      => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'discord' => [
+        'client_id'     => env('DISCORD_CLIENT_ID'),
+        'client_secret' => env('DISCORD_CLIENT_SECRET'),
+        'redirect'      => env('DISCORD_REDIRECT_URI'),
+    ],
+
     'paypal' => [
         'client_id'         => env('PAYPAL_CLIENT_ID'),
         'client_secret'     => env('PAYPAL_CLIENT_SECRET'),

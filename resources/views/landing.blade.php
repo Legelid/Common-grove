@@ -206,6 +206,29 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         }
 
+        /* ── Legal footer — small, fixed, stays out of the way of the cinematic
+             sequence and the auth panel (which sits above it, z-index 10). ── */
+        .cg-cine-legal {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 5;
+            display: flex;
+            justify-content: center;
+            gap: 1.25rem;
+            padding: 1rem;
+            opacity: 0;
+            transition: opacity 800ms ease 800ms;
+        }
+        .cg-cine-legal.is-in { opacity: 1; }
+        .cg-cine-legal a {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+        }
+        .cg-cine-legal a:hover { color: rgba(255,255,255,0.9); text-decoration: underline; }
+
         /* ── Auth panel ──────────────────────────────────────────────────── */
         .cg-auth-panel {
             position: fixed;
@@ -452,6 +475,12 @@
             </button>
 
         </div>
+    </div>
+
+    <div class="cg-cine-legal" :class="{ 'is-in': phase >= 5 }">
+        <a href="{{ route('privacy') }}">Privacy</a>
+        <a href="{{ route('terms') }}">Terms</a>
+        <a href="{{ route('guidelines') }}">Guidelines</a>
     </div>
 
     <div class="cg-auth-panel" :class="{ 'is-open': loginOpen }" role="dialog" aria-modal="true" aria-label="Sign in or join">

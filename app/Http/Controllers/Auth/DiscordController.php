@@ -19,79 +19,75 @@ use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
 
 /**
- * Handles "Continue with Google" sign-in/sign-up.
+ * Handles "Continue with Discord" sign-in/sign-up.
  *
- * A plain HTTP controller (not a Livewire action) — this whole flow is a
- * full-page redirect round trip through Google, so there is no Livewire
- * AJAX/cookie-propagation concern here (see LoginController's docblock for
- * why that concern exists elsewhere in this codebase).
- *
- * Matching behaviour to Register.php / Login.php: Auth::login() + session
- * regenerate, beta invite claiming, and the same post-login destination
- * logic (verification / password reset / onboarding / feed).
+ * Same shape as GoogleController deliberately — see that file's docblock for
+ * why this is a plain HTTP controller rather than a Livewire action, and why
+ * the "no matching account" case defers to a confirm step instead of
+ * creating immediately.
  */
-class GoogleController extends Controller
+class DiscordController extends Controller
 {
     use GeneratesPlaceholderGamertag;
 
-    private const PENDING_SESSION_KEY = 'pending_google_signup';
+    private const PENDING_SESSION_KEY = 'pending_discord_signup';
 
     public function redirect(): RedirectResponse
     {
-        return Socialite::driver('google')->redirect();
+        return Socialite::driver('discord')->redirect();
     }
 
     public function callback(): RedirectResponse
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
+            $discordUser = Socialite::driver('discord')->user();
         } catch (InvalidStateException $e) {
-            Log::info('Google OAuth: invalid state (expired or replayed callback)', ['error' => $e->getMessage()]);
+            Log::info('Discord OAuth: invalid state (expired or replayed callback)', ['error' => $e->getMessage()]);
 
             return redirect()->route('login')
-                ->withErrors(['login' => 'That sign-in link expired. Please try "Continue with Google" again.']);
+                ->withErrors(['login' => 'That sign-in link expired. Please try "Continue with Discord" again.']);
         } catch (\Throwable $e) {
-            Log::warning('Google OAuth: callback failed', ['error' => $e->getMessage()]);
+            Log::warning('Discord OAuth: callback failed', ['error' => $e->getMessage()]);
 
             return redirect()->route('login')
-                ->withErrors(['login' => 'Something went wrong signing in with Google. Please try again.']);
+                ->withErrors(['login' => 'Something went wrong signing in with Discord. Please try again.']);
         }
 
-        $email = $googleUser->getEmail();
+        $email = $discordUser->getEmail();
 
         if (empty($email)) {
-            Log::warning('Google OAuth: no email returned by Google', ['google_id' => $googleUser->getId()]);
+            Log::warning('Discord OAuth: no email returned by Discord', ['discord_id' => $discordUser->getId()]);
 
             return redirect()->route('login')
-                ->withErrors(['login' => 'Your Google account did not share an email address, so we could not sign you in.']);
+                ->withErrors(['login' => 'Your Discord account did not share an email address, so we could not sign you in.']);
         }
 
-        $user = User::where('google_id', $googleUser->getId())->first();
+        $user = User::where('discord_id', $discordUser->getId())->first();
 
         if ($user === null) {
-            $existing        = User::where('email', $email)->first();
-            $googleVerified  = (bool) ($googleUser->getRaw()['verified_email'] ?? false);
+            $existing         = User::where('email', $email)->first();
+            $discordVerified  = (bool) ($discordUser->getRaw()['verified'] ?? false);
 
-            if ($existing !== null && $existing->hasVerifiedEmail() && $googleVerified) {
-                $existing->update(['google_id' => $googleUser->getId()]);
-                Log::info('Google OAuth: linked to existing verified account', ['gamertag' => $existing->gamertag]);
+            if ($existing !== null && $existing->hasVerifiedEmail() && $discordVerified) {
+                $existing->update(['discord_id' => $discordUser->getId()]);
+                Log::info('Discord OAuth: linked to existing verified account', ['gamertag' => $existing->gamertag]);
 
                 $user = $existing;
             } else {
                 session([self::PENDING_SESSION_KEY => [
-                    'google_id' => $googleUser->getId(),
-                    'email'     => $email,
-                    'name'      => $googleUser->getName(),
+                    'discord_id' => $discordUser->getId(),
+                    'email'      => $email,
+                    'name'       => $discordUser->getName(),
                 ]]);
 
-                Log::info('Google OAuth: no verified match, routing to confirm', ['google_id' => $googleUser->getId()]);
+                Log::info('Discord OAuth: no verified match, routing to confirm', ['discord_id' => $discordUser->getId()]);
 
-                return redirect()->route('auth.google.confirm');
+                return redirect()->route('auth.discord.confirm');
             }
         }
 
         if ($user->isSuspended()) {
-            Log::info('Google OAuth: suspended account attempted sign-in', ['gamertag' => $user->gamertag]);
+            Log::info('Discord OAuth: suspended account attempted sign-in', ['gamertag' => $user->gamertag]);
 
             return redirect()->route('login')
                 ->withErrors(['login' => 'Your account has been suspended. Please contact support if you believe this is an error.']);
@@ -105,13 +101,13 @@ class GoogleController extends Controller
             app(FirstRootsService::class)->claimInvite((string) $betaToken, $user);
         }
 
-        Log::info('Google OAuth: sign-in success', ['gamertag' => $user->gamertag]);
+        Log::info('Discord OAuth: sign-in success', ['gamertag' => $user->gamertag]);
 
         return redirect($this->destinationFor($user));
     }
 
     /**
-     * Placeholder confirmation screen — shown only when the Google callback
+     * Placeholder confirmation screen — shown only when the Discord callback
      * found no matching account at all. Real styling is a later phase.
      */
     public function confirmShow(): View|RedirectResponse
@@ -120,10 +116,10 @@ class GoogleController extends Controller
 
         if (! $this->pendingIsValid($pending)) {
             return redirect()->route('login')
-                ->withErrors(['login' => 'That sign-up link expired. Please try "Continue with Google" again.']);
+                ->withErrors(['login' => 'That sign-up link expired. Please try "Continue with Discord" again.']);
         }
 
-        return view('auth.google-confirm', [
+        return view('auth.discord-confirm', [
             'email' => $pending['email'],
             'name'  => $pending['name'],
         ]);
@@ -139,25 +135,25 @@ class GoogleController extends Controller
 
         if (! $this->pendingIsValid($pending)) {
             return redirect()->route('login')
-                ->withErrors(['login' => 'That sign-up link expired. Please try "Continue with Google" again.']);
+                ->withErrors(['login' => 'That sign-up link expired. Please try "Continue with Discord" again.']);
         }
 
         // Race guard: a matching account may have appeared since confirmShow()
-        // rendered (e.g. a double submit, or the same Google account signing
+        // rendered (e.g. a double submit, or the same Discord account signing
         // in from a second tab) — check again rather than letting a unique
         // constraint violation surface as a raw 500.
         if (
-            User::where('google_id', $pending['google_id'])->exists()
+            User::where('discord_id', $pending['discord_id'])->exists()
             || User::where('email', $pending['email'])->exists()
         ) {
             session()->forget(self::PENDING_SESSION_KEY);
-            Log::info('Google OAuth: confirm race — account appeared before submit', ['email' => $pending['email']]);
+            Log::info('Discord OAuth: confirm race — account appeared before submit', ['email' => $pending['email']]);
 
             return redirect()->route('login')
                 ->withErrors(['login' => 'An account with that email already exists. Please sign in instead.']);
         }
 
-        $user = $this->createUser($pending['google_id'], $pending['email']);
+        $user = $this->createUser($pending['discord_id'], $pending['email']);
         session()->forget(self::PENDING_SESSION_KEY);
 
         Auth::login($user);
@@ -168,12 +164,12 @@ class GoogleController extends Controller
             app(FirstRootsService::class)->claimInvite((string) $betaToken, $user);
         }
 
-        Log::info('Google OAuth: account created via confirm', ['gamertag' => $user->gamertag]);
+        Log::info('Discord OAuth: account created via confirm', ['gamertag' => $user->gamertag]);
 
         return redirect($this->destinationFor($user));
     }
 
-    private function createUser(string $googleId, string $email): User
+    private function createUser(string $discordId, string $email): User
     {
         /** @var PasswordService $passwordService */
         $passwordService = app(PasswordService::class);
@@ -183,7 +179,7 @@ class GoogleController extends Controller
             'gamertag_setup_required' => true,
             'email'                   => $email,
             'password'                => $passwordService->hash(Str::random(40)),
-            'google_id'               => $googleId,
+            'discord_id'              => $discordId,
         ]);
 
         // email_verified_at is deliberately not mass-assignable (see User::$fillable) —
@@ -191,7 +187,7 @@ class GoogleController extends Controller
         $user->email_verified_at = now();
         $user->save();
 
-        Log::info('Google OAuth: new account created', ['user_id' => $user->id]);
+        Log::info('Discord OAuth: new account created', ['user_id' => $user->id]);
 
         return $user;
     }
@@ -199,7 +195,7 @@ class GoogleController extends Controller
     private function pendingIsValid(mixed $pending): bool
     {
         return is_array($pending)
-            && ! empty($pending['google_id'])
+            && ! empty($pending['discord_id'])
             && ! empty($pending['email']);
     }
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Auth\DiscordController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -90,6 +91,20 @@ Route::post('/auth/google/confirm', [GoogleController::class, 'confirmStore'])
     ->middleware('throttle:10,1')
     ->name('auth.google.confirm.store');
 
+// "Continue with Discord" — same shape as the Google block above
+Route::get('/auth/discord', [DiscordController::class, 'redirect'])
+    ->middleware('throttle:30,1')
+    ->name('auth.discord');
+Route::get('/auth/discord/callback', [DiscordController::class, 'callback'])
+    ->middleware('throttle:30,1')
+    ->name('auth.discord.callback');
+Route::get('/auth/discord/confirm', [DiscordController::class, 'confirmShow'])
+    ->middleware('throttle:30,1')
+    ->name('auth.discord.confirm');
+Route::post('/auth/discord/confirm', [DiscordController::class, 'confirmStore'])
+    ->middleware('throttle:10,1')
+    ->name('auth.discord.confirm.store');
+
 // Password reset — request link
 Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
@@ -98,13 +113,13 @@ Route::get('/forgot-password', function () {
 Route::post('/forgot-password', function (\Illuminate\Http\Request $request) {
     $request->validate(['email' => ['required', 'email']]);
 
-    $status = \Illuminate\Support\Facades\Password::sendResetLink(
-        $request->only('email')
-    );
+    // Deliberately ignore the broker's status (RESET_LINK_SENT vs INVALID_USER)
+    // in the response — Laravel's default copy for the latter ("We can't find
+    // a user with that email address") reveals whether an email is registered.
+    // Same message either way, whether or not an account actually exists.
+    \Illuminate\Support\Facades\Password::sendResetLink($request->only('email'));
 
-    return $status === \Illuminate\Support\Facades\Password::RESET_LINK_SENT
-        ? back()->with('status', __($status))
-        : back()->withInput($request->only('email'))->withErrors(['email' => __($status)]);
+    return back()->with('status', 'If an account exists for that email, we\'ve sent a password reset link.');
 })->middleware('throttle:5,1')->name('password.email');
 
 // Password reset — set new password

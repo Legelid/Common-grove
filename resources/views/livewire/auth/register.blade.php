@@ -3,9 +3,15 @@
 
     <a
         href="{{ route('auth.google') }}"
-        class="w-full inline-flex items-center justify-center gap-2 rounded-btn text-sm font-medium transition-all duration-150 ease-out px-4 py-2.5 hover:scale-[1.02] active:scale-100 mb-5"
+        class="w-full inline-flex items-center justify-center gap-2 rounded-btn text-sm font-medium transition-all duration-150 ease-out px-4 py-2.5 hover:scale-[1.02] active:scale-100 mb-3"
         style="background:var(--surface);border:1px solid var(--border);color:var(--text);"
     ><x-google-icon /> Continue with Google</a>
+
+    <a
+        href="{{ route('auth.discord') }}"
+        class="w-full inline-flex items-center justify-center gap-2 rounded-btn text-sm font-medium transition-all duration-150 ease-out px-4 py-2.5 hover:scale-[1.02] active:scale-100 mb-5"
+        style="background:var(--surface);border:1px solid var(--border);color:var(--text);"
+    ><x-discord-icon /> Continue with Discord</a>
 
     <div class="flex items-center gap-3 mb-5">
         <div class="flex-1 h-px" style="background:var(--border);"></div>
@@ -162,6 +168,13 @@
         </x-button>
 
     </form>
+
+    <p class="mt-4 text-center text-xs" style="color:var(--text-faint);">
+        By creating an account, you agree to our
+        <a href="{{ route('terms') }}" class="underline transition" style="color:var(--text-muted);" target="_blank" rel="noopener">Terms</a>
+        and
+        <a href="{{ route('privacy') }}" class="underline transition" style="color:var(--text-muted);" target="_blank" rel="noopener">Privacy Policy</a>.
+    </p>
 
     <p class="mt-6 text-center text-sm" style="color:var(--text-muted);">
         Already have an account?

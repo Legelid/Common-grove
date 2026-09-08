@@ -36,6 +36,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'google_id',
+        'discord_id',
         'gamertag_setup_required',
         'identity_mode',
         'show_names_pref',

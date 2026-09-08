@@ -159,9 +159,9 @@
         <section id="supporters">
             <h2 class="text-lg font-semibold mb-4 pb-3 border-b" style="color:var(--text);border-color:var(--border);">Supporter subscriptions</h2>
             <div class="space-y-3 text-sm leading-relaxed" style="color:var(--text);">
-                <p>CommonGrove may introduce an optional supporter subscription (approximately $1/month) that unlocks small extras, such as a supporter badge or cosmetic features. This is entirely optional.</p>
+                <p>CommonGrove offers an optional Supporter subscription ($1/month) that unlocks small extras, such as a supporter badge and additional cosmetic features. This is entirely optional.</p>
                 <p>Supporter status does not grant moderation authority or any special power over other users. It is a way to help keep the lights on, nothing more.</p>
-                <p>When this feature launches, payment processing will be handled by a third-party provider. Refunds and cancellations will be managed through that provider. We'll provide full details at launch.</p>
+                <p>Subscriptions are billed monthly through PayPal. You can cancel at any time from your account settings or directly through PayPal, and cancellation takes effect immediately. CommonGrove does not process or store your payment details — that's handled entirely by PayPal.</p>
             </div>
         </section>
 

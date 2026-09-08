@@ -160,8 +160,8 @@
                     <p>Your email address is shared with a transactional email provider solely to send verification emails and password reset links. It is not used for marketing.</p>
                 </div>
                 <div>
-                    <p class="font-medium mb-1" style="color:var(--text);">Payment provider (future)</p>
-                    <p>If supporter subscriptions are introduced, payment processing will be handled by a third-party provider. CommonGrove will not store your card details. We'll update this policy before that feature launches.</p>
+                    <p class="font-medium mb-1" style="color:var(--text);">Payment provider (PayPal)</p>
+                    <p>If you choose to become a Supporter, subscription payments are processed by PayPal. CommonGrove does not receive or store your card or bank details — PayPal handles that directly, under its own privacy policy.</p>
                 </div>
             </div>
         </section>
